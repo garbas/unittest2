@@ -5,7 +5,6 @@ import time
 import unittest
 
 from unittest2 import result
-from unittest2.suite import TestSuite, WrapperSuite
 
 
 class _WritelnDecorator(object):
@@ -139,7 +138,6 @@ class TextTestRunner(unittest.TextTestRunner):
 
     def run(self, test):
         "Run the given test case or test suite."
-        #test = WrapperSuite((test,))
         result = self._makeResult()
         startTime = time.time()
         startTestRun = getattr(result, 'startTestRun', None)

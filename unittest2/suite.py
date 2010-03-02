@@ -156,15 +156,6 @@ class TestSuite(unittest.TestSuite):
             test.debug()
 
 
-class WrapperSuite(TestSuite):
-    """Suites run by the TextTestRunner are wrapped with this class.
-    
-    It calls final class and module tearDown methods on test run end."""
-    def run(self, result):
-        TestSuite.run(self, result)
-        self._tearDownPreviousClass(result)
-
-
 class _ErrorHolder(object):
     """
     Placeholder for a TestCase inside a result. As far as a TestResult
@@ -204,6 +195,7 @@ class _ErrorHolder(object):
         return 0
 
 def _isnotsuite(test):
+    "A crude way to tell apart testcases and suites with duck-typing"
     try:
         iter(test)
     except TypeError:
