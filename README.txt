@@ -4,7 +4,15 @@ framework in Python 2.7. It is tested to run on Python 2.4 - 2.6.
 To use unittest2 instead of unittest simply replace ``import unittest`` with
 ``import unittest2``.
 
-Classes in unittest2 derive from the equivalent classes in unittest, so it
+unittest2 is maintained in a mercurial repository. The issue tracker is on
+google code:
+
+* `unittest2 hg <http://hg.python.org/unittest2>`_
+* `unittest2 issue tracker <http://code.google.com/p/unittest-ext/issues/list>`_
+* `Article / Docs: New features in unittest <http://www.voidspace.org.uk/python/articles/unittest2.shtml`_.
+
+
+Classes in unittest2 derive from the appropriate classes in unittest, so it
 should be possible to use the unittest2 test running infrastructure without
 having to switch all your tests to using unittest2 immediately. Similarly
 you can use the new assert methods on ``unittest2.TestCase`` with the standard
@@ -47,18 +55,12 @@ is the development version of the Python documentation for Python 2.7:
 
 * http://docs.python.org/dev/library/unittest.html
 
-There is some information about the new features in 
-`New and improved: new features in unittest 
-<http://code.google.com/p/unittest-ext/source/browse/trunk/unittest2/unittest2.txt>`_.
-
 Look for notes about features added or changed in Python 2.7.
 
-unittest2 is maintained in a mercurial repository. The issue tracker is on
-google code:
+.. note::
 
-* `unittest2 hg <http://hg.python.org/unittest2>`_
-* `unittest2 issue tracker <http://code.google.com/p/unittest-ext/issues/list>`_
-
+    unittest2 is already in use for development for development of 
+    `distutils2 <http://hg.python.org/distutils2>`_.
 
 Differences
 ===========

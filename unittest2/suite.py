@@ -37,10 +37,7 @@ class TestSuite(unittest.TestSuite):
         return iter(self._tests)
 
     def countTestCases(self):
-        cases = 0
-        for test in self:
-            cases += test.countTestCases()
-        return cases
+        return sum([test.countTestCases() for test in self])
 
     def addTest(self, test):
         # sanity checks
