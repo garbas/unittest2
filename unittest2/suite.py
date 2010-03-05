@@ -68,11 +68,13 @@ class TestSuite(unittest.TestSuite):
         currentClass._classTornDown = False
         currentClass._classSetupFailed = False
         
-        try:
-            currentClass.setUpClass()
-        except:
-            currentClass._classSetupFailed = True
-            self._addClassSetUpError(result, currentClass)
+        setUpClass = getattr(currentClass, 'setUpClass', None)
+        if setUpClass is not None:
+            try:
+                setUpClass()
+            except:
+                currentClass._classSetupFailed = True
+                self._addClassSetUpError(result, currentClass)
     
     def _handleModuleFixture(self, test, result):
         previousModule = None
@@ -100,11 +102,12 @@ class TestSuite(unittest.TestSuite):
 
                 
     def run(self, result):
-        self.__run(result)
+        self._wrapped_run(result)
         self._tearDownPreviousClass(None, result)
         return result
     
-    def __run(self, result):
+    def _wrapped_run(self, result):
+        # Not name _run because would clash with existing TestSuite subclasses
         for test in self:
             if result.shouldStop:
                 break
@@ -118,9 +121,8 @@ class TestSuite(unittest.TestSuite):
                 if test.__class__._classSetupFailed or result._moduleSetUpFailed:
                     continue
             
-            if hasattr(test, '_TestSuite__run'):
-                # TestSuite - recurse with __run
-                test.__run(result)
+            if hasattr(test, '_wrapped_run'):
+                test._wrapped_run(result)
             else:
                 test(result)
     
@@ -138,11 +140,13 @@ class TestSuite(unittest.TestSuite):
         if getattr(previousClass, "__unittest_skip__", False):
             return
         
-        try:
-            result._previousTestClass.tearDownClass()
-        except:
-            self._addClassTearDownError(result)
-        previousClass._classTornDown = True
+        tearDownClass = getattr(result._previousTestClass, 'tearDownClass', None)
+        if tearDownClass is not None:
+            try:
+                tearDownClass()
+            except:
+                self._addClassTearDownError(result)
+            previousClass._classTornDown = True
 
     def _addClassTearDownError(self, result):
         className = util.strclass(result._previousTestClass)

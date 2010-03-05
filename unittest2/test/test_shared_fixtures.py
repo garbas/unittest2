@@ -3,10 +3,8 @@ import sys
 from cStringIO import StringIO
 
 import unittest2
-from unittest2.test.support import OldTestResult
+from unittest2.test.support import OldTestResult, resultFactory
 
-def resultFactory(*_):
-    return unittest2.TestResult()
 
 class TestSetups(unittest2.TestCase):
     
@@ -217,13 +215,7 @@ class TestSetups(unittest2.TestCase):
         result = runner.run(suite)
         self.assertEqual(result.testsRun, 4)
         self.assertEqual(len(result.errors), 0)
- 
-        print
-        print '*'*20
-        print results
-        print '*'*20
-        print
-        
+
         self.assertEqual(results,
                          ['setup 1', 'Test1.testOne', 'Test1.testTwo', 'teardown 1',
                           'setup 2', 'Test2.testOne', 'Test2.testTwo', 'teardown 2'])
@@ -330,11 +322,10 @@ class TestSetups(unittest2.TestCase):
         self.assertEqual(Module.moduleTornDown, 1)
         self.assertEqual(result.testsRun, 2)
         self.assertEqual(len(result.errors), 0)
+        
 
 """
 Not tested yet.
-
-setUpClass should not be run for skipped classes.
 
 For unittest2 - TestCase without setUpClass should not die.
 
