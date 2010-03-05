@@ -241,21 +241,52 @@ class TestSetups(unittest2.TestCase):
         self.assertEqual(Module.moduleSetup, 0)
         self.assertEqual(result.testsRun, 2)
 
+    def test_teardown_module(self):
+        class Module(object):
+            moduleTornDown = 0
+            @staticmethod
+            def tearDownModule():
+                Module.moduleTornDown += 1
+        
+        class Test(unittest2.TestCase):
+            def test_one(self):
+                pass
+            def test_two(self):
+                pass
+        Test.__module__ = 'Module'
+        sys.modules['Module'] = Module
+        
+        result = self.runTests(Test)
+        self.assertEqual(Module.moduleTornDown, 1)
+        self.assertEqual(result.testsRun, 2)
+        self.assertEqual(len(result.errors), 0)
 
 """
-Class setup is not run for skipped classes
+Not tested yet.
 
-For unittest2 - TestCase without setUpClass should not die
+If setUpClass fails, then tearDownClass should not be called.
+
+If a setUpModule fails then the setUpClass(es) should not
+be run.
+
+If a setUpModule fails then the tearDownModule should not
+be run.
+
+setUpClass should not be run for skipped classes.
+
+For unittest2 - TestCase without setUpClass should not die.
+
+setUpModule / tearDownModule should not die when modules not in sys.modules.
 
 Meaning of SkipTest in setUpClass - skip whole class.
+SkipTest in setUpModule should skip whole module.
+
 
 To document:
     setUpClass failure means that tests in that class will *not* be run
     and reported.
+    
+    TestSuite.debug now has very different semantics from TestSuite.run().
+    It does not run the shared fixture code.
 
-TestSuite.debug now has very different semantics from TestSuite.run().
-
-If setUpClass fails, then tearDownClass should not be called.
-
-setUpModule / tearDownModule should not die when modules not in sys.modules.
 """
