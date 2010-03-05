@@ -146,6 +146,8 @@ class TestSuite(unittest.TestSuite):
         previousModule = self._get_previous_module(result)
         if previousModule is None:
             return
+        if result._moduleSetUpFailed:
+            return
             
         try:
             module = sys.modules[previousModule]
