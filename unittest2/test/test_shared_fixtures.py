@@ -9,14 +9,17 @@ def resultFactory(*_):
     return unittest2.TestResult()
 
 class TestSetups(unittest2.TestCase):
-
+    
+    def getRunner(self):
+        return unittest2.TextTestRunner(resultclass=resultFactory,
+                                          stream=StringIO())
     def runTests(self, *cases):
         suite = unittest2.TestSuite()
         for case in cases:
             tests = unittest2.defaultTestLoader.loadTestsFromTestCase(case)
             suite.addTests(tests)
-        runner = unittest2.TextTestRunner(resultclass=resultFactory,
-                                          stream=StringIO())
+        
+        runner = self.getRunner()
         
         # creating a nested suite exposes some potential bugs
         realSuite = unittest2.TestSuite()
@@ -176,8 +179,55 @@ class TestSetups(unittest2.TestCase):
         self.runTests(Test)
         self.assertFalse(Test.classSetUp)
         self.assertFalse(Test.tornDown)
+
+    def test_setup_teardown_order_with_pathological_suite(self):
+        results = []
         
+        class Test1(unittest2.TestCase):
+            @classmethod
+            def setUpClass(cls):
+                results.append('setup 1')
+            @classmethod
+            def tearDownClass(cls):
+                results.append('teardown 1')
+            def testOne(self):
+                results.append('Test1.testOne')
+            def testTwo(self):
+                results.append('Test1.testTwo')
             
+        class Test2(unittest2.TestCase):
+            @classmethod
+            def setUpClass(cls):
+                results.append('setup 2')
+            @classmethod
+            def tearDownClass(cls):
+                results.append('teardown 2')
+            def testOne(self):
+                results.append('Test2.testOne')
+            def testTwo(self):
+                results.append('Test2.testTwo')
+        
+        first = unittest2.TestSuite((Test1('testOne'),))
+        second = unittest2.TestSuite((Test1('testTwo'),))
+        third = unittest2.TestSuite((Test2('testOne'),))
+        fourth = unittest2.TestSuite((Test2('testTwo'),))
+        suite = unittest2.TestSuite((first, second, third, fourth))
+        
+        runner = self.getRunner()
+        result = runner.run(suite)
+        self.assertEqual(result.testsRun, 4)
+        self.assertEqual(len(result.errors), 0)
+ 
+        print
+        print '*'*20
+        print results
+        print '*'*20
+        print
+        
+        self.assertEqual(results,
+                         ['setup 1', 'Test1.testOne', 'Test1.testTwo', 'teardown 1',
+                          'setup 2', 'Test2.testOne', 'Test2.testTwo', 'teardown 2'])
+        
     def test_setup_module(self):
         class Module(object):
             moduleSetup = 0
@@ -236,7 +286,7 @@ class TestSetups(unittest2.TestCase):
         self.assertFalse(Test.classTornDown)
         self.assertEqual(len(result.errors), 1)
         error, _ = result.errors[0]
-        self.assertEqual(str(error), 'moduleSetUp (Module)')
+        self.assertEqual(str(error), 'setUpModule (Module)')
         
     def test_setup_module_with_missing_module(self):
         class Module(object):

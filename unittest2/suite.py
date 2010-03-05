@@ -95,12 +95,16 @@ class TestSuite(unittest.TestSuite):
                 setUpModule()
             except:
                 result._moduleSetUpFailed = True
-                error = _ErrorHolder('moduleSetUp (%s)' % currentModule)
+                error = _ErrorHolder('setUpModule (%s)' % currentModule)
                 result.addError(error, sys.exc_info())
 
                 
     def run(self, result):
-        test = None
+        self.__run(result)
+        self._tearDownPreviousClass(None, result, force=True)
+        return result
+    
+    def __run(self, result):
         for test in self:
             if result.shouldStop:
                 break
@@ -114,11 +118,14 @@ class TestSuite(unittest.TestSuite):
                 if test.__class__._classSetupFailed or result._moduleSetUpFailed:
                     continue
             
-            test(result)
+            if hasattr(test, '_TestSuite__run'):
+                # TestSuite - recurse with __run
+                test.__run(result)
+            else:
+                test(result)
         
-        if _isnotsuite(test):
-            self._tearDownPreviousClass(test, result, force=True)
         return result
+
     
     def _tearDownPreviousClass(self, test, result, force=False):
         previousClass = getattr(result, '_previousTestClass', None)
