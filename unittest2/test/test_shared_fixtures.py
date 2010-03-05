@@ -240,7 +240,9 @@ class TestSetups(unittest2.TestCase):
         result = self.runTests(Test)
         self.assertEqual(Module.moduleSetup, 0)
         self.assertEqual(result.testsRun, 2)
-
+        
+    # XXXX not implemented yet
+    @unittest2.expectedFailure
     def test_teardown_module(self):
         class Module(object):
             moduleTornDown = 0
@@ -264,19 +266,11 @@ class TestSetups(unittest2.TestCase):
 """
 Not tested yet.
 
-If setUpClass fails, then tearDownClass should not be called.
-
-If a setUpModule fails then the setUpClass(es) should not
-be run.
-
-If a setUpModule fails then the tearDownModule should not
-be run.
-
 setUpClass should not be run for skipped classes.
 
 For unittest2 - TestCase without setUpClass should not die.
 
-setUpModule / tearDownModule should not die when modules not in sys.modules.
+tearDownModule should not die when modules not in sys.modules.
 
 Meaning of SkipTest in setUpClass - skip whole class.
 SkipTest in setUpModule should skip whole module.
