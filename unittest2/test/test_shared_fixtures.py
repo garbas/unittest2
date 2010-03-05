@@ -181,13 +181,21 @@ class TestSetups(unittest2.TestCase):
     def test_setup_teardown_order_with_pathological_suite(self):
         results = []
         
-        class Module(object):
+        class Module1(object):
             @staticmethod
             def setUpModule():
-                results.append('Module.setUpModule')
+                results.append('Module1.setUpModule')
             @staticmethod
             def tearDownModule():
-                results.append('Module.tearDownModule')
+                results.append('Module1.tearDownModule')
+    
+        class Module2(object):
+            @staticmethod
+            def setUpModule():
+                results.append('Module2.setUpModule')
+            @staticmethod
+            def tearDownModule():
+                results.append('Module2.tearDownModule')
                 
         class Test1(unittest2.TestCase):
             @classmethod
@@ -212,26 +220,45 @@ class TestSetups(unittest2.TestCase):
                 results.append('Test2.testOne')
             def testTwo(self):
                 results.append('Test2.testTwo')
+            
+        class Test3(unittest2.TestCase):
+            @classmethod
+            def setUpClass(cls):
+                results.append('setup 3')
+            @classmethod
+            def tearDownClass(cls):
+                results.append('teardown 3')
+            def testOne(self):
+                results.append('Test3.testOne')
+            def testTwo(self):
+                results.append('Test3.testTwo')
         
         Test1.__module__ = Test2.__module__ = 'Module'
-        sys.modules['Module'] = Module
+        Test3.__module__ = 'Module2'
+        sys.modules['Module'] = Module1
+        sys.modules['Module2'] = Module2
         
         first = unittest2.TestSuite((Test1('testOne'),))
         second = unittest2.TestSuite((Test1('testTwo'),))
         third = unittest2.TestSuite((Test2('testOne'),))
         fourth = unittest2.TestSuite((Test2('testTwo'),))
-        suite = unittest2.TestSuite((first, second, third, fourth))
+        fifth = unittest2.TestSuite((Test3('testOne'),))
+        sixth = unittest2.TestSuite((Test3('testTwo'),))
+        suite = unittest2.TestSuite((first, second, third, fourth, fifth, sixth))
         
         runner = self.getRunner()
         result = runner.run(suite)
-        self.assertEqual(result.testsRun, 4)
+        self.assertEqual(result.testsRun, 6)
         self.assertEqual(len(result.errors), 0)
 
         self.assertEqual(results,
-                         ['Module.setUpModule', 'setup 1', 
+                         ['Module1.setUpModule', 'setup 1', 
                           'Test1.testOne', 'Test1.testTwo', 'teardown 1',
                           'setup 2', 'Test2.testOne', 'Test2.testTwo', 
-                          'teardown 2', 'Module.tearDownModule'])
+                          'teardown 2', 'Module1.tearDownModule',
+                          'Module2.setUpModule', 'setup 3',
+                          'Test3.testOne', 'Test3.testTwo', 
+                          'teardown 3', 'Module2.tearDownModule'])
         
     def test_setup_module(self):
         class Module(object):
