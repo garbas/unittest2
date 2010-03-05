@@ -77,6 +77,7 @@ class TestSuite(unittest.TestSuite):
         previousClass = getattr(result, '_previousTestClass', None)
         if previousClass is not None:
             previousModule = previousClass.__module__
+        
         currentModule = test.__class__.__module__
         if currentModule == previousModule:
             return
