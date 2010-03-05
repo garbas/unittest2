@@ -181,6 +181,14 @@ class TestSetups(unittest2.TestCase):
     def test_setup_teardown_order_with_pathological_suite(self):
         results = []
         
+        class Module(object):
+            @staticmethod
+            def setUpModule():
+                results.append('Module.setUpModule')
+            @staticmethod
+            def tearDownModule():
+                results.append('Module.tearDownModule')
+                
         class Test1(unittest2.TestCase):
             @classmethod
             def setUpClass(cls):
@@ -205,6 +213,9 @@ class TestSetups(unittest2.TestCase):
             def testTwo(self):
                 results.append('Test2.testTwo')
         
+        Test1.__module__ = Test2.__module__ = 'Module'
+        sys.modules['Module'] = Module
+        
         first = unittest2.TestSuite((Test1('testOne'),))
         second = unittest2.TestSuite((Test1('testTwo'),))
         third = unittest2.TestSuite((Test2('testOne'),))
@@ -217,8 +228,10 @@ class TestSetups(unittest2.TestCase):
         self.assertEqual(len(result.errors), 0)
 
         self.assertEqual(results,
-                         ['setup 1', 'Test1.testOne', 'Test1.testTwo', 'teardown 1',
-                          'setup 2', 'Test2.testOne', 'Test2.testTwo', 'teardown 2'])
+                         ['Module.setUpModule', 'setup 1', 
+                          'Test1.testOne', 'Test1.testTwo', 'teardown 1',
+                          'setup 2', 'Test2.testOne', 'Test2.testTwo', 
+                          'teardown 2', 'Module.tearDownModule'])
         
     def test_setup_module(self):
         class Module(object):
@@ -280,29 +293,18 @@ class TestSetups(unittest2.TestCase):
         error, _ = result.errors[0]
         self.assertEqual(str(error), 'setUpModule (Module)')
         
-    def test_setup_module_with_missing_module(self):
-        class Module(object):
-            moduleSetup = 0
-            @staticmethod
-            def setUpModule():
-                Module.moduleSetup += 1
-                raise TypeError('foo')
-        
+    def test_testcase_with_missing_module(self):
         class Test(unittest2.TestCase):
             def test_one(self):
                 pass
             def test_two(self):
                 pass
         Test.__module__ = 'Module'
-        if 'Module' in sys.modules:
-            del sys.modules['Module']
+        sys.modules.pop('Module', None)
         
         result = self.runTests(Test)
-        self.assertEqual(Module.moduleSetup, 0)
         self.assertEqual(result.testsRun, 2)
-        
-    # XXXX not implemented yet
-    @unittest2.expectedFailure
+
     def test_teardown_module(self):
         class Module(object):
             moduleTornDown = 0
@@ -326,10 +328,6 @@ class TestSetups(unittest2.TestCase):
 
 """
 Not tested yet.
-
-For unittest2 - TestCase without setUpClass should not die.
-
-tearDownModule should not die when modules not in sys.modules.
 
 Meaning of SkipTest in setUpClass - skip whole class.
 SkipTest in setUpModule should skip whole module.

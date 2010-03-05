@@ -86,6 +86,9 @@ class TestSuite(unittest.TestSuite):
         if currentModule == previousModule:
             return
         
+        self._handleModuleTearDown(result)
+
+        
         result._moduleSetUpFailed = False
         try:
             module = sys.modules[currentModule]
@@ -100,10 +103,32 @@ class TestSuite(unittest.TestSuite):
                 error = _ErrorHolder('setUpModule (%s)' % currentModule)
                 result.addError(error, sys.exc_info())
 
+    def _handleModuleTearDown(self, result):
+        previousModule = None
+        previousClass = getattr(result, '_previousTestClass', None)
+        if previousClass is not None:
+            previousModule = previousClass.__module__
+        else:
+            return
+            
+        try:
+            module = sys.modules[previousModule]
+        except KeyError:
+            return
+
+        tearDownModule = getattr(module, 'tearDownModule', None)
+        if tearDownModule is not None:
+            try:
+                tearDownModule()
+            except:
+                error = _ErrorHolder('tearDownModule (%s)' % previousModule)
+                result.addError(error, sys.exc_info())
+                
                 
     def run(self, result):
         self._wrapped_run(result)
         self._tearDownPreviousClass(None, result)
+        self._handleModuleTearDown(result)
         return result
     
     def _wrapped_run(self, result):
