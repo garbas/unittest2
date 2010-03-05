@@ -62,8 +62,7 @@ class TestSuite(unittest.TestSuite):
             return
         if result._moduleSetUpFailed:
             return
-        
-        if getattr(self.__class__, "__unittest_skip__", False):
+        if getattr(currentClass, "__unittest_skip__", False):
             return
         
         currentClass._classTornDown = False
@@ -132,6 +131,9 @@ class TestSuite(unittest.TestSuite):
             return
         if result._moduleSetUpFailed:
             return
+        if getattr(previousClass, "__unittest_skip__", False):
+            return
+        
         try:
             result._previousTestClass.tearDownClass()
         except:
