@@ -55,6 +55,41 @@ class TestSuite(unittest.TestSuite):
         for test in tests:
             self.addTest(test)
 
+    def run(self, result):
+        self._wrapped_run(result)
+        self._tearDownPreviousClass(None, result)
+        self._handleModuleTearDown(result)
+        return result
+    
+    def __call__(self, *args, **kwds):
+        return self.run(*args, **kwds)
+
+    def debug(self):
+        """Run the tests without collecting errors in a TestResult"""
+        for test in self:
+            test.debug()
+    
+    # private methods            
+    def _wrapped_run(self, result):
+        # Not name _run because would clash with existing TestSuite subclasses
+        for test in self:
+            if result.shouldStop:
+                break
+            
+            if _isnotsuite(test):
+                self._tearDownPreviousClass(test, result)
+                self._handleModuleFixture(test, result)
+                self._handleClassSetUp(test, result)
+                result._previousTestClass = test.__class__
+                
+                if test.__class__._classSetupFailed or result._moduleSetUpFailed:
+                    continue
+            
+            if hasattr(test, '_wrapped_run'):
+                test._wrapped_run(result)
+            else:
+                test(result)
+    
     def _handleClassSetUp(self, test, result):
         previousClass = getattr(result, '_previousTestClass', None)
         currentClass = test.__class__
@@ -76,12 +111,16 @@ class TestSuite(unittest.TestSuite):
                 currentClass._classSetupFailed = True
                 self._addClassSetUpError(result, currentClass)
     
-    def _handleModuleFixture(self, test, result):
+    def _get_previous_module(self, result):
         previousModule = None
         previousClass = getattr(result, '_previousTestClass', None)
         if previousClass is not None:
             previousModule = previousClass.__module__
+        return previousModule
         
+        
+    def _handleModuleFixture(self, test, result):
+        previousModule = self._get_previous_module(result)
         currentModule = test.__class__.__module__
         if currentModule == previousModule:
             return
@@ -104,11 +143,8 @@ class TestSuite(unittest.TestSuite):
                 result.addError(error, sys.exc_info())
 
     def _handleModuleTearDown(self, result):
-        previousModule = None
-        previousClass = getattr(result, '_previousTestClass', None)
-        if previousClass is not None:
-            previousModule = previousClass.__module__
-        else:
+        previousModule = self._get_previous_module(result)
+        if previousModule is None:
             return
             
         try:
@@ -123,33 +159,6 @@ class TestSuite(unittest.TestSuite):
             except:
                 error = _ErrorHolder('tearDownModule (%s)' % previousModule)
                 result.addError(error, sys.exc_info())
-                
-                
-    def run(self, result):
-        self._wrapped_run(result)
-        self._tearDownPreviousClass(None, result)
-        self._handleModuleTearDown(result)
-        return result
-    
-    def _wrapped_run(self, result):
-        # Not name _run because would clash with existing TestSuite subclasses
-        for test in self:
-            if result.shouldStop:
-                break
-            
-            if _isnotsuite(test):
-                self._tearDownPreviousClass(test, result)
-                self._handleModuleFixture(test, result)
-                self._handleClassSetUp(test, result)
-                result._previousTestClass = test.__class__
-                
-                if test.__class__._classSetupFailed or result._moduleSetUpFailed:
-                    continue
-            
-            if hasattr(test, '_wrapped_run'):
-                test._wrapped_run(result)
-            else:
-                test(result)
     
     def _tearDownPreviousClass(self, test, result):
         previousClass = getattr(result, '_previousTestClass', None)
@@ -183,13 +192,6 @@ class TestSuite(unittest.TestSuite):
         error = _ErrorHolder('classSetUp (%s)' % className)
         result.addError(error, sys.exc_info())
 
-    def __call__(self, *args, **kwds):
-        return self.run(*args, **kwds)
-
-    def debug(self):
-        """Run the tests without collecting errors in a TestResult"""
-        for test in self:
-            test.debug()
 
 
 class _ErrorHolder(object):
