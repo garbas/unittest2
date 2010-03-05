@@ -1,6 +1,11 @@
 import sys
 import warnings
 
+import unittest2
+
+
+def resultFactory(*_):
+    return unittest2.TestResult()
 
 class OldTestResult(object):
     """An object honouring TestResult before startTestRun/stopTestRun."""
