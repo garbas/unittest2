@@ -121,7 +121,6 @@ class TestSuite(unittest.TestSuite):
         return result
     
     def _tearDownPreviousClass(self, test, result, force=False):
-        force = False
         previousClass = getattr(result, '_previousTestClass', None)
         currentClass = test.__class__
         if not force and currentClass == previousClass:
