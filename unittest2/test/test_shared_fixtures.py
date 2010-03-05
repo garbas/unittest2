@@ -256,10 +256,14 @@ class TestSetups(unittest2.TestCase):
     def test_error_in_setup_module(self):
         class Module(object):
             moduleSetup = 0
+            moduleTornDown = 0
             @staticmethod
             def setUpModule():
                 Module.moduleSetup += 1
                 raise TypeError('foo')
+            @staticmethod
+            def tearDownModule():
+                Module.moduleTornDown += 1
         
         class Test(unittest2.TestCase):
             classSetUp = False
@@ -286,6 +290,7 @@ class TestSetups(unittest2.TestCase):
         
         result = self.runTests(Test, Test2)
         self.assertEqual(Module.moduleSetup, 1)
+        self.assertEqual(Module.moduleTornDown, 0)
         self.assertEqual(result.testsRun, 0)
         self.assertFalse(Test.classSetUp)
         self.assertFalse(Test.classTornDown)
