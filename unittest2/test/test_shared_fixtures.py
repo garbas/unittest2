@@ -158,6 +158,19 @@ class TestSetups(unittest2.TestCase):
 
         self.runTests(Test)
         self.assertFalse(Test.tornDown)
+    
+    def test_class_not_setup_when_skipped(self):
+        class Test(unittest2.TestCase):
+            classSetUp = False
+            @classmethod
+            def setUpClass(cls):
+                Test.classSetUp = True
+            def test_one(self):
+                pass
+
+        Test = unittest2.skip("hop")(Test)
+        self.runTests(Test)
+        self.assertFalse(Test.classSetUp)
         
             
     def test_setup_module(self):

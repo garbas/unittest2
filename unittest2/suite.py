@@ -63,6 +63,9 @@ class TestSuite(unittest.TestSuite):
         if result._moduleSetUpFailed:
             return
         
+        if getattr(self.__class__, "__unittest_skip__", False):
+            return
+        
         currentClass._classTornDown = False
         currentClass._classSetupFailed = False
         
