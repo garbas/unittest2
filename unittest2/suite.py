@@ -101,7 +101,7 @@ class TestSuite(unittest.TestSuite):
                 
     def run(self, result):
         self.__run(result)
-        self._tearDownPreviousClass(None, result, force=True)
+        self._tearDownPreviousClass(None, result)
         return result
     
     def __run(self, result):
@@ -123,14 +123,11 @@ class TestSuite(unittest.TestSuite):
                 test.__run(result)
             else:
                 test(result)
-        
-        return result
-
     
-    def _tearDownPreviousClass(self, test, result, force=False):
+    def _tearDownPreviousClass(self, test, result):
         previousClass = getattr(result, '_previousTestClass', None)
         currentClass = test.__class__
-        if not force and currentClass == previousClass:
+        if currentClass == previousClass:
             return
         if getattr(previousClass, '_classTornDown', True):
             return
