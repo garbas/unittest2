@@ -68,10 +68,10 @@ class TestSuite(unittest.TestSuite):
         """Run the tests without collecting errors in a TestResult"""
         for test in self:
             test.debug()
-    
-    # private methods            
+
+    ################################
+    # private methods
     def _wrapped_run(self, result):
-        # Not name _run because would clash with existing TestSuite subclasses
         for test in self:
             if result.shouldStop:
                 break
