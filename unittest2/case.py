@@ -176,10 +176,9 @@ class TestCase(unittest.TestCase):
 
     longMessage = True
     
-    # Attributes used by TestSuite for classSetUp and classTearDown
+    # Attribute used by TestSuite for classSetUp
     
     _classSetupFailed = False
-    _classTornDown = False
 
     def __init__(self, methodName='runTest'):
         """Create an instance of the class that will use the named test
