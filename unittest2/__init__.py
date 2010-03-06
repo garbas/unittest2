@@ -43,7 +43,7 @@ from unittest2.case import (
     TestCase, FunctionTestCase, SkipTest, skip, skipIf,
     skipUnless, expectedFailure
 )
-from unittest2.suite import TestSuite
+from unittest2.suite import BaseTestSuite, TestSuite
 from unittest2.loader import (
     TestLoader, defaultTestLoader, makeSuite, getTestCaseNames,
     findTestCases
