@@ -85,15 +85,13 @@ features a ``unit2`` (and ``unit2.py``) script is provided instead.
 CHANGELOG
 =========
 
-2010/02/XX - 0.2.0
+2010/03/06 - 0.2.0
 ------------------
 
-Addition of optional parameters and empty methods to ``TestResult`` so that it can
-be used with the ``TextTestRunner``.
+The ``TextTestRunner`` is now compatible with old result objects and standard
+(non-TextTestResult) ``TestResult`` objects.
 
-The ``TextTestRunner`` is also now compatible with old result objects.
-
-``setUpClass`` / ``tearDownClass`` added.
+``setUpClass`` / ``tearDownClass`` / ``setUpModule`` / ``tearDownModule`` added.
 
 
 2010/02/22 - 0.1.6
