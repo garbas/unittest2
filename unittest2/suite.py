@@ -115,7 +115,6 @@ class TestSuite(BaseTestSuite):
         if getattr(currentClass, "__unittest_skip__", False):
             return
         
-        currentClass._classTornDown = False
         currentClass._classSetupFailed = False
         
         setUpClass = getattr(currentClass, 'setUpClass', None)
@@ -182,23 +181,20 @@ class TestSuite(BaseTestSuite):
         currentClass = test.__class__
         if currentClass == previousClass:
             return
-        if getattr(previousClass, '_classTornDown', True):
-            return
         if getattr(previousClass, '_classSetupFailed', False):
             return
-        if result._moduleSetUpFailed:
+        if getattr(result, '_moduleSetUpFailed', False):
             return
         if getattr(previousClass, "__unittest_skip__", False):
             return
         
-        tearDownClass = getattr(result._previousTestClass, 'tearDownClass', None)
+        tearDownClass = getattr(previousClass, 'tearDownClass', None)
         if tearDownClass is not None:
             try:
                 tearDownClass()
             except:
                 self._addClassTearDownError(result)
-            previousClass._classTornDown = True
-
+    
     def _addClassTearDownError(self, result):
         className = util.strclass(result._previousTestClass)
         error = _ErrorHolder('classTearDown (%s)' % className)
