@@ -87,6 +87,12 @@ features a ``unit2`` (and ``unit2.py``) script is provided instead.
 CHANGELOG
 =========
 
+2010/XX/XX - 0.3.0
+------------------
+
+Added ``BaseTestSuite``, for use by frameworks that don't want to support shared
+class and module fixtures.
+
 2010/03/06 - 0.2.0
 ------------------
 

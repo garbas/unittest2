@@ -5,16 +5,9 @@ import unittest
 from unittest2 import case, util
 
 
-class TestSuite(unittest.TestSuite):
-    """A test suite is a composite test consisting of a number of TestCases.
-
-    For use, create an instance of TestSuite, then add test case instances.
-    When all tests have been added, the suite can be passed to a test
-    runner, such as TextTestRunner. It will run the individual test cases
-    in the order in which they were added, aggregating the results. When
-    subclassing, do not forget to call the base class constructor.
+class BaseTestSuite(unittest.TestSuite):
+    """A simple test suite that doesn't provide class or module shared fixtures.
     """
-    
     def __init__(self, tests=()):
         self._tests = []
         self.addTests(tests)
@@ -37,14 +30,17 @@ class TestSuite(unittest.TestSuite):
         return iter(self._tests)
 
     def countTestCases(self):
-        return sum([test.countTestCases() for test in self])
+        cases = 0
+        for test in self:
+            cases += test.countTestCases()
+        return cases
 
     def addTest(self, test):
         # sanity checks
         if not hasattr(test, '__call__'):
-            raise TypeError("%r is not callable" % (test,))
+            raise TypeError("%r is not callable" % (repr(test),))
         if isinstance(test, type) and issubclass(test,
-                                                 (unittest.TestCase, unittest.TestSuite)):
+                                                 (case.TestCase, TestSuite)):
             raise TypeError("TestCases and TestSuites must be instantiated "
                             "before passing them to addTest()")
         self._tests.append(test)
@@ -56,11 +52,12 @@ class TestSuite(unittest.TestSuite):
             self.addTest(test)
 
     def run(self, result):
-        self._wrapped_run(result)
-        self._tearDownPreviousClass(None, result)
-        self._handleModuleTearDown(result)
+        for test in self:
+            if result.shouldStop:
+                break
+            test(result)
         return result
-    
+
     def __call__(self, *args, **kwds):
         return self.run(*args, **kwds)
 
@@ -68,6 +65,24 @@ class TestSuite(unittest.TestSuite):
         """Run the tests without collecting errors in a TestResult"""
         for test in self:
             test.debug()
+
+
+class TestSuite(BaseTestSuite):
+    """A test suite is a composite test consisting of a number of TestCases.
+
+    For use, create an instance of TestSuite, then add test case instances.
+    When all tests have been added, the suite can be passed to a test
+    runner, such as TextTestRunner. It will run the individual test cases
+    in the order in which they were added, aggregating the results. When
+    subclassing, do not forget to call the base class constructor.
+    """
+    
+
+    def run(self, result):
+        self._wrapped_run(result)
+        self._tearDownPreviousClass(None, result)
+        self._handleModuleTearDown(result)
+        return result
 
     ################################
     # private methods
