@@ -403,6 +403,8 @@ Not tested yet.
 Meaning of SkipTest in setUpClass - skip whole class.
 SkipTest in setUpModule should skip whole module.
 
+Currently reported as an error rather than a skip.
+
 
 To document:
     setUpClass failure means that tests in that class will *not* be run
