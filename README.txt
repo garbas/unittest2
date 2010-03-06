@@ -9,7 +9,7 @@ google code:
 
 * `unittest2 hg <http://hg.python.org/unittest2>`_
 * `unittest2 issue tracker <http://code.google.com/p/unittest-ext/issues/list>`_
-* `Article / Docs: New features in unittest <http://www.voidspace.org.uk/python/articles/unittest2.shtml`_.
+* `Article / Docs: New features in unittest <http://www.voidspace.org.uk/python/articles/unittest2.shtml>`_.
 
 
 Classes in unittest2 derive from the appropriate classes in unittest, so it
@@ -31,6 +31,8 @@ New features include:
 * ``load_tests`` protocol for loading tests from modules or packages 
 * ``startTestRun`` and ``stopTestRun`` methods on TestResult
 * various other API improvements and fixes
+* class and module level fixtures: ``setUpClass``, ``tearDownClass``,
+  ``setUpModule``, ``tearDownModule``
 
 .. note:: Command line usage
 
