@@ -93,6 +93,9 @@ CHANGELOG
 Added ``BaseTestSuite``, for use by frameworks that don't want to support shared
 class and module fixtures.
 
+Skipped test methods no longer have ``setUp`` and ``tearDown`` called around
+them.
+
 2010/03/06 - 0.2.0
 ------------------
 
