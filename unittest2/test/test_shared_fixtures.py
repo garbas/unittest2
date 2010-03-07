@@ -109,7 +109,7 @@ class TestSetups(unittest2.TestCase):
         self.assertEqual(len(result.errors), 1)
         error, _ = result.errors[0]
         self.assertEqual(str(error), 
-                    'classSetUp (unittest2.test.test_shared_fixtures.BrokenTest)')
+                    'classSetUp (%s.BrokenTest)' % __name__)
 
     def test_error_in_teardown_class(self):
         class Test(unittest2.TestCase):
@@ -142,7 +142,7 @@ class TestSetups(unittest2.TestCase):
         
         error, _ = result.errors[0]
         self.assertEqual(str(error), 
-                    'classTearDown (unittest2.test.test_shared_fixtures.Test)')
+                    'classTearDown (%s.Test)' % __name__)
 
     def test_class_not_torndown_when_setup_fails(self):
         class Test(unittest2.TestCase):
