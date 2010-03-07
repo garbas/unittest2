@@ -3101,6 +3101,9 @@ class TestLongMessage(unittest2.TestCase):
 
         self.assertEquals(self.testableTrue._formatMessage(None, "foo"), "foo")
         self.assertEquals(self.testableTrue._formatMessage("foo", "bar"), "bar : foo")
+        
+        # This blows up if _formatMessage uses string concatenation
+        self.testableTrue._formatMessage(object(), 'foo')
 
     def assertMessages(self, methodName, args, errors):
         def getMethod(i):
@@ -3245,7 +3248,6 @@ class TestLongMessage(unittest2.TestCase):
                             ["^unexpectedly identical: None$", "^oops$",
                              "^unexpectedly identical: None$",
                              "^unexpectedly identical: None : oops$"])
-
 
 class TestCleanUp(unittest2.TestCase):
 
