@@ -48,14 +48,17 @@ def skip(reason):
     Unconditionally skip a test.
     """
     def decorator(test_item):
-        if isinstance(test_item, type) and issubclass(test_item, TestCase):
-            test_item.__unittest_skip__ = True
-            test_item.__unittest_skip_why__ = reason
-            return test_item
-        @wraps(test_item)
-        def skip_wrapper(*args, **kwargs):
-            raise SkipTest(reason)
-        return skip_wrapper
+        test_item.__unittest_skip__ = True
+        test_item.__unittest_skip_why__ = reason
+        if not (isinstance(test_item, type) and issubclass(test_item, TestCase)):
+            @wraps(test_item)
+            def skip_wrapper(*args, **kwargs):
+                raise SkipTest(reason)
+            test_item = skip_wrapper
+        
+        test_item.__unittest_skip__ = True
+        test_item.__unittest_skip_why__ = reason
+        return test_item
     return decorator
 
 def skipIf(condition, reason):
@@ -231,7 +234,6 @@ class TestCase(unittest.TestCase):
 
     def setUp(self):
         "Hook method for setting up the test fixture before exercising it."
-        pass
     
     @classmethod
     def setUpClass(cls):
@@ -302,14 +304,19 @@ class TestCase(unittest.TestCase):
 
         self._resultForDoCleanups = result
         result.startTest(self)
-        if getattr(self.__class__, "__unittest_skip__", False):
-            # If the whole class was skipped.
+        
+        testMethod = getattr(self, self._testMethodName)
+        
+        if (getattr(self.__class__, "__unittest_skip__", False) or 
+            getattr(testMethod, "__unittest_skip__", False)):
+            # If the class or method was skipped.
             try:
-                self._addSkip(result, self.__class__.__unittest_skip_why__)
+                skip_why = (getattr(self.__class__, '__unittest_skip_why__', '')
+                            or getattr(testMethod, '__unittest_skip_why__', ''))
+                self._addSkip(result, skip_why)
             finally:
                 result.stopTest(self)
             return
-        testMethod = getattr(self, self._testMethodName)
         try:
             success = False
             try:
@@ -452,10 +459,12 @@ class TestCase(unittest.TestCase):
             callableObj(*args, **kwargs)
         except excClass:
             return
+        
+        if hasattr(excClass,'__name__'):
+            excName = excClass.__name__
         else:
-            if hasattr(excClass,'__name__'): excName = excClass.__name__
-            else: excName = str(excClass)
-            raise self.failureException, "%s not raised" % excName
+            excName = str(excClass)
+        raise self.failureException, "%s not raised" % excName
 
     def _getAssertEqualityFunc(self, first, second):
         """Get a detailed comparison function for the types of the two args.

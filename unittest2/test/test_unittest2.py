@@ -2939,10 +2939,13 @@ class Test_TestSkipping(unittest2.TestCase):
         for deco, do_skip, dont_skip in op_table:
             class Foo(unittest2.TestCase):
                 @deco(do_skip, "testing")
-                def test_skip(self): pass
+                def test_skip(self): 
+                    pass
 
                 @deco(dont_skip, "testing")
-                def test_dont_skip(self): pass
+                def test_dont_skip(self): 
+                    pass
+            
             test_do_skip = Foo("test_skip")
             test_dont_skip = Foo("test_dont_skip")
             suite = unittest2.TestSuite([test_do_skip, test_dont_skip])
@@ -2956,7 +2959,7 @@ class Test_TestSkipping(unittest2.TestCase):
             self.assertEqual(result.testsRun, 2)
             self.assertEqual(result.skipped, [(test_do_skip, "testing")])
             self.assertTrue(result.wasSuccessful())
-
+        
     def test_skip_class(self):
         class Foo(unittest2.TestCase):
             def test_1(self):
@@ -3001,6 +3004,43 @@ class Test_TestSkipping(unittest2.TestCase):
         self.assertEqual(result.unexpectedSuccesses, [test])
         self.assertTrue(result.wasSuccessful())
 
+    def test_skip_doesnt_run_setup(self):
+        class Foo(unittest2.TestCase):
+            wasSetUp = False
+            wasTornDown = False
+            def setUp(self):
+                Foo.wasSetUp = True
+            def tornDown(self):
+                Foo.wasTornDown = True
+            @unittest2.skip('testing')
+            def test_1(self):
+                pass
+        
+        result = unittest2.TestResult()
+        test = Foo("test_1")
+        suite = unittest2.TestSuite([test])
+        suite.run(result)
+        self.assertEqual(result.skipped, [(test, "testing")])
+        self.assertFalse(Foo.wasSetUp)
+        self.assertFalse(Foo.wasTornDown)
+    
+    def test_decorated_skip(self):
+        def decorator(func):
+            def inner(*a):
+                return func(*a)
+            return inner
+        
+        class Foo(unittest2.TestCase):
+            @decorator
+            @unittest2.skip('testing')
+            def test_1(self):
+                pass
+        
+        result = unittest2.TestResult()
+        test = Foo("test_1")
+        suite = unittest2.TestSuite([test])
+        suite.run(result)
+        self.assertEqual(result.skipped, [(test, "testing")])
 
 
 class Test_Assertions(unittest2.TestCase):
