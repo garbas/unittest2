@@ -83,6 +83,13 @@ class TestWith(unittest2.TestCase):
             with self.assertRaises(self.failureException):
                 self.assertDictContainsSubset({'foo': one}, {'foo': u'\uFFFD'})
 
+    def test_formatMessage_unicode_error(self):
+        with catch_warnings(record=True):
+            # This causes a UnicodeWarning due to its craziness
+            one = ''.join(chr(i) for i in range(255))
+            # this used to cause a UnicodeDecodeError constructing msg
+            self._formatMessage(one, u'\uFFFD')
+                
     def assertOldResultWarning(self, test, failures):
         with catch_warnings(record=True) as log:
             result = OldTestResult()

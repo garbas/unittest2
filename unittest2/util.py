@@ -6,6 +6,12 @@ def safe_repr(obj):
     except Exception:
         return object.__repr__(obj)
 
+def safe_str(obj):
+    try:
+        return str(obj)
+    except Exception:
+        return object.__str__(obj)
+
 def strclass(cls):
     return "%s.%s" % (cls.__module__, cls.__name__)
 

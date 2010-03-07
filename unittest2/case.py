@@ -9,7 +9,8 @@ import warnings
 
 from unittest2 import result
 from unittest2.util import (
-    safe_repr, strclass, sorted_list_difference
+    safe_repr, safe_str, strclass,
+    sorted_list_difference
 )
 
 from unittest2.compatibility import wraps
@@ -427,7 +428,10 @@ class TestCase(unittest.TestCase):
             return msg or standardMsg
         if msg is None:
             return standardMsg
-        return '%s : %s' % (standardMsg, msg)
+        try:
+            return '%s : %s' % (standardMsg, msg)
+        except UnicodeDecodeError:
+            return '%s : %s' % (safe_str(standardMsg), safe_str(msg))
 
 
     def assertRaises(self, excClass, callableObj=None, *args, **kwargs):

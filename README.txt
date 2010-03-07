@@ -98,6 +98,9 @@ them.
 
 Using non strings for failure messages now works.
 
+UnicodeDecodeError whilst creating failure messages fixed.
+
+
 2010/03/06 - 0.2.0
 ------------------
 
