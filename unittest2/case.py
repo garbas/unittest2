@@ -427,7 +427,7 @@ class TestCase(unittest.TestCase):
             return msg or standardMsg
         if msg is None:
             return standardMsg
-        return standardMsg + ' : ' + msg
+        return '%s : %s' % (standardMsg, msg)
 
 
     def assertRaises(self, excClass, callableObj=None, *args, **kwargs):

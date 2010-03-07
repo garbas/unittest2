@@ -96,6 +96,8 @@ class and module fixtures.
 Skipped test methods no longer have ``setUp`` and ``tearDown`` called around
 them.
 
+Using non strings for failure messages now works.
+
 2010/03/06 - 0.2.0
 ------------------
 
