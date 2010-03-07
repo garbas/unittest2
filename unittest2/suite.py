@@ -97,7 +97,8 @@ class TestSuite(BaseTestSuite):
                 self._handleClassSetUp(test, result)
                 result._previousTestClass = test.__class__
                 
-                if test.__class__._classSetupFailed or result._moduleSetUpFailed:
+                if (getattr(test.__class__, '_classSetupFailed', False) or 
+                    getattr(result, '_moduleSetUpFailed', False)):
                     continue
             
             if hasattr(test, '_wrapped_run'):
