@@ -35,7 +35,6 @@ __version__ = '0.2.0'
 
 # Expose obsolete functions for backwards compatibility
 __all__.extend(['getTestCaseNames', 'makeSuite', 'findTestCases'])
-__all__.append('_TextTestResult')
 
 
 from unittest2.result import TestResult

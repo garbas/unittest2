@@ -49,8 +49,6 @@ def skip(reason):
     Unconditionally skip a test.
     """
     def decorator(test_item):
-        test_item.__unittest_skip__ = True
-        test_item.__unittest_skip_why__ = reason
         if not (isinstance(test_item, type) and issubclass(test_item, TestCase)):
             @wraps(test_item)
             def skip_wrapper(*args, **kwargs):
