@@ -10,7 +10,8 @@ import warnings
 from unittest2 import result
 from unittest2.util import (
     safe_repr, safe_str, strclass,
-    sorted_list_difference
+    sorted_list_difference,
+    unorderable_list_difference
 )
 
 from unittest2.compatibility import wraps
@@ -596,7 +597,7 @@ class TestCase(unittest.TestCase):
             msg: Optional message to use on failure instead of a list of
                     differences.
         """
-        if seq_type != None:
+        if seq_type is not None:
             seq_type_name = seq_type.__name__
             if not isinstance(seq1, seq_type):
                 raise self.failureException('First sequence is not a %s: %s'
@@ -715,8 +716,7 @@ class TestCase(unittest.TestCase):
             msg: Optional message to use on failure instead of a list of
                     differences.
 
-        For more general containership equality, assertSameElements will work
-        with things other than sets.    This uses ducktyping to support
+        assertSetEqual uses ducktyping to support
         different types of sets, and is optimized for sets specifically
         (parameters must support a difference method).
         """
@@ -812,28 +812,29 @@ class TestCase(unittest.TestCase):
 
         self.fail(self._formatMessage(msg, standardMsg))
 
-    def assertSameElements(self, expected_seq, actual_seq, msg=None):
-        """An unordered sequence specific comparison.
+    def assertItemsEqual(self, expected_seq, actual_seq, msg=None):
+        """An unordered sequence specific comparison. It asserts that
+        expected_seq and actual_seq contain the same elements. It is
+        the equivalent of::
+        
+            self.assertEqual(sorted(expected_seq), sorted(actual_seq))
 
         Raises with an error message listing which elements of expected_seq
         are missing from actual_seq and vice versa if any.
-
-        Duplicate elements are ignored when comparing *expected_seq* and
-        *actual_seq*. It is the equivalent of ``assertEqual(set(expected),
-        set(actual))`` but it works with sequences of unhashable objects as
-        well.
         """
         try:
-            expected = set(expected_seq)
-            actual = set(actual_seq)
-            missing = sorted(expected.difference(actual))
-            unexpected = sorted(actual.difference(expected))
-        except TypeError:
-            # Fall back to slower list-compare if any of the objects are
-            # not hashable.
             expected = sorted(expected_seq)
             actual = sorted(actual_seq)
-            missing, unexpected = sorted_list_difference(expected, actual)
+        except TypeError:
+            # Unsortable items (example: set(), complex(), ...)
+            expected = list(expected_seq)
+            actual = list(actual_seq)
+            missing, unexpected = unorderable_list_difference(
+                expected, actual, ignore_duplicate=False
+            )
+        else:
+            return self.assertSequenceEqual(expected, actual, msg=msg)
+
         errors = []
         if missing:
             errors.append('Expected, but missing:\n    %s' % 

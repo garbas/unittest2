@@ -69,7 +69,7 @@ Differences
 
 Differences between unittest2 and unittest in Python 2.7:
 
-``assertSameElements`` does not silence Py3k warnings as this uses
+``assertItemsEqual`` does not silence Py3k warnings as this uses
 ``warnings.catch_warnings()`` which is new in Python 2.6 (and is used as a
 context manager which would be a pain to make work with Python 2.4).
 
@@ -99,6 +99,9 @@ them.
 Using non strings for failure messages now works.
 
 UnicodeDecodeError whilst creating failure messages fixed.
+
+``assertSameElements`` removed and ``assertItemsEqual`` added; assert that
+sequences contain the same elements.
 
 
 2010/03/06 - 0.2.0
