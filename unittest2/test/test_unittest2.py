@@ -2637,20 +2637,27 @@ class Test_TestCase(unittest2.TestCase, TestEquality, TestHashing):
         self.assertRaises(self.failureException, self.assertDictEqual, [], d)
         self.assertRaises(self.failureException, self.assertDictEqual, 1, 1)
 
-        self.assertSameElements([1, 2, 3], [3, 2, 1])
-        self.assertSameElements([1, 2] + [3] * 100, [1] * 100 + [2, 3])
-        self.assertSameElements(['foo', 'bar', 'baz'], ['bar', 'baz', 'foo'])
-        self.assertRaises(self.failureException, self.assertSameElements,
+    def testAssertItemsEqual(self):
+        self.assertItemsEqual([1, 2, 3], [3, 2, 1])
+        self.assertItemsEqual(['foo', 'bar', 'baz'], ['bar', 'baz', 'foo'])
+        self.assertRaises(self.failureException, self.assertItemsEqual,
                           [10], [10, 11])
-        self.assertRaises(self.failureException, self.assertSameElements,
+        self.assertRaises(self.failureException, self.assertItemsEqual,
                           [10, 11], [10])
+        self.assertRaises(self.failureException, self.assertItemsEqual,
+                          [10, 11, 10], [10, 11])
 
         # Test that sequences of unhashable objects can be tested for sameness:
-        self.assertSameElements([[1, 2], [3, 4]], [[3, 4], [1, 2]])
+        self.assertItemsEqual([[1, 2], [3, 4]], [[3, 4], [1, 2]])
 
-        self.assertSameElements([{'a': 1}, {'b': 2}], [{'b': 2}, {'a': 1}])
-        self.assertRaises(self.failureException, self.assertSameElements,
+        self.assertItemsEqual([{'a': 1}, {'b': 2}], [{'b': 2}, {'a': 1}])
+        self.assertRaises(self.failureException, self.assertItemsEqual,
                           [[1]], [[2]])
+        
+        # Test unsortable objects
+        self.assertItemsEqual([2j, None], [None, 2j])
+        self.assertRaises(self.failureException, self.assertItemsEqual,
+                          [2j, None], [None, 3j])
 
     def testAssertSetEqual(self):
         set1 = set()
@@ -3190,8 +3197,8 @@ class TestLongMessage(unittest2.TestCase):
                              "^Missing: 'key'$",
                              "^Missing: 'key' : oops$"])
 
-    def testAssertSameElements(self):
-        self.assertMessages('assertSameElements', ([], [None]),
+    def testAssertItemsEqual(self):
+        self.assertMessages('assertItemsEqual', ([], [None]),
                             [r"\[None\]$", "^oops$",
                              r"\[None\]$",
                              r"\[None\] : oops$"])
