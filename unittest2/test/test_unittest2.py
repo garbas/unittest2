@@ -2470,9 +2470,9 @@ class Test_TestCase(unittest2.TestCase, TestEquality, TestHashing):
         class SadSnake(object):
             """Dummy class for test_addTypeEqualityFunc."""
         s1, s2 = SadSnake(), SadSnake()
-        self.assertFalse(s1 == s2)
+        self.assertNotEqual(s1, s2)
         def AllSnakesCreatedEqual(a, b, msg=None):
-            return type(a) == type(b) == SadSnake
+            return type(a) is type(b) is SadSnake
         self.addTypeEqualityFunc(SadSnake, AllSnakesCreatedEqual)
         self.assertEqual(s1, s2)
         # No this doesn't clean up and remove the SadSnake equality func

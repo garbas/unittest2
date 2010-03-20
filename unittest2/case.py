@@ -821,6 +821,11 @@ class TestCase(unittest.TestCase):
 
         Raises with an error message listing which elements of expected_seq
         are missing from actual_seq and vice versa if any.
+        
+        Asserts that each element has the same count in both sequences.
+        Example:
+            - [0, 1, 1] and [1, 0, 1] compare equal.
+            - [0, 0, 1] and [0, 1] compare unequal.
         """
         try:
             expected = sorted(expected_seq)
