@@ -103,6 +103,9 @@ UnicodeDecodeError whilst creating failure messages fixed.
 ``assertSameElements`` removed and ``assertItemsEqual`` added; assert that
 sequences contain the same elements.
 
+BUGFIX: ``__unittest`` in module globals trims frames from that module in
+reported stacktraces.
+
 
 2010/03/06 - 0.2.0
 ------------------
