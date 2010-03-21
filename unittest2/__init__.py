@@ -31,7 +31,7 @@ __all__ = ['TestResult', 'TestCase', 'TestSuite',
            'defaultTestLoader', 'SkipTest', 'skip', 'skipIf', 'skipUnless',
            'expectedFailure', 'TextTestResult', '__version__']
 
-__version__ = '0.2.0'
+__version__ = '0.3.0 alpha'
 
 # Expose obsolete functions for backwards compatibility
 __all__.extend(['getTestCaseNames', 'makeSuite', 'findTestCases'])
@@ -52,3 +52,5 @@ from unittest2.runner import TextTestRunner, TextTestResult
 
 # deprecated
 _TextTestResult = TextTestResult
+
+__unittest = True

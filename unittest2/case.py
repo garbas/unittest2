@@ -16,6 +16,8 @@ from unittest2.util import (
 
 from unittest2.compatibility import wraps
 
+__unittest = True
+
 
 class SkipTest(Exception):
     """

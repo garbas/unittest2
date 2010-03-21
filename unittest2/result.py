@@ -5,6 +5,8 @@ import traceback
 import unittest
 from unittest2 import util
 
+__unittest = True
+
 
 class TestResult(unittest.TestResult):
     """Holder for test result information.

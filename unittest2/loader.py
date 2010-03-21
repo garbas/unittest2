@@ -14,6 +14,9 @@ from unittest2 import case, suite
 # setup os.path.relpath if needed
 import unittest2.compatibility
 
+__unittest = True
+
+
 def _CmpToKey(mycmp):
     'Convert a cmp= function into a key= function'
     class K(object):

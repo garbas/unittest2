@@ -6,6 +6,8 @@ import types
 
 from unittest2 import loader, runner
 
+__unittest = True
+
 
 USAGE_AS_MAIN = """\
 Usage: %(progName)s [options] [tests]
