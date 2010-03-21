@@ -36,13 +36,19 @@ def _make_failed_import_test(name, suiteClass):
         # Python 2.3 compatibility
         # format_exc returns two frames of discover.py as well
         message += '\n%s' % traceback.format_exc()
+    return _make_failed_test('ModuleImportFailure', name, suiteClass,
+                             ImportError(message))
 
-    def testImportFailure(self):
-        raise ImportError(message)
-    attrs = {name: testImportFailure}
-    ModuleImportFailure = type('ModuleImportFailure', (case.TestCase,), attrs)
-    return suiteClass((ModuleImportFailure(name),))
+def _make_failed_load_tests(name, exception, suiteClass):
+    return _make_failed_test('LoadTestsFailure', name, suiteClass, exception)
 
+def _make_failed_test(classname, methodname, suiteClass, exception):
+    def testFailure(self):
+        raise exception
+    attrs = {methodname: testFailure}
+    TestClass = type(classname, (case.TestCase,), attrs)
+    return suiteClass((TestClass(methodname),))
+    
 
 class TestLoader(unittest.TestLoader):
     """
@@ -57,8 +63,8 @@ class TestLoader(unittest.TestLoader):
     def loadTestsFromTestCase(self, testCaseClass):
         """Return a suite of all tests cases contained in testCaseClass"""
         if issubclass(testCaseClass, suite.TestSuite):
-            raise TypeError("Test cases should not be derived from TestSuite." \
-                                " Maybe you meant to derive from TestCase?")
+            raise TypeError("Test cases should not be derived from TestSuite."
+                            " Maybe you meant to derive from TestCase?")
         testCaseNames = self.getTestCaseNames(testCaseClass)
         if not testCaseNames and hasattr(testCaseClass, 'runTest'):
             testCaseNames = ['runTest']
@@ -76,7 +82,11 @@ class TestLoader(unittest.TestLoader):
         load_tests = getattr(module, 'load_tests', None)
         tests = self.suiteClass(tests)
         if use_load_tests and load_tests is not None:
-            return load_tests(self, tests, None)
+            try:
+                return load_tests(self, tests, None)
+            except Exception, e:
+                return _make_failed_load_tests(module.__name__, e,
+                                               self.suiteClass)
         return tests
 
     def loadTestsFromName(self, name, module=None):
@@ -242,7 +252,11 @@ class TestLoader(unittest.TestLoader):
                     for test in self._find_tests(full_path, pattern):
                         yield test
                 else:
-                    yield load_tests(self, tests, pattern)
+                    try:
+                        yield load_tests(self, tests, pattern)
+                    except Exception, e:
+                        yield _make_failed_load_tests(package.__name__, e,
+                                                      self.suiteClass)
 
 defaultTestLoader = TestLoader()
 
