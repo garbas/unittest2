@@ -13,6 +13,8 @@ except ImportError:
 
 # Creates os.path.relpath for Python 2.4
 
+__unittest = True
+
 if not hasattr(os, 'relpath'):
     if os.path is sys.modules.get('ntpath'):
         def relpath(path, start=os.path.curdir):

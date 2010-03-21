@@ -6,6 +6,8 @@ import unittest
 
 from unittest2 import result
 
+__unittest = True
+
 
 class _WritelnDecorator(object):
     """Used to decorate file-like objects with a handy 'writeln' method"""
