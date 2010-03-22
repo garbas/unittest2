@@ -128,12 +128,11 @@ class TextTestRunner(unittest.TextTestRunner):
     resultclass = TextTestResult
 
     def __init__(self, stream=sys.stderr, descriptions=True, verbosity=1,
-                 failfast=False, catchbreak=False, resultclass=None):
+                 failfast=False, resultclass=None):
         self.stream = _WritelnDecorator(stream)
         self.descriptions = descriptions
         self.verbosity = verbosity
         self.failfast = failfast
-        self.catchbreak = catchbreak
         if resultclass is not None:
             self.resultclass = resultclass
 
