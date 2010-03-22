@@ -103,6 +103,10 @@ UnicodeDecodeError whilst creating failure messages fixed.
 ``assertSameElements`` removed and ``assertItemsEqual`` added; assert that
 sequences contain the same elements.
 
+Faulty ``load_tests`` functions no longer halt test discovery.
+
+Addition of -f/--failfast command line options.
+
 BUGFIX: ``__unittest`` in module globals trims frames from that module in
 reported stacktraces.
 

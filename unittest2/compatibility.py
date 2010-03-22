@@ -5,7 +5,6 @@ try:
     from functools import wraps
 except ImportError:
     # only needed for Python 2.4
-    import unittest2.compatibility
     def wraps(_):
         def _wraps(func):
             return func

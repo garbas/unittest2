@@ -4,8 +4,17 @@ import traceback
 
 import unittest
 from unittest2 import util
+from unittest2.compatibility import wraps
 
 __unittest = True
+
+def failfast(method):
+    @wraps(method)
+    def inner(self, *args, **kw):
+        if getattr(self, 'failfast', False):
+            self.stop()
+        return method(self, *args, **kw)
+    return inner
 
 
 class TestResult(unittest.TestResult):
@@ -22,6 +31,7 @@ class TestResult(unittest.TestResult):
     _previousTestClass = None
     _moduleSetUpFailed = False
     def __init__(self):
+        self.failfast = False
         self.failures = []
         self.errors = []
         self.testsRun = 0
@@ -49,12 +59,14 @@ class TestResult(unittest.TestResult):
         See stopTest for a method called after each test.
         """
 
+    @failfast
     def addError(self, test, err):
         """Called when an error has occurred. 'err' is a tuple of values as
         returned by sys.exc_info().
         """
         self.errors.append((test, self._exc_info_to_string(err, test)))
 
+    @failfast
     def addFailure(self, test, err):
         """Called when an error has occurred. 'err' is a tuple of values as
         returned by sys.exc_info()."""
@@ -73,6 +85,7 @@ class TestResult(unittest.TestResult):
         self.expectedFailures.append(
             (test, self._exc_info_to_string(err, test)))
 
+    @failfast
     def addUnexpectedSuccess(self, test):
         """Called when a test was expected to fail, but succeed."""
         self.unexpectedSuccesses.append(test)
