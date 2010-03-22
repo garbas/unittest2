@@ -105,7 +105,9 @@ sequences contain the same elements.
 
 Faulty ``load_tests`` functions no longer halt test discovery.
 
-Addition of -f/--failfast command line options.
+Addition of -f/--failfast command line option.
+
+BUGFIX: Correct usage message now shown for unit2.
 
 BUGFIX: ``__unittest`` in module globals trims frames from that module in
 reported stacktraces.
