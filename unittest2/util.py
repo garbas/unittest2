@@ -1,4 +1,6 @@
 """Various utility functions."""
+import signal
+
 
 __unittest = True
 
@@ -93,3 +95,16 @@ def unorderable_list_difference(expected, actual, ignore_duplicate=False):
 
     # anything left in actual is unexpected
     return missing, actual
+
+
+_default_int_handler = None
+def install_handler(result):
+    global _default_int_handler
+    
+    _default_int_handler = signal.getsignal(signal.SIGINT)
+    
+    def handler(signum, frame):
+        result.stop()
+    signal.signal(signal.SIGINT, handler)
+
+        

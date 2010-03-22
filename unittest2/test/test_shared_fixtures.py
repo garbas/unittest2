@@ -26,7 +26,7 @@ class TestSetups(unittest2.TestCase):
         suite.addTest(unittest2.TestSuite())
         realSuite.addTest(unittest2.TestSuite())
         return runner.run(realSuite)
-
+    
     def test_setup_class(self):
         class Test(unittest2.TestCase):
             setUpCalled = 0
