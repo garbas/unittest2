@@ -1,4 +1,8 @@
 #! /usr/bin/env python
 
-from unittest2 import main
+__unittest = True
+
+from unittest2.main import main, TestProgram, USAGE_AS_MAIN
+TestProgram.USAGE = USAGE_AS_MAIN
+
 main(module=None)
