@@ -2086,6 +2086,37 @@ class Test_TestResult(unittest2.TestCase):
         Frame.tb_frame.f_globals['__unittest'] = True
         self.assertTrue(result._is_relevant_tb_level(Frame))
 
+    def testFailFast(self):
+        result = unittest2.TestResult()
+        result._exc_info_to_string = lambda *_: ''
+        result.failfast = True
+        result.addError(None, None)
+        self.assertTrue(result.shouldStop)
+
+        result = unittest2.TestResult()
+        result._exc_info_to_string = lambda *_: ''
+        result.failfast = True
+        result.addFailure(None, None)
+        self.assertTrue(result.shouldStop)
+
+        result = unittest2.TestResult()
+        result._exc_info_to_string = lambda *_: ''
+        result.failfast = True
+        result.addUnexpectedSuccess(None)
+        self.assertTrue(result.shouldStop)
+
+        result = unittest2.TestResult()
+        result._exc_info_to_string = lambda *_: ''
+        result.failfast = True
+        result.addExpectedFailure(None, None)
+        self.assertTrue(result.shouldStop)
+
+    def testFailFastSetByRunner(self):
+        runner = unittest2.TextTestRunner(stream=StringIO(), failfast=True)
+        def test(result):
+            self.assertTrue(result.failfast)
+        result = runner.run(test)
+
 
 ### Support code for Test_TestCase
 ################################################################
@@ -3804,13 +3835,15 @@ class TestDiscovery(unittest2.TestCase):
         program._do_discovery(['-p', 'fish'], Loader=Loader)
         self.assertEqual(program.test, 'tests')
         self.assertEqual(Loader.args, [('.', 'fish', None)])
+        self.assertFalse(program.failfast)
 
         Loader.args = []
         program = object.__new__(unittest2.TestProgram)
-        program._do_discovery(['-p', 'eggs', '-s', 'fish', '-v'], Loader=Loader)
+        program._do_discovery(['-p', 'eggs', '-s', 'fish', '-v', '-f'], Loader=Loader)
         self.assertEqual(program.test, 'tests')
         self.assertEqual(Loader.args, [('fish', 'eggs', None)])
         self.assertEqual(program.verbosity, 2)
+        self.assertTrue(program.failfast)
 
 
 if __name__ == "__main__":
