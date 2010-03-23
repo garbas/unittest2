@@ -6,7 +6,6 @@ import unittest2
 from cStringIO import StringIO
 
 
-@unittest2.skipUnless(hasattr(os, 'kill'), "test uses os.kill(...)")
 class TestBreak(unittest2.TestCase):
     
     def setUp(self):
@@ -112,4 +111,6 @@ class TestBreak(unittest2.TestCase):
         self.fail('not done yet')
         
         # note also that main may not have a failfast parameter yet
-        
+
+skipper = unittest2.skipUnless(hasattr(os, 'kill'), "test uses os.kill(...)")
+TestBreak = skipper(TestBreak)
