@@ -33,7 +33,7 @@ Alternative Usage: %(progName)s discover [options]
 Options:
   -v, --verbose    Verbose output
   -f, --failfast   Stop on first failure
-  -c, --catch      Catch control-C and display results so far
+  -c, --catch      Catch ctrl-C and display results so far
   -s directory     Directory to start discovery ('.' default)
   -p pattern       Pattern to match test files ('test*.py' default)
   -t directory     Top level directory of project (default to
@@ -51,7 +51,7 @@ Options:
   -v, --verbose    Verbose output
   -q, --quiet      Minimal output
   -f, --failfast   Stop on first failure
-  -c, --catch      Catch control-C and display results so far
+  -c, --catch      Catch ctrl-C and display results so far
 
 Examples:
   %(progName)s                               - run default set of tests
@@ -69,12 +69,12 @@ class TestProgram(object):
     USAGE = USAGE_FROM_MODULE
     
     # defaults for testing
-    failfast = catchbreak = False
+    failfast = catchbreak = None
 
     def __init__(self, module='__main__', defaultTest=None,
                  argv=None, testRunner=None,
                  testLoader=loader.defaultTestLoader, exit=True,
-                 verbosity=1, failfast=False, catchbreak=False):
+                 verbosity=1, failfast=None, catchbreak=None):
         if isinstance(module, basestring):
             self.module = __import__(module)
             for part in module.split('.')[1:]:
@@ -151,7 +151,8 @@ class TestProgram(object):
         parser.add_option('-f', '--failfast', dest='failfast', default=False,
                           help='Stop on first fail or error', action='store_true')
         parser.add_option('-c', '--catch', dest='catchbreak', default=False,
-                          help='Catch control-C and display results so far', action='store_true')
+                          help='Catch ctrl-C and display results so far', 
+                          action='store_true')
         parser.add_option('-s', '--start-directory', dest='start', default='.',
                           help="Directory to start discovery ('.' default)")
         parser.add_option('-p', '--pattern', dest='pattern', default='test*.py',
@@ -165,9 +166,11 @@ class TestProgram(object):
 
         for name, value in zip(('start', 'pattern', 'top'), args):
             setattr(options, name, value)
-
-        self.failfast = self.failfast or options.failfast
-        self.catchbreak = self.catchbreak or options.catchbreak
+        
+        if self.failfast is None:
+            self.failfast = options.failfast
+        if self.catchbreak is None:
+            self.catchbreak = options.catchbreak
         
         if options.verbose:
             self.verbosity = 2
