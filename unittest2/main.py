@@ -118,9 +118,11 @@ class TestProgram(object):
                 if opt in ('-v','--verbose'):
                     self.verbosity = 2
                 if opt in ('-f','--failfast'):
-                    self.failfast = True
+                    if self.failfast is None:
+                        self.failfast = True
                 if opt in ('-c','--catch'):
-                    self.catchbreak = True
+                    if self.catchbreak is None:
+                        self.catchbreak = True
             if len(args) == 0 and self.defaultTest is None:
                 # createTests will load tests from self.module
                 self.testNames = None
@@ -167,6 +169,8 @@ class TestProgram(object):
         for name, value in zip(('start', 'pattern', 'top'), args):
             setattr(options, name, value)
         
+        # only set options from the parsing here
+        # if they weren't set explicitly in the constructor
         if self.failfast is None:
             self.failfast = options.failfast
         if self.catchbreak is None:
