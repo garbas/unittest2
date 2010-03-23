@@ -103,7 +103,12 @@ class TestBreak(unittest2.TestCase):
     def testRunner(self):
         # Creating a TextTestRunner with the appropriate argument should
         # register the TextTestResult it creates
-        self.fail('not done yet')
+        runner = unittest2.TextTestRunner(stream=StringIO(), catchbreak=True)
+        
+        result = runner.run(unittest2.TestSuite())
+        self.assertIn(result, unittest2.util._results)
+        self.assertIsNotNone(unittest2.util._interrupt_handler)
+        
     
     def testCommandLine(self):
         # The appropriate command line flags (or argument to main?) should
