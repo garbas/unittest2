@@ -17,6 +17,7 @@ Options:
   -v, --verbose    Verbose output
   -q, --quiet      Minimal output
   -f, --failfast   Stop on first failure
+  -c, --catch      Catch control-C and display results
 
 Examples:
   %(progName)s test_module                       - run tests from test_module
@@ -32,6 +33,7 @@ Alternative Usage: %(progName)s discover [options]
 Options:
   -v, --verbose    Verbose output
   -f, --failfast   Stop on first failure
+  -c, --catch      Catch control-C and display results so far
   -s directory     Directory to start discovery ('.' default)
   -p pattern       Pattern to match test files ('test*.py' default)
   -t directory     Top level directory of project (default to
@@ -49,6 +51,7 @@ Options:
   -v, --verbose    Verbose output
   -q, --quiet      Minimal output
   -f, --failfast   Stop on first failure
+  -c, --catch      Catch control-C and display results so far
 
 Examples:
   %(progName)s                               - run default set of tests
@@ -64,10 +67,14 @@ class TestProgram(object):
        for making test modules conveniently executable.
     """
     USAGE = USAGE_FROM_MODULE
+    
+    # defaults for testing
+    failfast = catchbreak = False
+
     def __init__(self, module='__main__', defaultTest=None,
                  argv=None, testRunner=None,
                  testLoader=loader.defaultTestLoader, exit=True,
-                 verbosity=1, failfast=False):
+                 verbosity=1, failfast=False, catchbreak=False):
         if isinstance(module, basestring):
             self.module = __import__(module)
             for part in module.split('.')[1:]:
@@ -80,6 +87,7 @@ class TestProgram(object):
         self.exit = exit
         self.verbosity = verbosity
         self.failfast = failfast
+        self.catchbreak = catchbreak
         self.defaultTest = defaultTest
         self.testRunner = testRunner
         self.testLoader = testLoader
@@ -101,7 +109,7 @@ class TestProgram(object):
         import getopt
         long_opts = ['help','verbose','quiet', 'failfast']
         try:
-            options, args = getopt.getopt(argv[1:], 'hHvqf', long_opts)
+            options, args = getopt.getopt(argv[1:], 'hHvqfc', long_opts)
             for opt, value in options:
                 if opt in ('-h','-H','--help'):
                     self.usageExit()
@@ -111,6 +119,8 @@ class TestProgram(object):
                     self.verbosity = 2
                 if opt in ('-f','--failfast'):
                     self.failfast = True
+                if opt in ('-c','--catch'):
+                    self.catchbreak = True
             if len(args) == 0 and self.defaultTest is None:
                 # createTests will load tests from self.module
                 self.testNames = None
@@ -140,6 +150,8 @@ class TestProgram(object):
                           help='Verbose output', action='store_true')
         parser.add_option('-f', '--failfast', dest='failfast', default=False,
                           help='Stop on first fail or error', action='store_true')
+        parser.add_option('-c', '--catch', dest='catchbreak', default=False,
+                          help='Catch control-C and display results so far', action='store_true')
         parser.add_option('-s', '--start-directory', dest='start', default='.',
                           help="Directory to start discovery ('.' default)")
         parser.add_option('-p', '--pattern', dest='pattern', default='test*.py',
@@ -154,7 +166,9 @@ class TestProgram(object):
         for name, value in zip(('start', 'pattern', 'top'), args):
             setattr(options, name, value)
 
-        self.failfast = options.failfast
+        self.failfast = self.failfast or options.failfast
+        self.catchbreak = self.catchbreak or options.catchbreak
+        
         if options.verbose:
             self.verbosity = 2
 
@@ -171,9 +185,10 @@ class TestProgram(object):
         if isinstance(self.testRunner, (type, types.ClassType)):
             try:
                 testRunner = self.testRunner(verbosity=self.verbosity,
-                                             failfast=self.failfast)
+                                             failfast=self.failfast,
+                                             catchbreak=self.catchbreak)
             except TypeError:
-                # didn't accept the verbosity or failfast arguments
+                # didn't accept the verbosity, catchbreak or failfast arguments
                 testRunner = self.testRunner()
         else:
             # it is assumed to be a TestRunner instance
