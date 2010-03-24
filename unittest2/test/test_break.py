@@ -1,9 +1,12 @@
+import gc
 import os
 import signal
-
-import unittest2
+import weakref
 
 from cStringIO import StringIO
+
+
+import unittest2
 
 
 class TestBreak(unittest2.TestCase):
@@ -13,7 +16,7 @@ class TestBreak(unittest2.TestCase):
         
     def tearDown(self):
         signal.signal(signal.SIGINT, self._default_handler)
-        unittest2.signals._results = set()
+        unittest2.signals._results = weakref.WeakKeyDictionary()
         unittest2.signals._interrupt_handler = None
 
         
@@ -29,6 +32,18 @@ class TestBreak(unittest2.TestCase):
             self.fail("KeyboardInterrupt not handled")
             
         self.assertTrue(unittest2.signals._interrupt_handler.called)
+    
+    def testRegisterResult(self):
+        result = unittest2.TestResult()
+        unittest2.registerResult(result)
+        
+        for ref in unittest2.signals._results:
+            if ref is result:
+                break
+            elif ref is not result:
+                self.fail("odd object in result set")
+        else:
+            self.fail("result not found")
         
         
     def testInterruptCaught(self):
@@ -121,22 +136,6 @@ class TestBreak(unittest2.TestCase):
         else:
             self.fail("replaced but delegated handler doesn't raise interrupt")
     
-    def testWeakReferences(self):
-        # Calling install_handler on a result should not keep it alive
-        return
-        self.fail('not done yet')
-    
-    def testRemoveHandler(self):
-        # need an API for de-registering result objects
-        return
-        self.fail('not done yet')
-    
-    def testRemoveLastHandler(self):
-        # (Optional?) De-registering the last result should re-install the
-        # default handler
-        return
-        self.fail('not done yet')
-    
     def testRunner(self):
         # Creating a TextTestRunner with the appropriate argument should
         # register the TextTestResult it creates
@@ -144,6 +143,22 @@ class TestBreak(unittest2.TestCase):
         
         result = runner.run(unittest2.TestSuite())
         self.assertIn(result, unittest2.signals._results)
+    
+    def testWeakReferences(self):
+        # Calling install_handler on a result should not keep it alive
+        result = unittest2.TestResult()
+        unittest2.registerResult(result)
+        ref = weakref.ref(result)
+        del result
+        # For non-reference counting implementations
+        gc.collect()
+        self.assertIsNone(ref())
+        
+    
+    def testRemoveHandler(self):
+        # need an API for de-registering result objects
+        return
+        self.fail('not done yet')
         
     
     def testCommandLine(self):

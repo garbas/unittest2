@@ -3,3 +3,4 @@ syntax:glob
 MANIFEST
 dist
 *.wpu
+*$py.class
