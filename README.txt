@@ -96,7 +96,7 @@ class and module fixtures.
 Skipped test methods no longer have ``setUp`` and ``tearDown`` called around
 them.
 
-Using non strings for failure messages now works.
+Using non-strings for failure messages now works.
 
 UnicodeDecodeError whilst creating failure messages fixed.
 
@@ -106,6 +106,8 @@ sequences contain the same elements.
 Faulty ``load_tests`` functions no longer halt test discovery.
 
 Addition of -f/--failfast command line option.
+
+Addition of -c/--catch command line option.
 
 BUGFIX: Correct usage message now shown for unit2.
 
