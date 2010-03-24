@@ -5,6 +5,7 @@ import os
 import types
 
 from unittest2 import loader, runner
+from unittest2.signals import installHandler
 
 __unittest = True
 
@@ -187,15 +188,16 @@ class TestProgram(object):
         self.test = loader.discover(start_dir, pattern, top_level_dir)
 
     def runTests(self):
+        if self.catchbreak:
+            installHandler()
         if self.testRunner is None:
             self.testRunner = runner.TextTestRunner
         if isinstance(self.testRunner, (type, types.ClassType)):
             try:
                 testRunner = self.testRunner(verbosity=self.verbosity,
-                                             failfast=self.failfast,
-                                             catchbreak=self.catchbreak)
+                                             failfast=self.failfast)
             except TypeError:
-                # didn't accept the verbosity, catchbreak or failfast arguments
+                # didn't accept the verbosity or failfast arguments
                 testRunner = self.testRunner()
         else:
             # it is assumed to be a TestRunner instance
