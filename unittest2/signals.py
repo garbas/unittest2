@@ -19,12 +19,12 @@ class _InterruptHandler(object):
         if self.called:
             self.default_handler(signum, frame)
         self.called = True
-        for result in _results:
+        for result in _results.keys():
             result.stop()
 
-_results = set()
+_results = weakref.WeakKeyDictionary()
 def registerResult(result):
-    _results.add(result)
+    _results[result] = 1
 
 _interrupt_handler = None
 def installHandler():
