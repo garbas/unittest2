@@ -16,6 +16,21 @@ class TestBreak(unittest2.TestCase):
         unittest2.signals._results = set()
         unittest2.signals._interrupt_handler = None
 
+        
+    def testInstallHandler(self):
+        default_handler = signal.getsignal(signal.SIGINT)
+        unittest2.installHandler()
+        self.assertNotEqual(signal.getsignal(signal.SIGINT), default_handler)
+        
+        try:
+            pid = os.getpid()
+            os.kill(pid, signal.SIGINT)
+        except KeyboardInterrupt:
+            self.fail("KeyboardInterrupt not handled")
+            
+        self.assertTrue(unittest2.signals._interrupt_handler.called)
+        
+        
     def testInterruptCaught(self):
         default_handler = signal.getsignal(signal.SIGINT)
         
@@ -91,9 +106,20 @@ class TestBreak(unittest2.TestCase):
         # If our handler has been replaced (is no longer installed) but is
         # called by the *new* handler, then it isn't safe to delay the
         # SIGINT and we should immediately delegate to the default handler
-        return
-        self.fail('not done yet')
+        unittest2.installHandler()
         
+        handler = signal.getsignal(signal.SIGINT)
+        def new_handler(frame, signum):
+            handler(frame, signum)
+        signal.signal(signal.SIGINT, new_handler)
+        
+        try:
+            pid = os.getpid()
+            os.kill(pid, signal.SIGINT)
+        except KeyboardInterrupt:
+            pass
+        else:
+            self.fail("replaced but delegated handler doesn't raise interrupt")
     
     def testWeakReferences(self):
         # Calling install_handler on a result should not keep it alive

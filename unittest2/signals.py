@@ -10,6 +10,12 @@ class _InterruptHandler(object):
         self.default_handler = default_handler
 
     def __call__(self, signum, frame):
+        installed_handler = signal.getsignal(signal.SIGINT)
+        if installed_handler is not self:
+            # if we aren't the installed handler, then delegate immediately
+            # to the default handler
+            self.default_handler(signum, frame)
+            
         if self.called:
             self.default_handler(signum, frame)
         self.called = True
