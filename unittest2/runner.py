@@ -5,7 +5,7 @@ import time
 import unittest
 
 from unittest2 import result
-from unittest2.util import install_handler
+from unittest2.signals import registerResult
 
 __unittest = True
 
@@ -129,11 +129,10 @@ class TextTestRunner(unittest.TextTestRunner):
     resultclass = TextTestResult
 
     def __init__(self, stream=sys.stderr, descriptions=True, verbosity=1,
-                 failfast=False, catchbreak=False, resultclass=None):
+                 failfast=False, resultclass=None):
         self.stream = _WritelnDecorator(stream)
         self.descriptions = descriptions
         self.verbosity = verbosity
-        self.catchbreak = catchbreak
         self.failfast = failfast
         if resultclass is not None:
             self.resultclass = resultclass
@@ -145,8 +144,7 @@ class TextTestRunner(unittest.TextTestRunner):
         "Run the given test case or test suite."
         result = self._makeResult()
         result.failfast = self.failfast
-        if self.catchbreak:
-            install_handler(result)
+        registerResult(result)
             
         startTime = time.time()
         startTestRun = getattr(result, 'startTestRun', None)

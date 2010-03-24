@@ -29,8 +29,8 @@ SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 __all__ = ['TestResult', 'TestCase', 'TestSuite',
            'TextTestRunner', 'TestLoader', 'FunctionTestCase', 'main',
            'defaultTestLoader', 'SkipTest', 'skip', 'skipIf', 'skipUnless',
-           'expectedFailure', 'TextTestResult', 'install_handler', 
-           '__version__']
+           'expectedFailure', 'TextTestResult', 'installHandler', 
+           'registerResult', '__version__']
 
 __version__ = '0.3.0 alpha'
 
@@ -50,7 +50,7 @@ from unittest2.loader import (
 )
 from unittest2.main import TestProgram, main
 from unittest2.runner import TextTestRunner, TextTestResult
-from unittest2.util import install_handler
+from unittest2.signals import installHandler, registerResult
 
 # deprecated
 _TextTestResult = TextTestResult
