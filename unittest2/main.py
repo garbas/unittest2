@@ -122,9 +122,11 @@ class TestProgram(object):
                 if opt in ('-f','--failfast'):
                     if self.failfast is None:
                         self.failfast = True
+                    # Should this raise an exception if -f is not valid?
                 if opt in ('-c','--catch'):
                     if self.catchbreak is None:
                         self.catchbreak = True
+                    # Should this raise an exception if -c is not valid?
             if len(args) == 0 and self.defaultTest is None:
                 # createTests will load tests from self.module
                 self.testNames = None

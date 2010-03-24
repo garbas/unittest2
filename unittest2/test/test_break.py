@@ -174,13 +174,56 @@ class TestBreak(unittest2.TestCase):
             pass
         
         self.assertFalse(result.shouldStop)
-            
     
-    def testCommandLine(self):
-        # The appropriate command line flags (or argument to main?) should
-        # install the handler
-        return
-        self.fail('not done yet')
+    def testMainInstallsHandler(self):
+        failfast = object()
+        test = object()
+        verbosity = object()
+        result = object()
+        default_handler = signal.getsignal(signal.SIGINT)
+
+        class FakeRunner(object):
+            initArgs = []
+            runArgs = []
+            def __init__(self, *args, **kwargs):
+                self.initArgs.append((args, kwargs))
+            def run(self, test):
+                self.runArgs.append(test)
+                return result
+        
+        class Program(unittest2.TestProgram):
+            def __init__(self, catchbreak): 
+                self.exit = False
+                self.verbosity = verbosity
+                self.failfast = failfast
+                self.catchbreak = catchbreak
+                self.testRunner = FakeRunner
+                self.test = test
+                self.result = None
+        
+        p = Program(False)
+        p.runTests()
+        
+        self.assertEqual(FakeRunner.initArgs, [((), {'verbosity': verbosity, 
+                                                'failfast': failfast})])
+        self.assertEqual(FakeRunner.runArgs, [test])
+        self.assertEqual(p.result, result)
+        
+        self.assertEqual(signal.getsignal(signal.SIGINT), default_handler)
+        
+        FakeRunner.initArgs = []
+        FakeRunner.runArgs = []
+        p = Program(True)
+        p.runTests()
+        
+        self.assertEqual(FakeRunner.initArgs, [((), {'verbosity': verbosity, 
+                                                'failfast': failfast})])
+        self.assertEqual(FakeRunner.runArgs, [test])
+        self.assertEqual(p.result, result)
+        
+        self.assertNotEqual(signal.getsignal(signal.SIGINT), default_handler)
+        
+        
         
 
 skipper = unittest2.skipUnless(hasattr(os, 'kill'), "test uses os.kill(...)")
