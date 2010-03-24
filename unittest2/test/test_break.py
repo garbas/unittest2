@@ -145,29 +145,43 @@ class TestBreak(unittest2.TestCase):
         self.assertIn(result, unittest2.signals._results)
     
     def testWeakReferences(self):
-        # Calling install_handler on a result should not keep it alive
+        # Calling registerResult on a result should not keep it alive
         result = unittest2.TestResult()
         unittest2.registerResult(result)
+        
         ref = weakref.ref(result)
         del result
+        
         # For non-reference counting implementations
-        gc.collect()
+        gc.collect();gc.collect()
         self.assertIsNone(ref())
         
     
-    def testRemoveHandler(self):
-        # need an API for de-registering result objects
-        return
-        self.fail('not done yet')
+    def testRemoveResult(self):
+        result = unittest2.TestResult()
+        unittest2.registerResult(result)
         
+        unittest2.installHandler()
+        self.assertTrue(unittest2.removeResult(result))
+        
+        # Should this raise an error instead?
+        self.assertFalse(unittest2.removeResult(unittest2.TestResult()))
+
+        try:
+            pid = os.getpid()
+            os.kill(pid, signal.SIGINT)
+        except KeyboardInterrupt:
+            pass
+        
+        self.assertFalse(result.shouldStop)
+            
     
     def testCommandLine(self):
         # The appropriate command line flags (or argument to main?) should
-        # create the runner with the right argument
+        # install the handler
         return
         self.fail('not done yet')
         
-        # note also that main may not have a failfast parameter yet
 
 skipper = unittest2.skipUnless(hasattr(os, 'kill'), "test uses os.kill(...)")
 TestBreak = skipper(TestBreak)

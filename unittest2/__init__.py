@@ -30,7 +30,7 @@ __all__ = ['TestResult', 'TestCase', 'TestSuite',
            'TextTestRunner', 'TestLoader', 'FunctionTestCase', 'main',
            'defaultTestLoader', 'SkipTest', 'skip', 'skipIf', 'skipUnless',
            'expectedFailure', 'TextTestResult', 'installHandler', 
-           'registerResult', '__version__']
+           'registerResult', 'removeResult', '__version__']
 
 __version__ = '0.3.0 alpha'
 
@@ -50,7 +50,7 @@ from unittest2.loader import (
 )
 from unittest2.main import TestProgram, main
 from unittest2.runner import TextTestRunner, TextTestResult
-from unittest2.signals import installHandler, registerResult
+from unittest2.signals import installHandler, registerResult, removeResult
 
 # deprecated
 _TextTestResult = TextTestResult

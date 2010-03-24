@@ -26,6 +26,9 @@ _results = weakref.WeakKeyDictionary()
 def registerResult(result):
     _results[result] = 1
 
+def removeResult(result):
+    return bool(_results.pop(result, None))
+
 _interrupt_handler = None
 def installHandler():
     global _interrupt_handler
