@@ -233,6 +233,18 @@ class TestBreak(unittest2.TestCase):
         # check that calling removeHandler multiple times has no ill-effect
         unittest2.removeHandler()
         self.assertEqual(signal.getsignal(signal.SIGINT), default_handler)
+    
+    def testRemoveHandlerAsDecorator(self):
+        default_handler = signal.getsignal(signal.SIGINT)
+        unittest2.installHandler()
+        
+        @unittest2.removeHandler
+        def test():
+            self.assertEqual(signal.getsignal(signal.SIGINT), default_handler)
+        
+        test()
+        self.assertNotEqual(signal.getsignal(signal.SIGINT), default_handler)
+        
             
 
 # Should also skip some tests on Jython
