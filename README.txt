@@ -93,6 +93,8 @@ CHANGELOG
 
 Addition of ``removeHandler`` for removing the control-C handler.
 
+All imports requiring the signal module are now optional, for compatiblity
+with IronPython (or other platforms without this module).
 
 2010/03/26 - 0.3.0
 ------------------
@@ -147,3 +149,12 @@ methods to support skipping etc).
 ---
 
 Initial release.
+
+
+TODO
+====
+
+* Capture stdout / stderr during test run (off by default -o command line
+  option)
+* delta or epsilon optional argument to assertAlmostEquals
+* assertNotRegexMatches
