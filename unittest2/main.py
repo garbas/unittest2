@@ -5,7 +5,10 @@ import os
 import types
 
 from unittest2 import loader, runner
-from unittest2.signals import installHandler
+try:
+    from unittest2.signals import installHandler
+except ImportError:
+    installHandler = None
 
 __unittest = True
 
@@ -158,7 +161,7 @@ class TestProgram(object):
             parser.add_option('-f', '--failfast', dest='failfast', default=False,
                               help='Stop on first fail or error', 
                               action='store_true')
-        if self.catchbreak != False:
+        if self.catchbreak != False and installHandler is not None:
             parser.add_option('-c', '--catch', dest='catchbreak', default=False,
                               help='Catch ctrl-C and display results so far', 
                               action='store_true')
@@ -180,7 +183,7 @@ class TestProgram(object):
         # if they weren't set explicitly in the constructor
         if self.failfast is None:
             self.failfast = options.failfast
-        if self.catchbreak is None:
+        if self.catchbreak is None and installHandler is not None:
             self.catchbreak = options.catchbreak
         
         if options.verbose:

@@ -1,10 +1,13 @@
 import gc
 import os
-import signal
 import weakref
 
 from cStringIO import StringIO
 
+try:
+    import signal
+except ImportError:
+    signal = None
 
 import unittest2
 
@@ -247,7 +250,8 @@ class TestBreak(unittest2.TestCase):
         
 
 # Should also skip some tests on Jython
-skipper = unittest2.skipUnless(hasattr(os, 'kill'), "test uses os.kill(...)")
+skipper = unittest2.skipUnless(hasattr(os, 'kill') and signal is not None, 
+                               "test uses os.kill(...) and the signal module")
 TestBreak = skipper(TestBreak)
 
 if __name__ == '__main__':

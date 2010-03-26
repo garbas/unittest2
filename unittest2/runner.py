@@ -5,8 +5,13 @@ import time
 import unittest
 
 from unittest2 import result
-from unittest2.signals import registerResult
 
+try:
+    from unittest2.signals import registerResult
+except ImportError:
+    def registerResult(_):
+        pass
+    
 __unittest = True
 
 
