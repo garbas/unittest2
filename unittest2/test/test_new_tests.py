@@ -1,6 +1,3 @@
-import os
-import sys
-
 from cStringIO import StringIO
 
 import unittest
