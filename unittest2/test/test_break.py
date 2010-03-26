@@ -227,3 +227,6 @@ class TestBreak(unittest2.TestCase):
 # Should also skip some tests on Jython
 skipper = unittest2.skipUnless(hasattr(os, 'kill'), "test uses os.kill(...)")
 TestBreak = skipper(TestBreak)
+
+if __name__ == '__main__':
+    unittest2.main()
