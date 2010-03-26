@@ -36,3 +36,9 @@ def installHandler():
         default_handler = signal.getsignal(signal.SIGINT)
         _interrupt_handler = _InterruptHandler(default_handler)
         signal.signal(signal.SIGINT, _interrupt_handler)
+
+
+def removeHandler(method=None):
+    global _interrupt_handler
+    if _interrupt_handler is not None:
+        signal.signal(signal.SIGINT, _interrupt_handler.default_handler)
