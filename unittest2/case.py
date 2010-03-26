@@ -10,7 +10,6 @@ import warnings
 from unittest2 import result
 from unittest2.util import (
     safe_repr, safe_str, strclass,
-    sorted_list_difference,
     unorderable_list_difference
 )
 

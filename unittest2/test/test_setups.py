@@ -3,7 +3,7 @@ import sys
 from cStringIO import StringIO
 
 import unittest2
-from unittest2.test.support import OldTestResult, resultFactory
+from unittest2.test.support import resultFactory
 
 
 class TestSetups(unittest2.TestCase):
