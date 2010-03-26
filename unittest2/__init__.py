@@ -32,7 +32,7 @@ __all__ = ['TestResult', 'TestCase', 'TestSuite',
            'expectedFailure', 'TextTestResult', 'installHandler', 
            'registerResult', 'removeResult', 'removeHandler', '__version__']
 
-__version__ = '0.3.0'
+__version__ = '0.3.1 alpha'
 
 # Expose obsolete functions for backwards compatibility
 __all__.extend(['getTestCaseNames', 'makeSuite', 'findTestCases'])
