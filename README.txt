@@ -154,7 +154,11 @@ Initial release.
 TODO
 ====
 
+Goals for *before* the Python 2.7 beta release:
+
 * Capture stdout / stderr during test run (off by default -o command line
   option)
 * delta or epsilon optional argument to assertAlmostEquals
 * assertNotRegexMatches
+* TestSuite.randomize method (?)
+* Allow dotted import path for test discovery
