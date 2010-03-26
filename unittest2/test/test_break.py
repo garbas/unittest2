@@ -245,7 +245,6 @@ class TestBreak(unittest2.TestCase):
         test()
         self.assertNotEqual(signal.getsignal(signal.SIGINT), default_handler)
         
-            
 
 # Should also skip some tests on Jython
 skipper = unittest2.skipUnless(hasattr(os, 'kill'), "test uses os.kill(...)")
