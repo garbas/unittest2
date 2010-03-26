@@ -224,6 +224,17 @@ class TestBreak(unittest2.TestCase):
         self.assertNotEqual(signal.getsignal(signal.SIGINT), default_handler)
 
 
+    def testRemoveHandler(self):
+        default_handler = signal.getsignal(signal.SIGINT)
+        unittest2.installHandler()
+        unittest2.removeHandler()
+        self.assertEqual(signal.getsignal(signal.SIGINT), default_handler)
+
+        # check that calling removeHandler multiple times has no ill-effect
+        unittest2.removeHandler()
+        self.assertEqual(signal.getsignal(signal.SIGINT), default_handler)
+            
+
 # Should also skip some tests on Jython
 skipper = unittest2.skipUnless(hasattr(os, 'kill'), "test uses os.kill(...)")
 TestBreak = skipper(TestBreak)
