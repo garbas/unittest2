@@ -5,7 +5,7 @@ from copy import deepcopy
 import unittest2
 
 from unittest2.test.support import (
-    OldTestResult, TestEquality, TestHashing, LoggingResult
+    OldTestResult, EqualityMixin, HashingMixin, LoggingResult
 )
 
 
@@ -40,15 +40,15 @@ class Test(object):
             self.events.append('tearDown')
 
 
-class Test_TestCase(unittest2.TestCase, TestEquality, TestHashing):
+class Test_TestCase(unittest2.TestCase, EqualityMixin, HashingMixin):
 
     ### Set up attributes used by inherited tests
     ################################################################
 
-    # Used by TestHashing.test_hash and TestEquality.test_eq
+    # Used by HashingMixin.test_hash and EqualityMixin.test_eq
     eq_pairs = [(Test.Foo('test1'), Test.Foo('test1'))]
 
-    # Used by TestEquality.test_ne
+    # Used by EqualityMixin.test_ne
     ne_pairs = [(Test.Foo('test1'), Test.Foo('runTest')),
                 (Test.Foo('test1'), Test.Bar('test1')),
                 (Test.Foo('test1'), Test.Bar('test2'))]

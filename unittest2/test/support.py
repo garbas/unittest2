@@ -83,7 +83,7 @@ class LoggingResult(unittest2.TestResult):
         super(LoggingResult, self).addUnexpectedSuccess(*args)
 
 
-class TestEquality(object):
+class EqualityMixin(object):
     """Used as a mixin for TestCase"""
 
     # Check for a valid __eq__ implementation
@@ -98,7 +98,7 @@ class TestEquality(object):
             self.assertNotEqual(obj_1, obj_2)
             self.assertNotEqual(obj_2, obj_1)
 
-class TestHashing(object):
+class HashingMixin(object):
     """Used as a mixin for TestCase"""
 
     # Check for a valid __hash__ implementation

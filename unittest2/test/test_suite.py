@@ -1,4 +1,4 @@
-from unittest2.test.support import TestEquality, LoggingResult
+from unittest2.test.support import EqualityMixin, LoggingResult
 
 import unittest2
 
@@ -13,17 +13,17 @@ def _mk_TestSuite(*names):
     return unittest2.TestSuite(Test.Foo(n) for n in names)
 
 
-class Test_TestSuite(unittest2.TestCase, TestEquality):
+class Test_TestSuite(unittest2.TestCase, EqualityMixin):
 
     ### Set up attributes needed by inherited tests
     ################################################################
 
-    # Used by TestEquality.test_eq
+    # Used by EqualityMixin.test_eq
     eq_pairs = [(unittest2.TestSuite(), unittest2.TestSuite()),
                 (unittest2.TestSuite(), unittest2.TestSuite([])),
                 (_mk_TestSuite('test_1'), _mk_TestSuite('test_1'))]
 
-    # Used by TestEquality.test_ne
+    # Used by EqualityMixin.test_ne
     ne_pairs = [(unittest2.TestSuite(), _mk_TestSuite('test_1')),
                 (unittest2.TestSuite([]), _mk_TestSuite('test_1')),
                 (_mk_TestSuite('test_1', 'test_2'), _mk_TestSuite('test_1', 'test_3')),
