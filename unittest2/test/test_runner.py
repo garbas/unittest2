@@ -123,7 +123,8 @@ class Test_TextTestRunner(unittest2.TestCase):
             def printErrors(self):
                 pass
 
-        runner = unittest2.TextTestRunner(stream=StringIO(), resultclass=OldTextResult)
+        runner = unittest2.TextTestRunner(stream=StringIO(), 
+                                          resultclass=OldTextResult)
         runner.run(unittest2.TestSuite())
 
     def test_startTestRun_stopTestRun_called(self):
