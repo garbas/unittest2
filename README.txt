@@ -109,6 +109,8 @@ Addition of -f/--failfast command line option.
 
 Addition of -c/--catch command line option.
 
+Split out monolithic test module into several modules.
+
 BUGFIX: Correct usage message now shown for unit2.
 
 BUGFIX: ``__unittest`` in module globals trims frames from that module in
