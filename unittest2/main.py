@@ -101,7 +101,7 @@ class TestProgram(object):
         usage = {'progName': self.progName, 'catchbreak': '', 'failfast': ''}
         if self.failfast != False:
             usage['failfast'] = FAILFAST
-        if self.catchbreak != False:
+        if self.catchbreak != False and installHandler is not None:
             usage['catchbreak'] = CATCHBREAK
         print self.USAGE % usage
         sys.exit(2)
@@ -127,7 +127,7 @@ class TestProgram(object):
                         self.failfast = True
                     # Should this raise an exception if -f is not valid?
                 if opt in ('-c','--catch'):
-                    if self.catchbreak is None:
+                    if self.catchbreak is None and installHandler is not None:
                         self.catchbreak = True
                     # Should this raise an exception if -c is not valid?
             if len(args) == 0 and self.defaultTest is None:
