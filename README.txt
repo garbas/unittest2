@@ -26,7 +26,8 @@ New features include:
   sets, dicts unicode strings etc and the ability to specify new default methods
   for comparing specific types
 * ``assertRaises`` as context manager, with access to the exception afterwards 
-* test discovery and new command line options 
+* test discovery and new command line options (including failfast and better
+  handling of ctrl-C during test runs)
 * test skipping and expected failures
 * ``load_tests`` protocol for loading tests from modules or packages 
 * ``startTestRun`` and ``stopTestRun`` methods on TestResult
@@ -80,15 +81,24 @@ be deep-copyable on Python versions prior to 2.7.
 ``TestCase.longMessage`` defaults to True because it is better. It defaults to
 False in Python 2.7 for backwards compatibility reasons.
 
-``python -m package`` doesn't work until Python 2.7, to provide the command line
-features a ``unit2`` (and ``unit2.py``) script is provided instead.
+``python -m package`` doesn't work until Python 2.7. The command line features
+of unittest2 are provided by a ``unit2`` (and ``unit2.py``) script instead.
 
 
 CHANGELOG
 =========
 
-2010/XX/XX - 0.3.0
+2010/03/26 - 0.3.0
 ------------------
+
+``assertSameElements`` removed and ``assertItemsEqual`` added; assert that
+sequences contain the same elements.
+
+Addition of -f/--failfast command line option, stopping test run on first
+failure or error.
+
+Addition of -c/--catch command line option for better control-C handling during
+test runs.
 
 Added ``BaseTestSuite``, for use by frameworks that don't want to support shared
 class and module fixtures.
@@ -96,22 +106,15 @@ class and module fixtures.
 Skipped test methods no longer have ``setUp`` and ``tearDown`` called around
 them.
 
-Using non-strings for failure messages now works.
-
-UnicodeDecodeError whilst creating failure messages fixed.
-
-``assertSameElements`` removed and ``assertItemsEqual`` added; assert that
-sequences contain the same elements.
-
 Faulty ``load_tests`` functions no longer halt test discovery.
 
-Addition of -f/--failfast command line option.
+Using non-strings for failure messages now works.
 
-Addition of -c/--catch command line option.
+Potential for ``UnicodeDecodeError`` whilst creating failure messages fixed.
 
 Split out monolithic test module into several modules.
 
-BUGFIX: Correct usage message now shown for unit2.
+BUGFIX: Correct usage message now shown for unit2 scripts.
 
 BUGFIX: ``__unittest`` in module globals trims frames from that module in
 reported stacktraces.
@@ -132,6 +135,7 @@ The ``TextTestRunner`` is now compatible with old result objects and standard
 Fix for compatibility with old ``TestResult`` objects. New tests can now be run
 with nosetests (with a DeprecationWarning for ``TestResult`` objects without
 methods to support skipping etc).
+
 
 0.1
 ---
