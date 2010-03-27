@@ -529,7 +529,7 @@ class TestCase(unittest.TestCase):
            compare almost equal.
         """
         if first == second:
-            # shortcut for ite
+            # shortcut
             return
         if round(abs(second-first), places) != 0:
             standardMsg = '%s != %s within %r places' % (safe_repr(first), 

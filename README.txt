@@ -96,6 +96,9 @@ Addition of ``removeHandler`` for removing the control-C handler.
 All imports requiring the signal module are now optional, for compatiblity
 with IronPython (or other platforms without this module).
 
+Tests fixed to be compatible with nosetest.
+
+
 2010/03/26 - 0.3.0
 ------------------
 
