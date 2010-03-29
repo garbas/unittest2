@@ -28,12 +28,14 @@ New features include:
 * ``assertRaises`` as context manager, with access to the exception afterwards 
 * test discovery and new command line options (including failfast and better
   handling of ctrl-C during test runs)
+* class and module level fixtures: ``setUpClass``, ``tearDownClass``,
+  ``setUpModule``, ``tearDownModule``
 * test skipping and expected failures
+* new ``delta`` keyword argument to ``assertAlmostEquals`` for more useful
+  comparison and for comparing non-numeric objects (like datetimes)
 * ``load_tests`` protocol for loading tests from modules or packages 
 * ``startTestRun`` and ``stopTestRun`` methods on TestResult
 * various other API improvements and fixes
-* class and module level fixtures: ``setUpClass``, ``tearDownClass``,
-  ``setUpModule``, ``tearDownModule``
 
 .. note:: Command line usage
 
@@ -101,6 +103,9 @@ with IronPython (or other platforms without this module).
 
 Tests fixed to be compatible with nosetest.
 
+BUGFIX: ``result.wasSuccessful()`` now returns False when there are unexpected
+successes.
+
 
 2010/03/26 - 0.3.0
 ------------------
@@ -164,7 +169,6 @@ Goals for *before* the Python 2.7 beta release:
 
 * Capture stdout / stderr during test run (off by default -o command line
   option)
-* delta or epsilon optional argument to assertAlmostEquals
 * assertNotRegexMatches
 * TestSuite.randomize method (?)
 * Allow dotted import path for test discovery

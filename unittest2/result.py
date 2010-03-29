@@ -1,8 +1,11 @@
 """Test result object"""
 
+import sys
 import traceback
-
 import unittest
+
+from cStringIO import StringIO
+
 from unittest2 import util
 from unittest2.compatibility import wraps
 
@@ -16,6 +19,8 @@ def failfast(method):
         return method(self, *args, **kw)
     return inner
 
+_std_out = sys.stdout
+_std_err = sys.stderr
 
 class TestResult(unittest.TestResult):
     """Holder for test result information.
@@ -39,10 +44,18 @@ class TestResult(unittest.TestResult):
         self.expectedFailures = []
         self.unexpectedSuccesses = []
         self.shouldStop = False
+        self.bufferOutput = False
+        self._stdout_buffer = StringIO()
+        self._stderr_buffer = StringIO()
+        self._mirrorOutput = False
     
     def startTest(self, test):
         "Called when the given test is about to be run"
         self.testsRun += 1
+        self._mirrorOutput = False
+        if self.bufferOutput:
+            sys.stdout = self._stdout_buffer
+            sys.stderr = self._stderr_buffer
 
     def startTestRun(self):
         """Called once before any tests are executed.
@@ -52,6 +65,23 @@ class TestResult(unittest.TestResult):
 
     def stopTest(self, test):
         """Called when the given test has been run"""
+        if self.bufferOutput:
+            if self._mirrorOutput:
+                output = sys.stdout.getvalue()
+                error = sys.stderr.getvalue()
+                if output:
+                    sys.__stdout__.write('\nStdout:\n%s' % output)
+                if error:
+                    sys.__stderr__.write('\nStderr:\n%s' % error)
+                
+            sys.stdout = _std_out
+            sys.stderr = _std_err
+            self._stdout_buffer.seek(0)
+            self._stdout_buffer.truncate()
+            self._stderr_buffer.seek(0)
+            self._stderr_buffer.truncate()
+        self._mirrorOutput = False
+        
 
     def stopTestRun(self):
         """Called once after all tests are executed.
@@ -65,12 +95,14 @@ class TestResult(unittest.TestResult):
         returned by sys.exc_info().
         """
         self.errors.append((test, self._exc_info_to_string(err, test)))
+        self._mirrorOutput = True
 
     @failfast
     def addFailure(self, test, err):
         """Called when an error has occurred. 'err' is a tuple of values as
         returned by sys.exc_info()."""
         self.failures.append((test, self._exc_info_to_string(err, test)))
+        self._mirrorOutput = True
 
     def addSuccess(self, test):
         "Called when a test has completed successfully"
@@ -92,7 +124,7 @@ class TestResult(unittest.TestResult):
 
     def wasSuccessful(self):
         "Tells whether or not this result was a success"
-        return len(self.failures) == len(self.errors) == 0
+        return (len(self.failures) + len(self.errors) == 0)
 
     def stop(self):
         "Indicates that the tests should be aborted"
@@ -108,7 +140,16 @@ class TestResult(unittest.TestResult):
             # Skip assert*() traceback levels
             length = self._count_relevant_tb_levels(tb)
             return ''.join(traceback.format_exception(exctype, value, tb, length))
-        return ''.join(traceback.format_exception(exctype, value, tb))
+        msgLines = traceback.format_exception(exctype, value, tb)
+        if self.bufferOutput:
+            output = sys.stdout.getvalue()
+            error = sys.stderr.getvalue()
+            
+            if output:
+                msgLines.append('\nStdout:\n%s' % output)
+            if error:
+                msgLines.append('\nStderr:\n%s' % error)
+        return ''.join(msgLines)
 
     def _is_relevant_tb_level(self, tb):
         return '__unittest' in tb.tb_frame.f_globals
