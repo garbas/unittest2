@@ -69,12 +69,12 @@ class TestProgram(object):
     USAGE = USAGE_FROM_MODULE
     
     # defaults for testing
-    failfast = catchbreak = None
+    failfast = catchbreak = buffer = None
 
     def __init__(self, module='__main__', defaultTest=None,
                  argv=None, testRunner=None,
                  testLoader=loader.defaultTestLoader, exit=True,
-                 verbosity=1, failfast=None, catchbreak=None):
+                 verbosity=1, failfast=None, catchbreak=None, buffer=None):
         if isinstance(module, basestring):
             self.module = __import__(module)
             for part in module.split('.')[1:]:
@@ -88,6 +88,7 @@ class TestProgram(object):
         self.verbosity = verbosity
         self.failfast = failfast
         self.catchbreak = catchbreak
+        self.buffer = buffer
         self.defaultTest = defaultTest
         self.testRunner = testRunner
         self.testLoader = testLoader
@@ -112,9 +113,9 @@ class TestProgram(object):
             return
 
         import getopt
-        long_opts = ['help','verbose','quiet', 'failfast', 'catch']
+        long_opts = ['help','verbose','quiet', 'failfast', 'catch', 'buffer']
         try:
-            options, args = getopt.getopt(argv[1:], 'hHvqfc', long_opts)
+            options, args = getopt.getopt(argv[1:], 'hHvqfcb', long_opts)
             for opt, value in options:
                 if opt in ('-h','-H','--help'):
                     self.usageExit()
@@ -130,6 +131,10 @@ class TestProgram(object):
                     if self.catchbreak is None and installHandler is not None:
                         self.catchbreak = True
                     # Should this raise an exception if -c is not valid?
+                if opt in ('-b','--buffer'):
+                    if self.buffer is None:
+                        self.buffer = True
+                    # Should this raise an exception if -b is not valid?
             if len(args) == 0 and self.defaultTest is None:
                 # createTests will load tests from self.module
                 self.testNames = None
@@ -165,6 +170,10 @@ class TestProgram(object):
             parser.add_option('-c', '--catch', dest='catchbreak', default=False,
                               help='Catch ctrl-C and display results so far', 
                               action='store_true')
+        if self.buffer != False:
+            parser.add_option('-b', '--buffer', dest='buffer', default=False,
+                              help='Buffer stdout and stderr during tests', 
+                              action='store_true')
         parser.add_option('-s', '--start-directory', dest='start', default='.',
                           help="Directory to start discovery ('.' default)")
         parser.add_option('-p', '--pattern', dest='pattern', default='test*.py',
@@ -185,6 +194,8 @@ class TestProgram(object):
             self.failfast = options.failfast
         if self.catchbreak is None and installHandler is not None:
             self.catchbreak = options.catchbreak
+        if self.buffer is None:
+            self.buffer = options.buffer
         
         if options.verbose:
             self.verbosity = 2
@@ -204,7 +215,8 @@ class TestProgram(object):
         if isinstance(self.testRunner, (type, types.ClassType)):
             try:
                 testRunner = self.testRunner(verbosity=self.verbosity,
-                                             failfast=self.failfast)
+                                             failfast=self.failfast,
+                                             buffer=self.buffer)
             except TypeError:
                 # didn't accept the verbosity or failfast arguments
                 testRunner = self.testRunner()

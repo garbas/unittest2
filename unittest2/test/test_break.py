@@ -208,7 +208,8 @@ class TestBreak(unittest2.TestCase):
         p.runTests()
         
         self.assertEqual(FakeRunner.initArgs, [((), {'verbosity': verbosity, 
-                                                'failfast': failfast})])
+                                                'failfast': failfast,
+                                                'buffer': None})])
         self.assertEqual(FakeRunner.runArgs, [test])
         self.assertEqual(p.result, result)
         
@@ -220,7 +221,8 @@ class TestBreak(unittest2.TestCase):
         p.runTests()
         
         self.assertEqual(FakeRunner.initArgs, [((), {'verbosity': verbosity, 
-                                                'failfast': failfast})])
+                                                'failfast': failfast,
+                                                'buffer': None})])
         self.assertEqual(FakeRunner.runArgs, [test])
         self.assertEqual(p.result, result)
         
