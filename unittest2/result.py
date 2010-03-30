@@ -139,8 +139,9 @@ class TestResult(unittest.TestResult):
         if exctype is test.failureException:
             # Skip assert*() traceback levels
             length = self._count_relevant_tb_levels(tb)
-            return ''.join(traceback.format_exception(exctype, value, tb, length))
-        msgLines = traceback.format_exception(exctype, value, tb)
+            msgLines = traceback.format_exception(exctype, value, tb, length)
+        else:
+            msgLines = traceback.format_exception(exctype, value, tb)
         if self.bufferOutput:
             output = sys.stdout.getvalue()
             error = sys.stderr.getvalue()
