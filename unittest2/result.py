@@ -20,8 +20,6 @@ def failfast(method):
         return method(self, *args, **kw)
     return inner
 
-_std_out = sys.stdout
-_std_err = sys.stderr
 
 NEWLINE = os.linesep
 STDOUT_LINE = '%sStdout:%s%%s' % (NEWLINE, NEWLINE)
@@ -86,8 +84,8 @@ class TestResult(unittest.TestResult):
                         error += NEWLINE
                     self._original_stderr.write(STDERR_LINE % error)
                 
-            sys.stdout = _std_out
-            sys.stderr = _std_err
+            sys.stdout = self._original_stdout
+            sys.stderr = self._original_stderr
             self._stdout_buffer.seek(0)
             self._stdout_buffer.truncate()
             self._stderr_buffer.seek(0)

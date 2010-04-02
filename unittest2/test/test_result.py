@@ -357,8 +357,8 @@ class TestOutputBuffering(unittest2.TestCase):
         result.addSuccess(self)
         result.stopTest(self)
         
-        self.assertIs(real_out, sys.stdout)
-        self.assertIs(real_err, sys.stderr)
+        self.assertIs(sys.stdout, result._original_stdout)
+        self.assertIs(sys.stderr, result._original_stderr)
         
         self.assertEqual(result._original_stdout.getvalue(), '')
         self.assertEqual(result._original_stderr.getvalue(), '')
@@ -389,7 +389,6 @@ class TestOutputBuffering(unittest2.TestCase):
             print >> sys.stdout, 'foo'
             if include_error:
                 print >> sys.stderr, 'bar'
-            
             
             addFunction = getattr(result, add_attr)
             addFunction(self, (None, None, None))
