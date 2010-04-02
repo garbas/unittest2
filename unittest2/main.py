@@ -113,7 +113,7 @@ class TestProgram(object):
             return
 
         import getopt
-        long_opts = ['help','verbose','quiet', 'failfast', 'catch', 'buffer']
+        long_opts = ['help', 'verbose', 'quiet', 'failfast', 'catch', 'buffer']
         try:
             options, args = getopt.getopt(argv[1:], 'hHvqfcb', long_opts)
             for opt, value in options:
@@ -218,7 +218,7 @@ class TestProgram(object):
                                              failfast=self.failfast,
                                              buffer=self.buffer)
             except TypeError:
-                # didn't accept the verbosity or failfast arguments
+                # didn't accept the verbosity, buffer or failfast arguments
                 testRunner = self.testRunner()
         else:
             # it is assumed to be a TestRunner instance

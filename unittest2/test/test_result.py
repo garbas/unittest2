@@ -294,15 +294,15 @@ class Test_TestResult(unittest2.TestCase):
         self.assertFalse(result.wasSuccessful())
 
 
-class TestBufferOutput(unittest2.TestCase):
+class TestOutputBuffering(unittest2.TestCase):
 
     def setUp(self):
-        self._real_out = sys.__stdout__
-        self._real_err = sys.__stderr__
+        self._real_out = sys.stdout
+        self._real_err = sys.stderr
 
     def tearDown(self):
-        sys.stdout = sys.__stdout__ = self._real_out
-        sys.stderr = sys.__stderr__ = self._real_err
+        sys.stdout = self._real_out
+        sys.stderr = self._real_err
 
     def testBufferOutputOff(self):
         real_out = self._real_out
@@ -342,8 +342,8 @@ class TestBufferOutput(unittest2.TestCase):
         out_stream = sys.stdout
         err_stream = sys.stderr
         
-        sys.__stdout__ = StringIO()
-        sys.__stderr__ = StringIO()
+        result._original_stdout = StringIO()
+        result._original_stderr = StringIO()
         
         print 'foo'
         print >> sys.stderr, 'bar'
@@ -351,8 +351,8 @@ class TestBufferOutput(unittest2.TestCase):
         self.assertEqual(out_stream.getvalue(), 'foo\n')
         self.assertEqual(err_stream.getvalue(), 'bar\n')
         
-        self.assertEqual(sys.__stdout__.getvalue(), '')
-        self.assertEqual(sys.__stderr__.getvalue(), '')
+        self.assertEqual(result._original_stdout.getvalue(), '')
+        self.assertEqual(result._original_stderr.getvalue(), '')
         
         result.addSuccess(self)
         result.stopTest(self)
@@ -360,8 +360,8 @@ class TestBufferOutput(unittest2.TestCase):
         self.assertIs(real_out, sys.stdout)
         self.assertIs(real_err, sys.stderr)
         
-        self.assertEqual(sys.__stdout__.getvalue(), '')
-        self.assertEqual(sys.__stderr__.getvalue(), '')
+        self.assertEqual(result._original_stdout.getvalue(), '')
+        self.assertEqual(result._original_stderr.getvalue(), '')
         
         self.assertEqual(out_stream.getvalue(), '')
         self.assertEqual(err_stream.getvalue(), '')
@@ -374,20 +374,17 @@ class TestBufferOutput(unittest2.TestCase):
         return result
 
     def testBufferOutputAddErrorOrFailure(self):
-        def clear():
-            sys.__stdout__ = StringIO()
-            sys.__stderr__ = StringIO()
-        
         for message_attr, add_attr, include_error in [
             ('errors', 'addError', True), 
             ('failures', 'addFailure', False),
             ('errors', 'addError', True), 
             ('failures', 'addFailure', False)
         ]:
-            clear()
             result = self.getStartedResult()
             buffered_out = sys.stdout
             buffered_err = sys.stderr
+            result._original_stderr = StringIO()
+            result._original_stdout = StringIO()
             
             print >> sys.stdout, 'foo'
             if include_error:
@@ -415,8 +412,8 @@ class TestBufferOutput(unittest2.TestCase):
             expectedFullMessage = 'None\n%s%s' % (expectedOutMessage, expectedErrMessage)
 
             self.assertIs(test, self)
-            self.assertEqual(sys.__stdout__.getvalue(), expectedOutMessage)
-            self.assertEqual(sys.__stderr__.getvalue(), expectedErrMessage)
+            self.assertEqual(result._original_stdout.getvalue(), expectedOutMessage)
+            self.assertEqual(result._original_stderr.getvalue(), expectedErrMessage)
             self.assertMultiLineEqual(message, expectedFullMessage)
         
         
