@@ -131,7 +131,7 @@ Using non-strings for failure messages now works.
 
 Potential for ``UnicodeDecodeError`` whilst creating failure messages fixed.
 
-Split out monolithic test module into several modules.
+Split out monolithic test module into a package.
 
 BUGFIX: Correct usage message now shown for unit2 scripts.
 

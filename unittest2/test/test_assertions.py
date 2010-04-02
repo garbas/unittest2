@@ -50,6 +50,17 @@ class Test_Assertions(unittest2.TestCase):
         self.assertNotAlmostEqual(first, second,
                                   delta=datetime.timedelta(seconds=5))
 
+    def testAssertNotRegexpMatches(self):
+        self.assertNotRegexpMatches('Ala ma kota', r'r+')
+        try:
+            self.assertNotRegexpMatches('Ala ma kota', r'k.t', 'Message')
+        except self.failureException, e:
+            self.assertIn("'kot'", e.args[0])
+            self.assertIn('Message', e.args[0])
+        else:
+            self.fail('assertNotRegexpMatches should have failed.')
+
+
 class TestLongMessage(unittest2.TestCase):
     """Test that the individual asserts honour longMessage.
     This actually tests all the message behaviour for
