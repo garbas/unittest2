@@ -90,7 +90,7 @@ of unittest2 are provided by a ``unit2`` (and ``unit2.py``) script instead.
 CHANGELOG
 =========
 
-2010/03/XX - 0.4.0
+2010/04/XX - 0.4.0
 ------------------
 
 Addition of ``removeHandler`` for removing the control-C handler.
@@ -98,13 +98,13 @@ Addition of ``removeHandler`` for removing the control-C handler.
 ``delta`` keyword argument for ``assertAlmostEqual`` and
 ``assertNotAlmostEqual``.
 
+Addition of -b command line option (and ``TestResult.buffer``) for buffering 
+stdout / stderr during test runs.
+
 All imports requiring the signal module are now optional, for compatiblity
 with IronPython (or other platforms without this module).
 
 Tests fixed to be compatible with nosetest.
-
-BUGFIX: ``result.wasSuccessful()`` now returns False when there are unexpected
-successes.
 
 
 2010/03/26 - 0.3.0
