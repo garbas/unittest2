@@ -1,5 +1,6 @@
 """Test result object"""
 
+import os
 import sys
 import traceback
 import unittest
@@ -22,6 +23,10 @@ def failfast(method):
 _std_out = sys.stdout
 _std_err = sys.stderr
 
+NEWLINE = os.linesep
+STDOUT_LINE = '%sStdout:%s%%s' % (NEWLINE, NEWLINE)
+STDERR_LINE = '%sStderr:%s%%s' % (NEWLINE, NEWLINE)
+
 class TestResult(unittest.TestResult):
     """Holder for test result information.
 
@@ -35,6 +40,7 @@ class TestResult(unittest.TestResult):
     """
     _previousTestClass = None
     _moduleSetUpFailed = False
+    
     def __init__(self):
         self.failfast = False
         self.failures = []
@@ -44,7 +50,7 @@ class TestResult(unittest.TestResult):
         self.expectedFailures = []
         self.unexpectedSuccesses = []
         self.shouldStop = False
-        self.bufferOutput = False
+        self.buffer = False
         self._stdout_buffer = StringIO()
         self._stderr_buffer = StringIO()
         self._mirrorOutput = False
@@ -53,7 +59,7 @@ class TestResult(unittest.TestResult):
         "Called when the given test is about to be run"
         self.testsRun += 1
         self._mirrorOutput = False
-        if self.bufferOutput:
+        if self.buffer:
             sys.stdout = self._stdout_buffer
             sys.stderr = self._stderr_buffer
 
@@ -65,14 +71,18 @@ class TestResult(unittest.TestResult):
 
     def stopTest(self, test):
         """Called when the given test has been run"""
-        if self.bufferOutput:
+        if self.buffer:
             if self._mirrorOutput:
                 output = sys.stdout.getvalue()
                 error = sys.stderr.getvalue()
                 if output:
-                    sys.__stdout__.write('\nStdout:\n%s' % output)
+                    if not output.endswith(NEWLINE):
+                        output += NEWLINE
+                    sys.__stdout__.write(STDOUT_LINE % output)
                 if error:
-                    sys.__stderr__.write('\nStderr:\n%s' % error)
+                    if not error.endswith(NEWLINE):
+                        error += NEWLINE
+                    sys.__stderr__.write(STDERR_LINE % error)
                 
             sys.stdout = _std_out
             sys.stderr = _std_err
@@ -142,14 +152,18 @@ class TestResult(unittest.TestResult):
             msgLines = traceback.format_exception(exctype, value, tb, length)
         else:
             msgLines = traceback.format_exception(exctype, value, tb)
-        if self.bufferOutput:
+        
+        if self.buffer:
             output = sys.stdout.getvalue()
-            error = sys.stderr.getvalue()
-            
+            error = sys.stderr.getvalue()            
             if output:
-                msgLines.append('\nStdout:\n%s' % output)
+                if not output.endswith(NEWLINE):
+                    output += NEWLINE
+                msgLines.append(STDOUT_LINE % output)
             if error:
-                msgLines.append('\nStderr:\n%s' % error)
+                if not error.endswith(NEWLINE):
+                    error += NEWLINE
+                msgLines.append(STDERR_LINE % error)
         return ''.join(msgLines)
 
     def _is_relevant_tb_level(self, tb):

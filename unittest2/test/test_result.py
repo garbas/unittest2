@@ -309,7 +309,7 @@ class TestBufferOutput(unittest2.TestCase):
         real_err = self._real_err
         
         result = unittest2.TestResult()
-        self.assertFalse(result.bufferOutput)
+        self.assertFalse(result.buffer)
     
         self.assertIs(real_out, sys.stdout)
         self.assertIs(real_err, sys.stderr)
@@ -324,9 +324,9 @@ class TestBufferOutput(unittest2.TestCase):
         real_err = self._real_err
         
         result = unittest2.TestResult()
-        self.assertFalse(result.bufferOutput)
+        self.assertFalse(result.buffer)
         
-        result.bufferOutput = True
+        result.buffer = True
     
         self.assertIs(real_out, sys.stdout)
         self.assertIs(real_err, sys.stderr)
@@ -369,7 +369,7 @@ class TestBufferOutput(unittest2.TestCase):
 
     def getStartedResult(self):
         result = unittest2.TestResult()
-        result.bufferOutput = True
+        result.buffer = True
         result.startTest(self)
         return result
 

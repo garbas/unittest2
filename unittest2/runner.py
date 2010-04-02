@@ -150,7 +150,7 @@ class TextTestRunner(unittest.TextTestRunner):
         "Run the given test case or test suite."
         result = self._makeResult()
         result.failfast = self.failfast
-        result.bufferOutput = self.buffer
+        result.buffer = self.buffer
         registerResult(result)
         
         startTime = time.time()
