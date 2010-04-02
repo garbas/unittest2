@@ -101,6 +101,8 @@ Addition of ``removeHandler`` for removing the control-C handler.
 Addition of -b command line option (and ``TestResult.buffer``) for buffering 
 stdout / stderr during test runs.
 
+Addition of ``TestCase.assertNotRegexpMatches``.
+
 All imports requiring the signal module are now optional, for compatiblity
 with IronPython (or other platforms without this module).
 
