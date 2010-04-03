@@ -1,3 +1,4 @@
+import os
 import sys
 import textwrap
 from cStringIO import StringIO, OutputType
@@ -348,8 +349,8 @@ class TestOutputBuffering(unittest2.TestCase):
         print 'foo'
         print >> sys.stderr, 'bar'
         
-        self.assertEqual(out_stream.getvalue(), 'foo\n')
-        self.assertEqual(err_stream.getvalue(), 'bar\n')
+        self.assertEqual(out_stream.getvalue(), 'foo%s' % os.linesep)
+        self.assertEqual(err_stream.getvalue(), 'bar%s' % os.linesep)
         
         self.assertEqual(result._original_stdout.getvalue(), '')
         self.assertEqual(result._original_stderr.getvalue(), '')
@@ -401,14 +402,14 @@ class TestOutputBuffering(unittest2.TestCase):
             expectedOutMessage = textwrap.dedent("""
                 Stdout:
                 foo
-            """)
+            """).replace('\n', os.linesep)
             expectedErrMessage = ''
             if include_error:
                 expectedErrMessage = textwrap.dedent("""
                 Stderr:
                 bar
-            """)
-            expectedFullMessage = 'None\n%s%s' % (expectedOutMessage, expectedErrMessage)
+            """).replace('\n', os.linesep)
+            expectedFullMessage = 'None%s%s%s' % (os.linesep, expectedOutMessage, expectedErrMessage)
 
             self.assertIs(test, self)
             self.assertEqual(result._original_stdout.getvalue(), expectedOutMessage)
