@@ -177,3 +177,4 @@ For *before* the Python 2.7 release:
 * Issues 8301, 8302 and 8303 on the Python bug tracker
 * Document ``BaseTestSuite`` and ``_ErrorHolder``
 * Document ``installHandler``, ``removeResult``, ``registerResult``
+* Document new arguments to ``main()``
