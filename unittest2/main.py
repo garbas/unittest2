@@ -12,8 +12,9 @@ except ImportError:
 
 __unittest = True
 
-FAILFAST = "  -f, --failfast   Stop on first failure\n"
-CATCHBREAK = "  -c, --catch      Catch control-C and display results\n"
+FAILFAST     = "  -f, --failfast   Stop on first failure\n"
+CATCHBREAK   = "  -c, --catch      Catch control-C and display results\n"
+BUFFEROUTPUT = "  -b, --buffer     Buffer stdout and stderr during test runs\n"
 
 USAGE_AS_MAIN = """\
 Usage: %(progName)s [options] [tests]
@@ -22,7 +23,7 @@ Options:
   -h, --help       Show this message
   -v, --verbose    Verbose output
   -q, --quiet      Minimal output
-%(failfast)s%(catchbreak)s
+%(failfast)s%(catchbreak)s%(buffer)s
 Examples:
   %(progName)s test_module                       - run tests from test_module
   %(progName)s test_module.TestClass             - run tests from
@@ -36,7 +37,7 @@ Alternative Usage: %(progName)s discover [options]
 
 Options:
   -v, --verbose    Verbose output
-%(failfast)s%(catchbreak)s  -s directory     Directory to start discovery ('.' default)
+%(failfast)s%(catchbreak)s%(buffer)s  -s directory     Directory to start discovery ('.' default)
   -p pattern       Pattern to match test files ('test*.py' default)
   -t directory     Top level directory of project (default to
                    start directory)
@@ -52,7 +53,7 @@ Options:
   -h, --help       Show this message
   -v, --verbose    Verbose output
   -q, --quiet      Minimal output
-%(failfast)s%(catchbreak)s
+%(failfast)s%(catchbreak)s%(buffer)s
 Examples:
   %(progName)s                               - run default set of tests
   %(progName)s MyTestSuite                   - run suite 'MyTestSuite'
@@ -99,11 +100,14 @@ class TestProgram(object):
     def usageExit(self, msg=None):
         if msg:
             print msg
-        usage = {'progName': self.progName, 'catchbreak': '', 'failfast': ''}
+        usage = {'progName': self.progName, 'catchbreak': '', 'failfast': '',
+                 'buffer': ''}
         if self.failfast != False:
             usage['failfast'] = FAILFAST
         if self.catchbreak != False and installHandler is not None:
             usage['catchbreak'] = CATCHBREAK
+        if self.buffer != False:
+            usage['buffer'] = BUFFEROUTPUT
         print self.USAGE % usage
         sys.exit(2)
 
