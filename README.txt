@@ -169,9 +169,9 @@ Initial release.
 TODO
 ====
 
-Goals for *before* the Python 2.7 beta release:
+For *before* the Python 2.7 release:
 
-* TestSuite.randomize method (?)
 * Tests for command line handling of -b
 * Tests for dotted path discovery
+* Usage message to include '-b'
 
