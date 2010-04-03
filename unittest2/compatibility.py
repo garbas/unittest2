@@ -51,7 +51,7 @@ if not hasattr(os, 'relpath'):
         
             if not path:
                 raise ValueError("no path specified")
-        
+            
             start_list = os.path.abspath(start).split(os.path.sep)
             path_list = os.path.abspath(path).split(os.path.sep)
         
