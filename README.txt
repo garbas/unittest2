@@ -103,6 +103,8 @@ stdout / stderr during test runs.
 
 Addition of ``TestCase.assertNotRegexpMatches``.
 
+Allow test discovery using dotted module names instead of a path.
+
 All imports requiring the signal module are now optional, for compatiblity
 with IronPython (or other platforms without this module).
 
@@ -169,8 +171,7 @@ TODO
 
 Goals for *before* the Python 2.7 beta release:
 
-* Capture stdout / stderr during test run (off by default -o command line
-  option)
-* assertNotRegexMatches
 * TestSuite.randomize method (?)
-* Allow dotted import path for test discovery
+* Tests for command line handling of -b
+* Tests for dotted path discovery
+
