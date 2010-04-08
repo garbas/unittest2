@@ -23,10 +23,18 @@ class Test_Assertions(unittest2.TestCase):
         self.assertRaises(self.failureException,
                           self.assertNotAlmostEqual, 0, .1+.1j, places=0)
 
-        self.assertAlmostEqual(float('inf'), float('inf'))
-        self.assertRaises(self.failureException, self.assertNotAlmostEqual,
-                          float('inf'), float('inf'))
-    
+        try:
+            self.assertAlmostEqual(float('inf'), float('inf'))
+            self.assertRaises(self.failureException, self.assertNotAlmostEqual,
+                              float('inf'), float('inf'))
+        except ValueError:
+            # float('inf') is invalid on Windows in Python 2.4 / 2.5
+            x = object()
+            self.assertAlmostEqual(x, x)
+            self.assertRaises(self.failureException, self.assertNotAlmostEqual,
+                              x, x)
+            
+            
     def test_AmostEqualWithDelta(self):
         self.assertAlmostEqual(1.1, 1.0, delta=0.5)
         self.assertAlmostEqual(1.0, 1.1, delta=0.5)
