@@ -90,7 +90,7 @@ of unittest2 are provided by a ``unit2`` (and ``unit2.py``) script instead.
 CHANGELOG
 =========
 
-2010/04/XX - 0.4.0
+2010/04/08 - 0.4.0
 ------------------
 
 Addition of ``removeHandler`` for removing the control-C handler.
