@@ -1,5 +1,6 @@
 from cStringIO import StringIO
 
+import sys
 import unittest2
 
 hasInstallHandler = hasattr(unittest2, 'installHandler')
@@ -91,8 +92,14 @@ RESULT = object()
 class FakeRunner(object):
     initArgs = None
     test = None
+    raiseError = False
+
     def __init__(self, **kwargs):
         FakeRunner.initArgs = kwargs
+        if FakeRunner.raiseError:
+            FakeRunner.raiseError = False
+            raise TypeError
+
     def run(self, test):
         FakeRunner.test = test
         return RESULT
@@ -157,7 +164,7 @@ class TestCommandLineArgs(unittest2.TestCase):
                 program.parseArgs([None, opt])
                 self.assertEqual(getattr(program, attr), not_none)
 
-    def testRunTests(self):
+    def testRunTestsRunnerClass(self):
         program = self.program
         
         program.testRunner = FakeRunner
@@ -173,6 +180,66 @@ class TestCommandLineArgs(unittest2.TestCase):
                                                 'buffer': 'buffer'})
         self.assertEqual(FakeRunner.test, 'test')
         self.assertIs(program.result, RESULT)
+
+    def testRunTestsRunnerInstance(self):
+        program = self.program
+        
+        program.testRunner = FakeRunner()
+        program.test = 'test'
+        FakeRunner.initArgs = None
+        
+        program.runTests()
+
+        # A new FakeRunner should not have been instantiated
+        self.assertIsNone(FakeRunner.initArgs)
+        
+        self.assertEqual(FakeRunner.test, 'test')
+        self.assertIs(program.result, RESULT)
+
+    def testRunTestsOldRunnerClass(self):
+        program = self.program
+        
+        FakeRunner.raiseError = True
+        program.testRunner = FakeRunner
+        program.verbosity = 'verbosity'
+        program.failfast = 'failfast'
+        program.buffer = 'buffer'
+        program.test = 'test'
+        
+        program.runTests()
+        
+        self.assertEqual(FakeRunner.initArgs, {})
+        self.assertEqual(FakeRunner.test, 'test')
+        self.assertIs(program.result, RESULT)
+    
+    def testCatchBreakInstallsHandler(self):
+        module = sys.modules['unittest2.main']
+        original = module.installHandler
+        def restore():
+            module.installHandler = original
+        self.addCleanup(restore)
+
+        self.installed = False
+        def fakeInstallHandler():
+            self.installed = True
+        module.installHandler = fakeInstallHandler
+        
+        program = self.program
+        program.catchbreak = True
+        
+        program.testRunner = FakeRunner
+        program.test = 'test'
+        
+        program.runTests()
+        self.assertTrue(self.installed)
+        
+        
+        self.assertEqual(FakeRunner.initArgs, {'verbosity': 1, 
+                                                'failfast': None,
+                                                'buffer': None})
+        self.assertEqual(FakeRunner.test, 'test')
+        self.assertIs(program.result, RESULT)
+
 
 
 if __name__ == '__main__':
