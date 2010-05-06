@@ -193,7 +193,6 @@ TODO
 
 For *before* the Python 2.7 release:
 
-* Addition of ``removeHandler`` to 2.7?
 * Making ``removeHandler`` a context manager?
 * Tests for command line handling of -b
 * Tests for dotted path discovery
