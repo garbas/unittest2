@@ -2,7 +2,7 @@ from cStringIO import StringIO
 
 import unittest2
 
-
+hasInstallHandler = hasattr(unittest2, 'installHandler')
 
 class Test_TestProgram(unittest2.TestCase):
 
@@ -73,6 +73,106 @@ class Test_TestProgram(unittest2.TestCase):
             argv=["foobar"],
             testRunner=unittest2.TextTestRunner(stream=StringIO()),
             testLoader=self.FooBarLoader())
+
+
+class FakeProgram(unittest2.TestProgram):
+    exit = False
+    result = None
+    verbosity = 1
+    defaultTest = None
+    testRunner = None
+    testLoader = unittest2.defaultTestLoader
+    progName = 'test'
+    def __init__(self, *args):
+        pass
+
+RESULT = object()
+
+class FakeRunner(object):
+    initArgs = None
+    test = None
+    def __init__(self, **kwargs):
+        FakeRunner.initArgs = kwargs
+    def run(self, test):
+        FakeRunner.test = test
+        return RESULT
+
+class TestCommandLineArgs(unittest2.TestCase):
+    
+    def setUp(self):
+        self.program = FakeProgram()
+        self.program.createTests = lambda: None
+        FakeRunner.initArgs = None
+        FakeRunner.test = None
+    
+    def testHelpAndUnknown(self):
+        program = self.program
+        def usageExit(msg=None):
+            program.msg = msg
+            program.exit = True
+        program.usageExit = usageExit
+        
+        for opt in '-h', '-H', '--help':
+            program.exit = False
+            program.parseArgs([None, opt])
+            self.assertTrue(program.exit)
+            self.assertIsNone(program.msg)
+    
+        program.parseArgs([None, '-$'])
+        self.assertTrue(program.exit)
+        self.assertIsNotNone(program.msg)
+    
+    def testVerbosity(self):
+        program = self.program
+        
+        for opt in '-q', '--quiet':
+            program.verbosity = 1
+            program.parseArgs([None, opt])
+            self.assertEqual(program.verbosity, 0)
+
+        for opt in '-v', '--verbose':
+            program.verbosity = 1
+            program.parseArgs([None, opt])
+            self.assertEqual(program.verbosity, 2)
+
+    def testBufferCatchFailfast(self):
+        program = self.program
+        for arg, attr in (('buffer', 'buffer'), ('failfast', 'failfast'),
+                      ('catch', 'catchbreak')):
+            if attr == 'catch' and not hasInstallHandler:
+                continue
+            
+            short_opt = '-%s' % arg[0]
+            long_opt = '--%s' % arg
+            for opt in short_opt, long_opt:
+                setattr(program, attr, None)
+                
+                program.parseArgs([None, opt])
+                self.assertTrue(getattr(program, attr))
+
+            for opt in short_opt, long_opt:
+                not_none = object()
+                setattr(program, attr, not_none)
+                
+                program.parseArgs([None, opt])
+                self.assertEqual(getattr(program, attr), not_none)
+
+    def testRunTests(self):
+        program = self.program
+        
+        program.testRunner = FakeRunner
+        program.verbosity = 'verbosity'
+        program.failfast = 'failfast'
+        program.buffer = 'buffer'
+        program.test = 'test'
+        
+        program.runTests()
+        
+        self.assertEqual(FakeRunner.initArgs, {'verbosity': 'verbosity', 
+                                                'failfast': 'failfast',
+                                                'buffer': 'buffer'})
+        self.assertEqual(FakeRunner.test, 'test')
+        self.assertIs(program.result, RESULT)
 
 
 if __name__ == '__main__':
