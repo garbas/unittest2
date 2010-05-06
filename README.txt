@@ -94,6 +94,11 @@ A ``TestResult`` object with unexpected successes returns True
 for ``result.wasSuccessful()``. Difficult to know if this is the correct
 behaviour or not.
 
+If a dotted path name is used for test discovery then a globally installed
+module/package will still be used in preference of one in the current
+directory. When doing discovery from a dotted path name we could check for this
+specific case.
+
 
 CHANGELOG
 =========
