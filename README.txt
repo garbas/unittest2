@@ -87,8 +87,25 @@ False in Python 2.7 for backwards compatibility reasons.
 of unittest2 are provided by a ``unit2`` (and ``unit2.py``) script instead.
 
 
+Issues
+======
+
+A ``TestResult`` object with unexpected successes returns True
+for ``result.wasSuccessful()``. Difficult to know if this is the correct
+behaviour or not.
+
+
 CHANGELOG
 =========
+
+2010/XX/XX - 0.5.0
+------------------
+
+If test discovery imports a module from the wrong location (usually because the
+module is globally installed and the user is expecting to run tests against a
+development version in a different location) then discovery halts with an
+``ImportError`` and the problem is reported.
+
 
 2010/04/08 - 0.4.0
 ------------------

@@ -288,14 +288,6 @@ class Test_TestResult(unittest2.TestCase):
         result = runner.run(test)
 
 
-    @unittest2.expectedFailure
-    def testWasSuccessfulWhenUnexpectedSuccesses(self):
-        result = unittest2.TestResult()
-        result.unexpectedSuccesses.append(self)
-        
-        self.assertFalse(result.wasSuccessful())
-
-
 class TestOutputBuffering(unittest2.TestCase):
 
     def setUp(self):
