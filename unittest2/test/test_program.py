@@ -84,6 +84,7 @@ class InitialisableProgram(unittest2.TestProgram):
     testRunner = None
     testLoader = unittest2.defaultTestLoader
     progName = 'test'
+    test = 'test'
     def __init__(self, *args):
         pass
 
@@ -172,7 +173,6 @@ class TestCommandLineArgs(unittest2.TestCase):
         program.verbosity = 'verbosity'
         program.failfast = 'failfast'
         program.buffer = 'buffer'
-        program.test = 'test'
         
         program.runTests()
         
@@ -186,7 +186,6 @@ class TestCommandLineArgs(unittest2.TestCase):
         program = self.program
         
         program.testRunner = FakeRunner()
-        program.test = 'test'
         FakeRunner.initArgs = None
         
         program.runTests()
@@ -209,6 +208,8 @@ class TestCommandLineArgs(unittest2.TestCase):
         
         program.runTests()
         
+        # If initialising raises a type error it should be retried
+        # without the new keyword arguments
         self.assertEqual(FakeRunner.initArgs, {})
         self.assertEqual(FakeRunner.test, 'test')
         self.assertIs(program.result, RESULT)
@@ -229,18 +230,9 @@ class TestCommandLineArgs(unittest2.TestCase):
         program.catchbreak = True
         
         program.testRunner = FakeRunner
-        program.test = 'test'
         
         program.runTests()
         self.assertTrue(self.installed)
-        
-        
-        self.assertEqual(FakeRunner.initArgs, {'verbosity': 1, 
-                                                'failfast': None,
-                                                'buffer': None})
-        self.assertEqual(FakeRunner.test, 'test')
-        self.assertIs(program.result, RESULT)
-
 
 
 if __name__ == '__main__':
