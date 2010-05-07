@@ -8,7 +8,6 @@
 # http://www.voidspace.org.uk/python/license.shtml
 
 import os
-import sys
 from distutils.core import setup
 from unittest2 import __version__ as VERSION
 
@@ -43,14 +42,14 @@ AUTHOR = 'Michael Foord'
 
 AUTHOR_EMAIL = 'michael@voidspace.org.uk'
 
-KEYWORDS = "unittest testing tests".split(', ')
+KEYWORDS = "unittest testing tests".split(' ')
 
 
 setup(name=NAME,
       version=VERSION,
       description=DESCRIPTION,
       long_description=LONG_DESCRIPTION,
-#      download_url=DOWNLOAD_URL,,
+#      download_url=DOWNLOAD_URL,
       packages=PACKAGES,
       scripts=SCRIPTS,
       author=AUTHOR,
