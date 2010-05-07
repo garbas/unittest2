@@ -125,6 +125,7 @@ class TextTestResult(result.TestResult):
         super(TextTestResult, self).stopTestRun()
         self.printErrors()
 
+
 class TextTestRunner(unittest.TextTestRunner):
     """A test runner class that displays results in textual form.
 
