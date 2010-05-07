@@ -283,9 +283,12 @@ class Test_TestResult(unittest2.TestCase):
 
     def testFailFastSetByRunner(self):
         runner = unittest2.TextTestRunner(stream=StringIO(), failfast=True)
+        self.testRan = False
         def test(result):
+            self.testRan = True
             self.assertTrue(result.failfast)
-        result = runner.run(test)
+        runner.run(test)
+        self.assertTrue(self.testRan)
 
 
 class TestOutputBuffering(unittest2.TestCase):
@@ -375,8 +378,6 @@ class TestOutputBuffering(unittest2.TestCase):
             ('failures', 'addFailure', False)
         ]:
             result = self.getStartedResult()
-            buffered_out = sys.stdout
-            buffered_err = sys.stderr
             result._original_stderr = StringIO()
             result._original_stdout = StringIO()
             
