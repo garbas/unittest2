@@ -194,8 +194,6 @@ TODO
 For *before* the Python 2.7 release:
 
 * Making ``removeHandler`` a context manager?
-* Tests for command line handling of -b
-* Tests for dotted path discovery
 * Docstrings for assertRegexpMatches and assertNotRegexpMatches
 * Issues 8301, 8302 and 8303 on the Python bug tracker
 * Document ``BaseTestSuite`` and ``_ErrorHolder``

@@ -6,6 +6,22 @@ import unittest2
 
 class TestDiscovery(unittest2.TestCase):
 
+    def test_discovery_from_dotted_path(self):
+        loader = unittest2.TestLoader()
+        
+        tests = [self]
+        self.wasRun = False
+        def _find_tests(start_dir, pattern):
+            self.wasRun = True
+            expectedPath = os.path.abspath(os.path.dirname(unittest2.test.__file__))
+            self.assertEqual(start_dir, expectedPath)
+            return tests
+        loader._find_tests = _find_tests
+        suite = loader.discover('unittest2.test')
+        self.assertTrue(self.wasRun)
+        self.assertEqual(suite._tests, tests)
+
+
     # Heavily mocked tests so I can avoid hitting the filesystem
     def test_get_name_from_path(self):
         loader = unittest2.TestLoader()
