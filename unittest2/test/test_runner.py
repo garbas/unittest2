@@ -9,6 +9,30 @@ import unittest2
 class Test_TextTestRunner(unittest2.TestCase):
     """Tests for TextTestRunner."""
 
+    def test_init(self):
+        runner = unittest2.TextTestRunner()
+        self.assertFalse(runner.failfast)
+        self.assertFalse(runner.buffer)
+        self.assertEqual(runner.verbosity, 1)
+        self.assertTrue(runner.descriptions)
+        self.assertEqual(runner.resultclass, unittest2.TextTestResult)
+
+
+    def testBufferAndFailfast(self):
+        class Test(unittest2.TestCase):
+            def testFoo(self):
+                pass
+        result = unittest2.TestResult()
+        runner = unittest2.TextTestRunner(stream=StringIO(), failfast=True,
+                                           buffer=True)
+        # Use our result object
+        runner._makeResult = lambda: result
+        runner.run(Test('testFoo'))
+        
+        self.assertTrue(result.failfast)
+        self.assertTrue(result.buffer)
+
+        
     def test_works_with_result_without_startTestRun_stopTestRun(self):
         class OldTextResult(OldTestResult):
             def __init__(self, *_):
@@ -66,7 +90,8 @@ class Test_TextTestRunner(unittest2.TestCase):
 
         expectedresult = (runner.stream, DESCRIPTIONS, VERBOSITY)
         self.assertEqual(runner._makeResult(), expectedresult)
-        
+
+
     def test_oldresult(self):
         class Test(unittest2.TestCase):
             def testFoo(self):
