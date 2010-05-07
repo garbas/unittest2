@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 
 import unittest2
@@ -72,8 +73,9 @@ class TestDiscovery(unittest2.TestCase):
         loader._get_module_from_name = lambda path: path + ' module'
         loader.loadTestsFromModule = lambda module: module + ' tests'
 
-        loader._top_level_dir = '/foo'
-        suite = list(loader._find_tests('/foo', 'test*.py'))
+        top_level = '/foo'
+        loader._top_level_dir = top_level
+        suite = list(loader._find_tests(top_level, 'test*.py'))
 
         expected = [name + ' module tests' for name in
                     ('test1', 'test2')]
@@ -356,10 +358,10 @@ class TestDiscovery(unittest2.TestCase):
         
         mod_dir = os.path.abspath('bar')
         expected_dir = os.path.abspath('foo')
-        msg = (r"^'foo' module incorrectly imported from %r\. Expected %r\. "
-                "Is this module globally installed\?$") % (mod_dir, expected_dir)
+        msg = re.escape(r"'foo' module incorrectly imported from %r. Expected %r. "
+                "Is this module globally installed?" % (mod_dir, expected_dir))
         self.assertRaisesRegexp(
-            ImportError, msg, loader.discover,
+            ImportError, '^%s$' % msg, loader.discover,
             start_dir='foo', pattern='foo.py'
         )
         self.assertEqual(sys.path[0], full_path)
