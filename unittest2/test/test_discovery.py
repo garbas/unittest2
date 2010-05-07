@@ -73,7 +73,7 @@ class TestDiscovery(unittest2.TestCase):
         loader._get_module_from_name = lambda path: path + ' module'
         loader.loadTestsFromModule = lambda module: module + ' tests'
 
-        top_level = '/foo'
+        top_level = os.path.abspath('/foo')
         loader._top_level_dir = top_level
         suite = list(loader._find_tests(top_level, 'test*.py'))
 
