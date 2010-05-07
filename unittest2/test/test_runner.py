@@ -32,6 +32,28 @@ class Test_TextTestRunner(unittest2.TestCase):
         self.assertTrue(result.failfast)
         self.assertTrue(result.buffer)
 
+    def testRunnerRegistersResult(self):
+        class Test(unittest2.TestCase):
+            def testFoo(self):
+                pass
+        originalRegisterResult = unittest2.runner.registerResult
+        def cleanup():
+            unittest2.runner.registerResult = originalRegisterResult
+        self.addCleanup(cleanup)
+        
+        result = unittest2.TestResult()
+        runner = unittest2.TextTestRunner(stream=StringIO())
+        # Use our result object
+        runner._makeResult = lambda: result
+        
+        self.wasRegistered = 0
+        def fakeRegisterResult(thisResult):
+            self.wasRegistered += 1
+            self.assertEqual(thisResult, result)
+        unittest2.runner.registerResult = fakeRegisterResult
+        
+        runner.run(unittest2.TestSuite())
+        self.assertEqual(self.wasRegistered, 1)
         
     def test_works_with_result_without_startTestRun_stopTestRun(self):
         class OldTextResult(OldTestResult):
