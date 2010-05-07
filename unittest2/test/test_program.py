@@ -76,7 +76,7 @@ class Test_TestProgram(unittest2.TestCase):
             testLoader=self.FooBarLoader())
 
 
-class FakeProgram(unittest2.TestProgram):
+class InitialisableProgram(unittest2.TestProgram):
     exit = False
     result = None
     verbosity = 1
@@ -107,10 +107,11 @@ class FakeRunner(object):
 class TestCommandLineArgs(unittest2.TestCase):
     
     def setUp(self):
-        self.program = FakeProgram()
+        self.program = InitialisableProgram()
         self.program.createTests = lambda: None
         FakeRunner.initArgs = None
         FakeRunner.test = None
+        FakeRunner.raiseError = False
     
     def testHelpAndUnknown(self):
         program = self.program
