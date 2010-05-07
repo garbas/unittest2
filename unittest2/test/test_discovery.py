@@ -10,10 +10,11 @@ class TestDiscovery(unittest2.TestCase):
         loader = unittest2.TestLoader()
         
         tests = [self]
+        expectedPath = os.path.abspath(os.path.dirname(unittest2.test.__file__))
+
         self.wasRun = False
         def _find_tests(start_dir, pattern):
             self.wasRun = True
-            expectedPath = os.path.abspath(os.path.dirname(unittest2.test.__file__))
             self.assertEqual(start_dir, expectedPath)
             return tests
         loader._find_tests = _find_tests
