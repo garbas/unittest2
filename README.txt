@@ -111,6 +111,7 @@ module is globally installed and the user is expecting to run tests against a
 development version in a different location) then discovery halts with an
 ``ImportError`` and the problem is reported.
 
+Added docstrings to ``assertRegexpMatches`` and ``assertNotRegexpMatches``.
 
 2010/04/08 - 0.4.0
 ------------------
