@@ -99,11 +99,13 @@ module/package will still be used in preference of one in the current
 directory. When doing discovery from a dotted path name we could check for this
 specific case.
 
+The ``removeHandler`` decorator could also be a context manager.
+
 
 CHANGELOG
 =========
 
-2010/XX/XX - 0.5.0
+2010/XX/XX - 0.4.1
 ------------------
 
 If test discovery imports a module from the wrong location (usually because the
@@ -195,9 +197,7 @@ Initial release.
 TODO
 ====
 
-For *before* the Python 2.7 release:
+For *before* the Python 2.7 final release:
 
-* Making ``removeHandler`` a context manager?
-* Docstrings for assertRegexpMatches and assertNotRegexpMatches
-* Issues 8301, 8302 and 8303 on the Python bug tracker
+* Issues 8302, 8303, 8351, 8564 and 8313 on the Python bug tracker
 * Document ``BaseTestSuite`` and ``_ErrorHolder``
