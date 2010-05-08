@@ -294,5 +294,31 @@ class Test_TestSuite(unittest2.TestCase, EqualityMixin):
         suite.run(unittest2.TestResult())
 
 
+    def test_basetestsuite(self):
+        class Test(unittest2.TestCase):
+            wasSetUp = False
+            wasTornDown = False
+            @classmethod
+            def setUpClass(cls):
+                cls.wasSetUp = True
+            @classmethod
+            def tearDownClass(cls):
+                cls.wasTornDown = True
+            def testPass(self):
+                pass
+            def testFail(self):
+                fail
+        suite = unittest2.BaseTestSuite()
+        suite.addTests([Test('testPass'), Test('testFail')])
+        self.assertEqual(suite.countTestCases(), 2)
+        
+        result = unittest2.TestResult()
+        suite.run(result)
+        self.assertFalse(Test.wasSetUp)
+        self.assertFalse(Test.wasTornDown)
+        self.assertEqual(len(result.errors), 1)
+        self.assertEqual(len(result.failures), 0)
+        self.assertEqual(result.testsRun, 2)
+
 if __name__ == '__main__':
     unittest2.main()
