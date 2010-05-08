@@ -113,6 +113,9 @@ development version in a different location) then discovery halts with an
 
 Added docstrings to ``assertRegexpMatches`` and ``assertNotRegexpMatches``.
 
+Putting functions in test suites no longer crashes.
+
+
 2010/04/08 - 0.4.0
 ------------------
 
