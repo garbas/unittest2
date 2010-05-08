@@ -105,7 +105,7 @@ The ``removeHandler`` decorator could also be a context manager.
 CHANGELOG
 =========
 
-2010/XX/XX - 0.4.1
+2010/05/09 - 0.4.1
 ------------------
 
 If test discovery imports a module from the wrong location (usually because the
