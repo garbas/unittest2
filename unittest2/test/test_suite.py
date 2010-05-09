@@ -1,5 +1,6 @@
 from unittest2.test.support import EqualityMixin, LoggingResult
 
+import sys
 import unittest2
 
 class Test(object):
@@ -308,12 +309,28 @@ class Test_TestSuite(unittest2.TestCase, EqualityMixin):
                 pass
             def testFail(self):
                 fail
+        class Module(object):
+            wasSetUp = False
+            wasTornDown = False
+            @staticmethod
+            def setUpModule():
+                Module.wasSetUp = True
+            @staticmethod
+            def tearDownModule():
+                Module.wasTornDown = True
+        
+        Test.__module__ = 'Module'
+        sys.modules['Module'] = Module
+        self.addCleanup(sys.modules.pop, 'Module')
+        
         suite = unittest2.BaseTestSuite()
         suite.addTests([Test('testPass'), Test('testFail')])
         self.assertEqual(suite.countTestCases(), 2)
-        
+
         result = unittest2.TestResult()
         suite.run(result)
+        self.assertFalse(Module.wasSetUp)
+        self.assertFalse(Module.wasTornDown)
         self.assertFalse(Test.wasSetUp)
         self.assertFalse(Test.wasTornDown)
         self.assertEqual(len(result.errors), 1)
