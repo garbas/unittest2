@@ -70,7 +70,7 @@ class TestProgram(object):
     USAGE = USAGE_FROM_MODULE
     
     # defaults for testing
-    failfast = catchbreak = buffer = None
+    failfast = catchbreak = buffer = progName = None
 
     def __init__(self, module='__main__', defaultTest=None,
                  argv=None, testRunner=None,
@@ -162,8 +162,10 @@ class TestProgram(object):
 
     def _do_discovery(self, argv, Loader=loader.TestLoader):
         # handle command line args for test discovery
+        self.progName = '%s discover' % self.progName
         import optparse
         parser = optparse.OptionParser()
+        parser.prog = self.progName
         parser.add_option('-v', '--verbose', dest='verbose', default=False,
                           help='Verbose output', action='store_true')
         if self.failfast != False:
