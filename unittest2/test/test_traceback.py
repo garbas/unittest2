@@ -6,7 +6,7 @@ if __name__ == '__main__':
 from StringIO import StringIO
 
 import unittest2
-import unittest2.new_traceback as traceback
+import unittest2.traceback27 as traceback
 
 
 
