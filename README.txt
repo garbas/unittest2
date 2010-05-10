@@ -83,8 +83,9 @@ be deep-copyable on Python versions prior to 2.7.
 ``TestCase.longMessage`` defaults to True because it is better. It defaults to
 False in Python 2.7 for backwards compatibility reasons.
 
-``python -m package`` doesn't work until Python 2.7. The command line features
-of unittest2 are provided by a ``unit2`` (and ``unit2.py``) script instead.
+``python -m package`` doesn't work in versions of Python before Python 2.7. The
+command line features of unittest2 are provided by a ``unit2`` (and 
+``unit2.py``) script instead.
 
 
 Issues
