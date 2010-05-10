@@ -105,6 +105,11 @@ The ``removeHandler`` decorator could also be a context manager.
 CHANGELOG
 =========
 
+2010/XX/XX - 0.4.2
+------------------
+
+Improved help message for ``unit2 discover -h``.
+
 2010/05/09 - 0.4.1
 ------------------
 
