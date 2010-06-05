@@ -615,7 +615,8 @@ class TestCase(unittest.TestCase):
     failUnlessRaises = _deprecate(assertRaises)
     failIf = _deprecate(assertFalse)
 
-    def assertSequenceEqual(self, seq1, seq2, msg=None, seq_type=None):
+    def assertSequenceEqual(self, seq1, seq2,
+                            msg=None, seq_type=None, max_diff=80*8):
         """An equality assertion for ordered sequences (like lists and tuples).
 
         For the purposes of this function, a valid ordered sequence type is one
@@ -628,6 +629,7 @@ class TestCase(unittest.TestCase):
                     datatype should be enforced.
             msg: Optional message to use on failure instead of a list of
                     differences.
+            max_diff: Maximum size off the diff, larger diffs are not shown
         """
         if seq_type is not None:
             seq_type_name = seq_type.__name__
@@ -710,9 +712,12 @@ class TestCase(unittest.TestCase):
                 except (TypeError, IndexError, NotImplementedError):
                     differing += ('Unable to index element %d '
                                   'of second %s\n' % (len1, seq_type_name))
-        standardMsg = differing + '\n' + '\n'.join(
+        standardMsg = differing
+        diffMsg = '\n' + '\n'.join(
             difflib.ndiff(pprint.pformat(seq1).splitlines(),
                           pprint.pformat(seq2).splitlines()))
+        if len(diffMsg) <= max_diff:
+            standardMsg += diffMsg
         msg = self._formatMessage(msg, standardMsg)
         self.fail(msg)
 
