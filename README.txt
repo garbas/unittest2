@@ -106,10 +106,23 @@ The ``removeHandler`` decorator could also be a context manager.
 CHANGELOG
 =========
 
-2010/XX/XX - 0.4.2
+2010/06/XX - 0.4.2
 ------------------
 
 Improved help message for ``unit2 discover -h``.
+
+SkipTest in unittest.TestCase.setUpClass or setUpModule is now reported as a 
+skip rather than an error.
+
+Excessively large diffs due to ``TestCase.assertSequenceEqual`` are no
+longer included in failure reports. (Controlled by ``TestCase.maxDiff``.)
+
+Matching files during test discovery is done in ``TestLoader._match_path``. This
+method can be overriden in subclasses to, for example, match on the full file
+path or use regular expressions for matching.
+
+Feature parity with unittest in Python 2.7 RC 1.
+
 
 2010/05/09 - 0.4.1
 ------------------
@@ -123,6 +136,7 @@ Added docstrings to ``assertRegexpMatches`` and ``assertNotRegexpMatches``.
 
 Putting functions in test suites no longer crashes.
 
+Feature parity with unittest in Python 2.7 Beta 2.
 
 2010/04/08 - 0.4.0
 ------------------

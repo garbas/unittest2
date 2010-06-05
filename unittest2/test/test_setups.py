@@ -397,19 +397,47 @@ class TestSetups(unittest2.TestCase):
         error, _ = result.errors[0]
         self.assertEqual(str(error), 'tearDownModule (Module)')
 
+    def test_skiptest_in_setupclass(self):
+        class Test(unittest2.TestCase):
+            @classmethod
+            def setUpClass(cls):
+                raise unittest2.SkipTest('foo')
+            def test_one(self):
+                pass
+            def test_two(self):
+                pass
+
+        result = self.runTests(Test)
+        self.assertEqual(result.testsRun, 0)
+        self.assertEqual(len(result.errors), 0)
+        self.assertEqual(len(result.skipped), 1)
+        skipped = result.skipped[0][0]
+        self.assertEqual(str(skipped), 'setUpClass (%s.Test)' % __name__)
+
+    def test_skiptest_in_setupmodule(self):
+        class Test(unittest2.TestCase):
+            def test_one(self):
+                pass
+            def test_two(self):
+                pass
+
+        class Module(object):
+            @staticmethod
+            def setUpModule():
+                raise unittest2.SkipTest('foo')
+
+        Test.__module__ = 'Module'
+        sys.modules['Module'] = Module
+
+        result = self.runTests(Test)
+        self.assertEqual(result.testsRun, 0)
+        self.assertEqual(len(result.errors), 0)
+        self.assertEqual(len(result.skipped), 1)
+        skipped = result.skipped[0][0]
+        self.assertEqual(str(skipped), 'setUpModule (Module)')
+
 """
-Not tested yet.
-
-Meaning of SkipTest in setUpClass - skip whole class.
-SkipTest in setUpModule should skip whole module.
-
-Currently reported as an error rather than a skip.
-
-
 To document:
-    setUpClass failure means that tests in that class will *not* be run
-    and reported.
-    
     TestSuite.debug now has very different semantics from TestSuite.run().
     It does not run the shared fixture code.
 
