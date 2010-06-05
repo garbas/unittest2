@@ -174,6 +174,12 @@ class TestCase(unittest.TestCase):
 
     failureException = AssertionError
 
+    # This attribute sets the maximum length of a diff in failure messsages
+    # by assert methods using difflib. It is looked up as an instance attribute
+    # so can be configured by individual tests if required.
+
+    maxDiff = 80*8
+
     # This attribute determines whether long messages (including repr of
     # objects used in assert methods) will be printed on failure in *addition*
     # to any explicit message passed.
