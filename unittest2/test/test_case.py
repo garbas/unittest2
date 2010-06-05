@@ -869,7 +869,7 @@ test case
     A test case is the smallest unit of testing. [...] You may provide your
     own implementation that does not subclass from TestCase, of course.
 """
-        sample_text_error = """
+        sample_text_error = """\
 - http://www.python.org/doc/2.3/lib/module-unittest.html
 ?                             ^
 + http://www.python.org/doc/2.4.1/lib/module-unittest.html
@@ -880,15 +880,95 @@ test case
 ?                                                       +++++++++++++++++++++
 +     own implementation that does not subclass from TestCase, of course.
 """
-
+        self.maxDiff = None
         for type_changer in (lambda x: x, lambda x: x.decode('utf8')):
             try:
                 self.assertMultiLineEqual(type_changer(sample_text),
                                           type_changer(revised_sample_text))
             except self.failureException, e:
+                # need to remove the first line of the error message
+                error = str(e).encode('utf8').split('\n', 1)[1]
+
                 # assertMultiLineEqual is hooked up as the default for
                 # unicode strings - so we can't use it for this check
-                self.assertTrue(sample_text_error == str(e).encode('utf8'))
+                self.assertTrue(sample_text_error == error)
+
+    def testAssertSequenceEqualMaxDiff(self):
+        self.assertEqual(self.maxDiff, 80*8)
+        seq1 = 'a' + 'x' * 80**2
+        seq2 = 'b' + 'x' * 80**2
+        diff = '\n'.join(difflib.ndiff(pprint.pformat(seq1).splitlines(),
+                                       pprint.pformat(seq2).splitlines()))
+        # the +1 is the leading \n added by assertSequenceEqual
+        omitted = unittest.case.DIFF_OMITTED % (len(diff) + 1,)
+
+        self.maxDiff = len(diff)//2
+        try:
+            self.assertSequenceEqual(seq1, seq2)
+        except self.failureException as e:
+            msg = e.args[0]
+        else:
+            self.fail('assertSequenceEqual did not fail.')
+        self.assertTrue(len(msg) < len(diff))
+        self.assertIn(omitted, msg)
+
+        self.maxDiff = len(diff) * 2
+        try:
+            self.assertSequenceEqual(seq1, seq2)
+        except self.failureException as e:
+            msg = e.args[0]
+        else:
+            self.fail('assertSequenceEqual did not fail.')
+        self.assertTrue(len(msg) > len(diff))
+        self.assertNotIn(omitted, msg)
+
+        self.maxDiff = None
+        try:
+            self.assertSequenceEqual(seq1, seq2)
+        except self.failureException as e:
+            msg = e.args[0]
+        else:
+            self.fail('assertSequenceEqual did not fail.')
+        self.assertTrue(len(msg) > len(diff))
+        self.assertNotIn(omitted, msg)
+
+    def testTruncateMessage(self):
+        self.maxDiff = 1
+        message = self._truncateMessage('foo', 'bar')
+        omitted = unittest.case.DIFF_OMITTED % len('bar')
+        self.assertEqual(message, 'foo' + omitted)
+
+        self.maxDiff = None
+        message = self._truncateMessage('foo', 'bar')
+        self.assertEqual(message, 'foobar')
+
+        self.maxDiff = 4
+        message = self._truncateMessage('foo', 'bar')
+        self.assertEqual(message, 'foobar')
+
+    def testAssertDictEqualTruncates(self):
+        test = unittest.TestCase('assertEqual')
+        def truncate(msg, diff):
+            return 'foo'
+        test._truncateMessage = truncate
+        try:
+            test.assertDictEqual({}, {1: 0})
+        except self.failureException as e:
+            self.assertEqual(str(e), 'foo')
+        else:
+            self.fail('assertDictEqual did not fail')
+
+    def testAssertMultiLineEqualTruncates(self):
+        test = unittest.TestCase('assertEqual')
+        def truncate(msg, diff):
+            return 'foo'
+        test._truncateMessage = truncate
+        try:
+            test.assertMultiLineEqual('foo', 'bar')
+        except self.failureException as e:
+            self.assertEqual(str(e), 'foo')
+        else:
+            self.fail('assertMultiLineEqual did not fail')
 
     def testAssertIsNone(self):
         self.assertIsNone(None)
