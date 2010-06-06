@@ -102,11 +102,21 @@ specific case.
 
 The ``removeHandler`` decorator could also be a context manager.
 
+`Issue 8313: <http://bugs.python.org/issue8313>`_, <unprintable AssertionError object>
+message in unittest tracebacks, is hard to fix in versions of Python before 2.7.
+The fix in Python 2.7 relies on changes to both the traceback module and
+traceback objects. As the issue is rare I am leaving it unfixed in unittest2.
+
+There are several places in unittest2 (and unittest) that call ``str(...)`` on
+exceptions to get the exception message. This can fail if the exception was
+created with non-ascii unicode. This is rare and I won't address it unless it is
+actually reported as a problem for someone.
+
 
 CHANGELOG
 =========
 
-2010/06/XX - 0.4.2
+2010/06/06 - 0.4.2
 ------------------
 
 Improved help message for ``unit2 discover -h``.
@@ -225,5 +235,5 @@ TODO
 
 For *before* the Python 2.7 final release:
 
-* Issues 8302, 8303, 8351, 8564 and 8313 on the Python bug tracker
-* Document ``BaseTestSuite`` and ``_ErrorHolder``
+* `Issue 8564 <http://bugs.python.org/issue8564>`_ on the Python bug tracker
+* Document ``SkipTest``, ``BaseTestSuite`` and ``_ErrorHolder``
