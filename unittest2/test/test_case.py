@@ -900,7 +900,7 @@ test case
         diff = '\n'.join(difflib.ndiff(pprint.pformat(seq1).splitlines(),
                                        pprint.pformat(seq2).splitlines()))
         # the +1 is the leading \n added by assertSequenceEqual
-        omitted = unittest.case.DIFF_OMITTED % (len(diff) + 1,)
+        omitted = unittest2.case.DIFF_OMITTED % (len(diff) + 1,)
 
         self.maxDiff = len(diff)//2
         try:
@@ -935,7 +935,7 @@ test case
     def testTruncateMessage(self):
         self.maxDiff = 1
         message = self._truncateMessage('foo', 'bar')
-        omitted = unittest.case.DIFF_OMITTED % len('bar')
+        omitted = unittest2.case.DIFF_OMITTED % len('bar')
         self.assertEqual(message, 'foo' + omitted)
 
         self.maxDiff = None
@@ -947,7 +947,7 @@ test case
         self.assertEqual(message, 'foobar')
 
     def testAssertDictEqualTruncates(self):
-        test = unittest.TestCase('assertEqual')
+        test = unittest2.TestCase('assertEqual')
         def truncate(msg, diff):
             return 'foo'
         test._truncateMessage = truncate
@@ -959,7 +959,7 @@ test case
             self.fail('assertDictEqual did not fail')
 
     def testAssertMultiLineEqualTruncates(self):
-        test = unittest.TestCase('assertEqual')
+        test = unittest2.TestCase('assertEqual')
         def truncate(msg, diff):
             return 'foo'
         test._truncateMessage = truncate
