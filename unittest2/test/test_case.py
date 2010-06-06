@@ -699,13 +699,13 @@ class Test_TestCase(unittest2.TestCase, EqualityMixin, HashingMixin):
                                        pprint.pformat(seq2).splitlines()))
         try:
             self.assertSequenceEqual(seq1, seq2, max_diff=len(diff)/2)
-        except AssertionError as e:
+        except AssertionError, e:
             msg = e.args[0]
         self.assertTrue(len(msg) < len(diff))
 
         try:
             self.assertSequenceEqual(seq1, seq2, max_diff=len(diff)*2)
-        except AssertionError as e:
+        except AssertionError, e:
             msg = e.args[0]
         self.assertTrue(len(msg) > len(diff))
 
@@ -905,7 +905,7 @@ test case
         self.maxDiff = len(diff)//2
         try:
             self.assertSequenceEqual(seq1, seq2)
-        except self.failureException as e:
+        except self.failureException, e:
             msg = e.args[0]
         else:
             self.fail('assertSequenceEqual did not fail.')
@@ -915,7 +915,7 @@ test case
         self.maxDiff = len(diff) * 2
         try:
             self.assertSequenceEqual(seq1, seq2)
-        except self.failureException as e:
+        except self.failureException, e:
             msg = e.args[0]
         else:
             self.fail('assertSequenceEqual did not fail.')
@@ -925,7 +925,7 @@ test case
         self.maxDiff = None
         try:
             self.assertSequenceEqual(seq1, seq2)
-        except self.failureException as e:
+        except self.failureException, e:
             msg = e.args[0]
         else:
             self.fail('assertSequenceEqual did not fail.')
@@ -953,7 +953,7 @@ test case
         test._truncateMessage = truncate
         try:
             test.assertDictEqual({}, {1: 0})
-        except self.failureException as e:
+        except self.failureException, e:
             self.assertEqual(str(e), 'foo')
         else:
             self.fail('assertDictEqual did not fail')
@@ -965,7 +965,7 @@ test case
         test._truncateMessage = truncate
         try:
             test.assertMultiLineEqual('foo', 'bar')
-        except self.failureException as e:
+        except self.failureException, e:
             self.assertEqual(str(e), 'foo')
         else:
             self.fail('assertMultiLineEqual did not fail')
@@ -1040,19 +1040,6 @@ test case
         self.assertAlmostEquals(2.0, 2.0)
         self.assertNotAlmostEquals(3.0, 5.0)
         self.assert_(True)
-
-    def testPendingDeprecationMethodNames(self):
-        """Test fail* methods pending deprecation, they will warn in 3.2.
-
-        Do not use these methods.  They will go away in 3.3.
-        """
-        self.failIfEqual(3, 5)
-        self.failUnlessEqual(3, 3)
-        self.failUnlessAlmostEqual(2.0, 2.0)
-        self.failIfAlmostEqual(3.0, 5.0)
-        self.failUnless(True)
-        self.failUnlessRaises(TypeError, lambda _: 3.14 + u'spam')
-        self.failIf(False)
 
     def testDeepcopy(self):
         # Issue: 5660

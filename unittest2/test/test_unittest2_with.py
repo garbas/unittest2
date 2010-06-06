@@ -123,7 +123,21 @@ class TestWith(unittest2.TestCase):
                 pass
         Test = unittest2.skip('no reason')(Test)
         self.assertOldResultWarning(Test('testFoo'), 0)
-    
+
+    def testPendingDeprecationMethodNames(self):
+        """Test fail* methods pending deprecation, they will warn in 3.2.
+
+        Do not use these methods.  They will go away in 3.3.
+        """
+        with catch_warnings(record=True):
+            self.failIfEqual(3, 5)
+            self.failUnlessEqual(3, 3)
+            self.failUnlessAlmostEqual(2.0, 2.0)
+            self.failIfAlmostEqual(3.0, 5.0)
+            self.failUnless(True)
+            self.failUnlessRaises(TypeError, lambda _: 3.14 + u'spam')
+            self.failIf(False)
+
 
 if __name__ == '__main__':
     unittest2.main()
