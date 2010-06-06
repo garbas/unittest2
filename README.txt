@@ -31,7 +31,7 @@ New features include:
 * class and module level fixtures: ``setUpClass``, ``tearDownClass``,
   ``setUpModule``, ``tearDownModule``
 * test skipping and expected failures
-* new ``delta`` keyword argument to ``assertAlmostEquals`` for more useful
+* new ``delta`` keyword argument to ``assertAlmostEqual`` for more useful
   comparison and for comparing non-numeric objects (like datetimes)
 * ``load_tests`` protocol for loading tests from modules or packages 
 * ``startTestRun`` and ``stopTestRun`` methods on TestResult
