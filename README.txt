@@ -1,5 +1,5 @@
 unittest2 is a backport of the new features added to the unittest testing
-framework in Python 2.7. It is tested to run on Python 2.4 - 2.6.
+framework in Python 2.7. It is tested to run on Python 2.4 - 2.7.
 
 To use unittest2 instead of unittest simply replace ``import unittest`` with
 ``import unittest2``.
