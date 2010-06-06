@@ -833,9 +833,11 @@ class TestCase(unittest.TestCase):
         self.assert_(isinstance(d2, dict), 'Second argument is not a dictionary')
 
         if d1 != d2:
-            standardMsg = ('\n' + '\n'.join(difflib.ndiff(
+            standardMsg = '%s != %s' % (safe_repr(d1, True), safe_repr(d2, True))
+            diff = ('\n' + '\n'.join(difflib.ndiff(
                            pprint.pformat(d1).splitlines(),
                            pprint.pformat(d2).splitlines())))
+            standardMsg = self._truncateMessage(standardMsg, diff)
             self.fail(self._formatMessage(msg, standardMsg))
 
     def assertDictContainsSubset(self, expected, actual, msg=None):
