@@ -121,6 +121,12 @@ Matching files during test discovery is done in ``TestLoader._match_path``. This
 method can be overriden in subclasses to, for example, match on the full file
 path or use regular expressions for matching.
 
+Addition of a setuptools compatible entrypoint for the unit2 test runner script.
+Contributed by Chris Withers.
+
+Tests fixed to be compatible with Python 2.7, where deprecation warnings are
+silenced by default.
+
 Feature parity with unittest in Python 2.7 RC 1.
 
 
