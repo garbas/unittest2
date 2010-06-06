@@ -18,6 +18,9 @@ from unittest2.compatibility import wraps
 __unittest = True
 
 
+DIFF_OMITTED = ('\nDiff is %s characters long. '
+                 'Set self.maxDiff to None to see it.')
+
 class SkipTest(Exception):
     """
     Raise this exception in a test to skip it.
@@ -726,6 +729,12 @@ class TestCase(unittest.TestCase):
             standardMsg += diffMsg
         msg = self._formatMessage(msg, standardMsg)
         self.fail(msg)
+
+    def _truncateMessage(self, message, diff):
+        max_diff = self.maxDiff
+        if max_diff is None or len(diff) <= max_diff:
+            return message + diff
+        return message + (DIFF_OMITTED % len(diff))
 
     def assertListEqual(self, list1, list2, msg=None):
         """A list-specific equality assertion.
