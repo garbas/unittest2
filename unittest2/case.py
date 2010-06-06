@@ -725,8 +725,8 @@ class TestCase(unittest.TestCase):
         diffMsg = '\n' + '\n'.join(
             difflib.ndiff(pprint.pformat(seq1).splitlines(),
                           pprint.pformat(seq2).splitlines()))
-        if len(diffMsg) <= max_diff:
-            standardMsg += diffMsg
+
+        standardMsg = self._truncateMessage(standardMsg, diffMsg)
         msg = self._formatMessage(msg, standardMsg)
         self.fail(msg)
 
