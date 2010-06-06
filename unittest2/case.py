@@ -913,8 +913,10 @@ class TestCase(unittest.TestCase):
                 'Second argument is not a string'))
 
         if first != second:
-            standardMsg = '\n' + ''.join(difflib.ndiff(first.splitlines(True),
+            standardMsg = '%s != %s' % (safe_repr(first, True), safe_repr(second, True))
+            diff = '\n' + ''.join(difflib.ndiff(first.splitlines(True),
                                                        second.splitlines(True)))
+            standardMsg = self._truncateMessage(standardMsg, diff)
             self.fail(self._formatMessage(msg, standardMsg))
 
     def assertLess(self, a, b, msg=None):
