@@ -102,7 +102,7 @@ specific case.
 
 The ``removeHandler`` decorator could also be a context manager.
 
-`Issue 8313: <http://bugs.python.org/issue8313>`_, <unprintable AssertionError object>
+`Issue 8313: <http://bugs.python.org/issue8313>`_, \<unprintable AssertionError object\>
 message in unittest tracebacks, is hard to fix in versions of Python before 2.7.
 The fix in Python 2.7 relies on changes to both the traceback module and
 traceback objects. As the issue is rare I am leaving it unfixed in unittest2.
