@@ -2,7 +2,6 @@
 
 __unittest = True
 
-from unittest2.main import main, TestProgram, USAGE_AS_MAIN
-TestProgram.USAGE = USAGE_AS_MAIN
+from unittest2.main import main_
 
-main(module=None)
+main_()

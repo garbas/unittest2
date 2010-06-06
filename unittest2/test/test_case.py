@@ -692,23 +692,6 @@ class Test_TestCase(unittest2.TestCase, EqualityMixin, HashingMixin):
         self.assertRaises(self.failureException, self.assertDictEqual, [], d)
         self.assertRaises(self.failureException, self.assertDictEqual, 1, 1)
 
-    def testAssertSequenceEqualMaxDiff(self):
-        seq1 = 'a' + 'x' * 80**2
-        seq2 = 'b' + 'x' * 80**2
-        diff = '\n'.join(difflib.ndiff(pprint.pformat(seq1).splitlines(),
-                                       pprint.pformat(seq2).splitlines()))
-        try:
-            self.assertSequenceEqual(seq1, seq2, max_diff=len(diff)/2)
-        except AssertionError, e:
-            msg = e.args[0]
-        self.assertTrue(len(msg) < len(diff))
-
-        try:
-            self.assertSequenceEqual(seq1, seq2, max_diff=len(diff)*2)
-        except AssertionError, e:
-            msg = e.args[0]
-        self.assertTrue(len(msg) > len(diff))
-
     def testAssertItemsEqual(self):
         self.assertItemsEqual([1, 2, 3], [3, 2, 1])
         self.assertItemsEqual(['foo', 'bar', 'baz'], ['bar', 'baz', 'foo'])
