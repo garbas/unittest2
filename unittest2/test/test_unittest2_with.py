@@ -3,6 +3,9 @@ from __future__ import with_statement
 import unittest2
 from unittest2.test.support import OldTestResult, catch_warnings
 
+import warnings
+# needed to enable the deprecation warnings
+warnings.simplefilter('default')
 
 class TestWith(unittest2.TestCase):
     """Tests that use the with statement live in this
