@@ -402,6 +402,9 @@ class TestCase(unittest.TestCase):
         self.setUp()
         getattr(self, self._testMethodName)()
         self.tearDown()
+        while self._cleanups:
+            function, args, kwargs = self._cleanups.pop(-1)
+            function(*args, **kwargs)
 
     def skipTest(self, reason):
         """Skip this test."""

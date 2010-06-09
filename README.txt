@@ -133,6 +133,9 @@ CHANGELOG
 Addition of a setuptools compatible test collector (very basic). Specify
 ``test_suite = 'unittest2.collector'`` in your setup.py.
 
+``TestSuite.debug()`` and ``TestCase.debug()`` now execute cleanup functions
+and class and module level setups and teardowns.
+
 
 2010/06/06 - 0.4.2
 ------------------
