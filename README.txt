@@ -88,7 +88,9 @@ command line features of unittest2 are provided by a ``unit2`` (and
 ``unit2.py``) script instead.
 
 unittest2 includes a very basic setuptools compatible test collector. Specify
-``test_suite = 'unittest2.collector'`` in your setup.py.
+``test_suite = 'unittest2.collector'`` in your setup.py. This starts test
+discovery with the default parameters from the current directory, so it is
+perhaps most useful as an example (see unittest2/collector.py).
 
 
 
