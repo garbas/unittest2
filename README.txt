@@ -87,6 +87,10 @@ False in Python 2.7 for backwards compatibility reasons.
 command line features of unittest2 are provided by a ``unit2`` (and 
 ``unit2.py``) script instead.
 
+unittest2 includes a very basic setuptools compatible test collector. Specify
+``test_suite = 'unittest2.collector'`` in your setup.py.
+
+
 
 Issues
 ======
@@ -112,6 +116,10 @@ exceptions to get the exception message. This can fail if the exception was
 created with non-ascii unicode. This is rare and I won't address it unless it is
 actually reported as a problem for someone.
 
+A comparison of text or long sequences (using ``assertSequenceEqual`` or
+``assertMultiLineEqual`` etc) can take a *long* time to generate diffs for
+failure messages. These methods use ``prettyprint`` and ``difflib``.
+
 
 CHANGELOG
 =========
@@ -119,6 +127,9 @@ CHANGELOG
 
 2010/XX/XX - 0.5.0
 ------------------
+
+Addition of a setuptools compatible test collector (very basic). Specify
+``test_suite = 'unittest2.collector'`` in your setup.py.
 
 
 2010/06/06 - 0.4.2
