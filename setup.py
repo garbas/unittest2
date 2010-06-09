@@ -72,5 +72,7 @@ else:
                 ],
             },
     ))
+    
+    params['test_suite'] = 'unittest2.collector'
 
 setup(**params)
