@@ -29,14 +29,15 @@ SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 __all__ = ['TestResult', 'TestCase', 'TestSuite',
            'TextTestRunner', 'TestLoader', 'FunctionTestCase', 'main',
            'defaultTestLoader', 'SkipTest', 'skip', 'skipIf', 'skipUnless',
-           'expectedFailure', 'TextTestResult', '__version__']
+           'expectedFailure', 'TextTestResult', '__version__', 'collector']
 
-__version__ = '0.4.2'
+__version__ = '0.5.0 alpha'
 
 # Expose obsolete functions for backwards compatibility
 __all__.extend(['getTestCaseNames', 'makeSuite', 'findTestCases'])
 
 
+from unittest2.collector import collector
 from unittest2.result import TestResult
 from unittest2.case import (
     TestCase, FunctionTestCase, SkipTest, skip, skipIf,

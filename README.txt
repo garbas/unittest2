@@ -116,6 +116,11 @@ actually reported as a problem for someone.
 CHANGELOG
 =========
 
+
+2010/XX/XX - 0.5.0
+------------------
+
+
 2010/06/06 - 0.4.2
 ------------------
 
