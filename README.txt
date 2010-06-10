@@ -136,6 +136,9 @@ Addition of a setuptools compatible test collector (very basic). Specify
 ``TestSuite.debug()`` and ``TestCase.debug()`` now execute cleanup functions
 and class and module level setups and teardowns.
 
+No longer monkey-patch os.path.relpath for Python 2.4 / 2.5 so that projects
+don't accidentally depend on our patching. Contributed by Konrad Delong.
+
 
 2010/06/06 - 0.4.2
 ------------------

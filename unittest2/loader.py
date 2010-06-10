@@ -11,8 +11,10 @@ from fnmatch import fnmatch
 
 from unittest2 import case, suite
 
-# setup os.path.relpath if needed
-import unittest2.compatibility
+try:
+    from os.path import relpath
+except ImportError:
+    from unittest2.compatibility import relpath
 
 __unittest = True
 
@@ -225,7 +227,7 @@ class TestLoader(unittest.TestLoader):
     def _get_name_from_path(self, path):
         path = os.path.splitext(os.path.normpath(path))[0]
 
-        _relpath = os.path.relpath(path, self._top_level_dir)
+        _relpath = relpath(path, self._top_level_dir)
         assert not os.path.isabs(_relpath), "Path must be within the project"
         assert not _relpath.startswith('..'), "Path must be within the project"
 
