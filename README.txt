@@ -17,7 +17,8 @@ should be possible to use the unittest2 test running infrastructure without
 having to switch all your tests to using unittest2 immediately. Similarly
 you can use the new assert methods on ``unittest2.TestCase`` with the standard
 unittest test running infrastructure. Not all of the new features in unittest2
-will work with the standard unittest test loaders and runners however.
+will work with the standard unittest test loaders, runners result objects
+however.
 
 New features include:
 
