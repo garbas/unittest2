@@ -492,8 +492,11 @@ class TestSetups(unittest2.TestCase):
         Test.__module__ = 'Module'
         sys.modules['Module'] = Module
 
-        suite = unittest2.defaultTestLoader.loadTestsFromTestCase(Test)
-
+        _suite = unittest2.defaultTestLoader.loadTestsFromTestCase(Test)
+        suite = unittest2.TestSuite()
+        
+        # nesting a suite again exposes a bug in the initial implementation
+        suite.addTest(_suite)
         messages = ('setUpModule', 'tearDownModule', 'setUpClass', 'tearDownClass', 'test_something')
         for phase, msg in enumerate(messages):
             self.assertRaisesRegexp(Exception, msg, suite.debug)
