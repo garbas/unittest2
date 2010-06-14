@@ -8,6 +8,7 @@
 # http://www.voidspace.org.uk/python/license.shtml
 
 import os
+import sys
 from unittest2 import __version__ as VERSION
 
 NAME = 'unittest2'
@@ -60,18 +61,20 @@ params = dict(
     keywords=KEYWORDS
 )
 
+
+py_version = sys.version[:3]
+
 try:
     from setuptools import setup
 except ImportError:
     from distutils.core import setup
 else:
-    params.update(dict(
-        entry_points = {
-            'console_scripts': [
-                'unit2 = unittest2:main_',
-                ],
-            },
-    ))
+    params['entry_points'] = {
+        'console_scripts': [
+            'unit2 = unittest2:main_',
+            'unit2-%s = unittest2:main_' % py_version,
+        ],
+    }
     
     params['test_suite'] = 'unittest2.collector'
 
