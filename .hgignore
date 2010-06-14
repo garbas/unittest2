@@ -5,3 +5,4 @@ dist
 *.wpu
 *$py.class
 unittest2.egg-info/*
+build/*
