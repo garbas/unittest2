@@ -140,6 +140,10 @@ and class and module level setups and teardowns.
 No longer monkey-patch os.path.relpath for Python 2.4 / 2.5 so that projects
 don't accidentally depend on our patching. Contributed by Konrad Delong.
 
+Added a Python version specific unit2 entrypoint. This will, for example,
+create a ``unit2-2.6`` script if unittest2 is installed with Python 2.6.
+(Requires setuptools or distribute.)
+
 
 2010/06/06 - 0.4.2
 ------------------
