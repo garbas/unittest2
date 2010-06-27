@@ -128,7 +128,7 @@ class _AssertRaisesContext(object):
         return True
 
 
-class _TyepEqualityDict(object):
+class _TypeEqualityDict(object):
     
     def __init__(self, testcase):
         self.testcase = testcase
@@ -211,7 +211,7 @@ class TestCase(unittest.TestCase):
         # Map types to custom assertEqual functions that will compare
         # instances of said type in more detail to generate a more useful
         # error message.
-        self._type_equality_funcs = _TyepEqualityDict(self)
+        self._type_equality_funcs = _TypeEqualityDict(self)
         self.addTypeEqualityFunc(dict, 'assertDictEqual')
         self.addTypeEqualityFunc(list, 'assertListEqual')
         self.addTypeEqualityFunc(tuple, 'assertTupleEqual')
