@@ -49,7 +49,7 @@ def removeHandler(method=None):
                 return method(*args, **kwargs)
             finally:
                 signal.signal(signal.SIGINT, initial)
-        inner = wraps(inner)(method)
+        inner = wraps(method)(inner)
         return inner
 
     global _interrupt_handler
