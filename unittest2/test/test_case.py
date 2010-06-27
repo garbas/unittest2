@@ -1,15 +1,18 @@
 import difflib
 import pprint
 import re
+import sys
 
 from copy import deepcopy
 
 import unittest2
 
-from unittest2.test.support import (
+from unittest2.test.support import\
     OldTestResult, EqualityMixin, HashingMixin, LoggingResult
-)
 
+if sys.version_info[:2] == (2,3):
+    from sets import Set as set
+    from sets import ImmutableSet as frozenset
 
 class MyException(Exception):
     pass
@@ -100,7 +103,9 @@ class TestCleanUp(unittest2.TestCase):
 
         self.assertFalse(test.doCleanups())
 
-        (test1, (Type1, instance1, _)), (test2, (Type2, instance2, _)) = reversed(MockResult.errors)
+        errors = MockResult.errors[:]
+        errors.reverse()
+        (test1, (Type1, instance1, _)), (test2, (Type2, instance2, _)) = errors
         self.assertEqual((test1, Type1, instance1), (test, Exception, exc1))
         self.assertEqual((test2, Type2, instance2), (test, Exception, exc2))
 

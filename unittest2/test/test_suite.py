@@ -3,6 +3,10 @@ from unittest2.test.support import EqualityMixin, LoggingResult
 import sys
 import unittest2
 
+if sys.version_info[:2] == (2,3):
+    from sets import Set as set
+    from sets import ImmutableSet as frozenset
+
 class Test(object):
     class Foo(unittest2.TestCase):
         def test_1(self): pass
@@ -11,7 +15,7 @@ class Test(object):
         def runTest(self): pass
 
 def _mk_TestSuite(*names):
-    return unittest2.TestSuite(Test.Foo(n) for n in names)
+    return unittest2.TestSuite([Test.Foo(n) for n in names])
 
 
 class Test_TestSuite(unittest2.TestCase, EqualityMixin):
@@ -299,12 +303,12 @@ class Test_TestSuite(unittest2.TestCase, EqualityMixin):
         class Test(unittest2.TestCase):
             wasSetUp = False
             wasTornDown = False
-            @classmethod
             def setUpClass(cls):
                 cls.wasSetUp = True
-            @classmethod
+            setUpClass = classmethod(setUpClass)
             def tearDownClass(cls):
                 cls.wasTornDown = True
+            tearDownClass = classmethod(tearDownClass)
             def testPass(self):
                 pass
             def testFail(self):
@@ -312,12 +316,12 @@ class Test_TestSuite(unittest2.TestCase, EqualityMixin):
         class Module(object):
             wasSetUp = False
             wasTornDown = False
-            @staticmethod
             def setUpModule():
                 Module.wasSetUp = True
-            @staticmethod
+            setUpModule = classmethod(setUpModule)
             def tearDownModule():
                 Module.wasTornDown = True
+            setUpModule = classmethod(tearDownModule)
         
         Test.__module__ = 'Module'
         sys.modules['Module'] = Module
