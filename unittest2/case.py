@@ -7,11 +7,14 @@ import re
 import unittest
 import warnings
 
+if sys.version_info[:2] == (2,3):
+    from sets import Set as set
+    from sets import ImmutableSet as frozenset
+
 from unittest2 import result
-from unittest2.util import (
-    safe_repr, safe_str, strclass,
+from unittest2.util import\
+    safe_repr, safe_str, strclass,\
     unorderable_list_difference
-)
 
 from unittest2.compatibility import wraps
 
@@ -55,9 +58,9 @@ def skip(reason):
     """
     def decorator(test_item):
         if not (isinstance(test_item, type) and issubclass(test_item, TestCase)):
-            @wraps(test_item)
             def skip_wrapper(*args, **kwargs):
                 raise SkipTest(reason)
+            skip_wrapper = wraps(test_item)(skip_wrapper)
             test_item = skip_wrapper
         
         test_item.__unittest_skip__ = True
@@ -83,13 +86,13 @@ def skipUnless(condition, reason):
 
 
 def expectedFailure(func):
-    @wraps(func)
     def wrapper(*args, **kwargs):
         try:
             func(*args, **kwargs)
         except Exception:
             raise _ExpectedFailure(sys.exc_info())
         raise _UnexpectedSuccess
+    wrapper = wraps(func)(wrapper)
     return wrapper
 
 
@@ -245,14 +248,14 @@ class TestCase(unittest.TestCase):
     def setUp(self):
         "Hook method for setting up the test fixture before exercising it."
     
-    @classmethod
     def setUpClass(cls):
         "Hook method for setting up class fixture before running tests in the class."
-
-    @classmethod
+    setUpClass = classmethod(setUpClass)
+    
     def tearDownClass(cls):
         "Hook method for deconstructing the class fixture after running all tests in the class."
-
+    tearDownClass = classmethod(tearDownClass)
+    
     def tearDown(self):
         "Hook method for deconstructing the test fixture after testing it."
 
@@ -850,18 +853,23 @@ class TestCase(unittest.TestCase):
         for key, value in expected.iteritems():
             if key not in actual:
                 missing.append(key)
-            elif value != actual[key]:
-                mismatched.append('%s, expected: %s, actual: %s' %
-                                  (safe_repr(key), safe_repr(value), 
-                                   safe_repr(actual[key])))
+            else:
+                try:
+                    are_equal = (value == actual[key])
+                except UnicodeDecodeError:
+                    are_equal = False
+                if not are_equal:
+                    mismatched.append('%s, expected: %s, actual: %s' %
+                                      (safe_repr(key), safe_repr(value), 
+                                       safe_repr(actual[key])))
 
         if not (missing or mismatched):
             return
 
         standardMsg = ''
         if missing:
-            standardMsg = 'Missing: %s' % ','.join(safe_repr(m) for m in 
-                                                    missing)
+            standardMsg = 'Missing: %s' % ','.join([safe_repr(m) for m in 
+                                                    missing])
         if mismatched:
             if standardMsg:
                 standardMsg += '; '
@@ -885,8 +893,11 @@ class TestCase(unittest.TestCase):
             - [0, 0, 1] and [0, 1] compare unequal.
         """
         try:
-            expected = sorted(expected_seq)
-            actual = sorted(actual_seq)
+            
+            expected = expected_seq[:]
+            expected.sort()
+            actual = actual_seq[:]
+            actual.sort()
         except TypeError:
             # Unsortable items (example: set(), complex(), ...)
             expected = list(expected_seq)
