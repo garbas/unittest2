@@ -144,6 +144,9 @@ Added a Python version specific unit2 entrypoint. This will, for example,
 create a ``unit2-2.6`` script if unittest2 is installed with Python 2.6.
 (Requires setuptools or distribute.)
 
+Python 2.3 compatibility (in the python2.3 branch of the repository),
+contributed by Mark Roddy.
+
 
 2010/06/06 - 0.4.2
 ------------------
