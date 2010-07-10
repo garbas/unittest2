@@ -147,6 +147,10 @@ create a ``unit2-2.6`` script if unittest2 is installed with Python 2.6.
 Python 2.3 compatibility (in the python2.3 branch of the repository),
 contributed by Mark Roddy.
 
+setuptools console script entry points are created as '.py' scripts on Windows.
+
+Feature parity with the Python 2.7 final release.
+
 
 2010/06/06 - 0.4.2
 ------------------
