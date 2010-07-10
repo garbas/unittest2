@@ -17,7 +17,7 @@ PACKAGES = ['unittest2', 'unittest2.test']
 SCRIPTS = ['unit2.py', 'unit2']
 
 DESCRIPTION = ('The new features in unittest for Python 2.7 backported to '
-               'Python 2.4+.')
+               'Python 2.3+.')
 
 URL = 'http://pypi.python.org/pypi/unittest2'
 
@@ -30,6 +30,7 @@ CLASSIFIERS = [
     'Intended Audience :: Developers',
     'License :: OSI Approved :: BSD License',
     'Programming Language :: Python',
+    'Programming Language :: Python :: 2.3',
     'Programming Language :: Python :: 2.4',
     'Programming Language :: Python :: 2.5',
     'Programming Language :: Python :: 2.6',
