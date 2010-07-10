@@ -64,6 +64,14 @@ params = dict(
 
 py_version = sys.version[:3]
 
+ext = ''
+if sys.platform == 'win32':
+    ext = '.py'
+
+SCRIPT1 = 'unit2%s' % ext
+SCRIPT2 = 'unit2-%s%s' % (py_version, ext)
+
+
 try:
     from setuptools import setup
 except ImportError:
@@ -71,8 +79,8 @@ except ImportError:
 else:
     params['entry_points'] = {
         'console_scripts': [
-            'unit2 = unittest2:main_',
-            'unit2-%s = unittest2:main_' % py_version,
+            '%s = unittest2:main_' % SCRIPT1,
+            ' = unittest2:main_' % SCRIPT2,
         ],
     }
     
