@@ -65,8 +65,19 @@ Look for notes about features added or changed in Python 2.7.
 
 .. note::
 
-    unittest2 is already in use for development for development of 
-    `distutils2 <http://hg.python.org/distutils2>`_.
+    unittest2 is already in use for development for development of `distutils2
+    <http://hg.python.org/distutils2>`_.
+    
+    Version 0.5.0 of unittest2 has feature parity with unittest_ in Python 2.7
+    final. If you want to ensure that your tests run identically under unittest2
+    and unittest in Python 2.7 you should use unittest2 0.5.0.
+    
+    Later versions of unittest2 include changes in unittest made in Python 3.2
+    and onwards after the release of Python 2.7.
+
+
+.. _unittest: http://docs.python.org/release/2.7/library/unittest.html
+
 
 Differences
 ===========
