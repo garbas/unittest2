@@ -34,13 +34,13 @@ class Test_TestSkipping(unittest2.TestCase):
                     (unittest2.skipIf, True, False))
         for deco, do_skip, dont_skip in op_table:
             class Foo(unittest2.TestCase):
-                @deco(do_skip, "testing")
                 def test_skip(self): 
                     pass
+                test_skip = deco(do_skip, "testing")(test_skip)
 
-                @deco(dont_skip, "testing")
                 def test_dont_skip(self): 
                     pass
+                test_dont_skip = deco(dont_skip, "testing")(test_dont_skip)
             
             test_do_skip = Foo("test_skip")
             test_dont_skip = Foo("test_dont_skip")
@@ -73,9 +73,9 @@ class Test_TestSkipping(unittest2.TestCase):
 
     def test_expected_failure(self):
         class Foo(unittest2.TestCase):
-            @unittest2.expectedFailure
             def test_die(self):
                 self.fail("help me!")
+            test_die = unittest2.expectedFailure(test_die)
         events = []
         result = LoggingResult(events)
         test = Foo("test_die")
@@ -87,9 +87,9 @@ class Test_TestSkipping(unittest2.TestCase):
 
     def test_unexpected_success(self):
         class Foo(unittest2.TestCase):
-            @unittest2.expectedFailure
             def test_die(self):
                 pass
+            test_die = unittest2.expectedFailure(test_die)
         events = []
         result = LoggingResult(events)
         test = Foo("test_die")
@@ -108,9 +108,9 @@ class Test_TestSkipping(unittest2.TestCase):
                 Foo.wasSetUp = True
             def tornDown(self):
                 Foo.wasTornDown = True
-            @unittest2.skip('testing')
             def test_1(self):
                 pass
+            test_1 = unittest2.skip('testing')(test_1)
         
         result = unittest2.TestResult()
         test = Foo("test_1")
@@ -127,10 +127,9 @@ class Test_TestSkipping(unittest2.TestCase):
             return inner
         
         class Foo(unittest2.TestCase):
-            @decorator
-            @unittest2.skip('testing')
             def test_1(self):
                 pass
+            test_1 = decorator(unittest2.skip('testing')(test_1))
         
         result = unittest2.TestResult()
         test = Foo("test_1")
