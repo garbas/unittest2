@@ -71,7 +71,6 @@ if sys.platform == 'win32':
 SCRIPT1 = 'unit2%s' % ext
 SCRIPT2 = 'unit2-%s%s' % (py_version, ext)
 
-
 try:
     from setuptools import setup
 except ImportError:
@@ -80,7 +79,7 @@ else:
     params['entry_points'] = {
         'console_scripts': [
             '%s = unittest2:main_' % SCRIPT1,
-            ' = unittest2:main_' % SCRIPT2,
+            '%s = unittest2:main_' % SCRIPT2,
         ],
     }
     
