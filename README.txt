@@ -283,7 +283,4 @@ Initial release.
 TODO
 ====
 
-For *before* the Python 2.7 final release:
-
-* `Issue 8564 <http://bugs.python.org/issue8564>`_ on the Python bug tracker
-* Document ``SkipTest``, ``BaseTestSuite`` and ``_ErrorHolder``
+* Document ``SkipTest``, ``BaseTestSuite```
