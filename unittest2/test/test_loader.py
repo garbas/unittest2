@@ -3,6 +3,9 @@ import types
 
 import unittest2
 
+if sys.version_info[:2] == (2,3):
+    from sets import Set as set
+    from sets import ImmutableSet as frozenset
 
 class Test_TestLoader(unittest2.TestCase):
 
@@ -871,9 +874,9 @@ class Test_TestLoader(unittest2.TestCase):
 
         testcase_1 = Test1('test')
         class Foo(unittest2.TestCase):
-            @staticmethod
             def foo():
                 return testcase_1
+            foo = staticmethod(foo)
         m.Foo = Foo
 
         loader = unittest2.TestLoader()

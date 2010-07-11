@@ -12,11 +12,11 @@ from unittest2.compatibility import wraps
 __unittest = True
 
 def failfast(method):
-    @wraps(method)
     def inner(self, *args, **kw):
         if getattr(self, 'failfast', False):
             self.stop()
         return method(self, *args, **kw)
+    inner = wraps(method)(inner)
     return inner
 
 
@@ -100,21 +100,22 @@ class TestResult(unittest.TestResult):
         See stopTest for a method called after each test.
         """
 
-    @failfast
+
     def addError(self, test, err):
         """Called when an error has occurred. 'err' is a tuple of values as
         returned by sys.exc_info().
         """
         self.errors.append((test, self._exc_info_to_string(err, test)))
         self._mirrorOutput = True
+    addError = failfast(addError)
 
-    @failfast
     def addFailure(self, test, err):
         """Called when an error has occurred. 'err' is a tuple of values as
         returned by sys.exc_info()."""
         self.failures.append((test, self._exc_info_to_string(err, test)))
         self._mirrorOutput = True
-
+    addFailure = failfast(addFailure)
+    
     def addSuccess(self, test):
         "Called when a test has completed successfully"
         pass
@@ -128,10 +129,10 @@ class TestResult(unittest.TestResult):
         self.expectedFailures.append(
             (test, self._exc_info_to_string(err, test)))
 
-    @failfast
     def addUnexpectedSuccess(self, test):
         """Called when a test was expected to fail, but succeed."""
         self.unexpectedSuccesses.append(test)
+    addUnexpectedSuccess = failfast(addUnexpectedSuccess)
 
     def wasSuccessful(self):
         "Tells whether or not this result was a success"
