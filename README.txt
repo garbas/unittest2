@@ -142,7 +142,7 @@ CHANGELOG
 =========
 
 
-2010/XX/XX - 0.5.0
+2010/07/11 - 0.5.0
 ------------------
 
 Addition of a setuptools compatible test collector (very basic). Specify
