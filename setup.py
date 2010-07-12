@@ -65,12 +65,8 @@ params = dict(
 
 py_version = sys.version[:3]
 
-ext = ''
-if sys.platform == 'win32':
-    ext = '.py'
-
-SCRIPT1 = 'unit2%s' % ext
-SCRIPT2 = 'unit2-%s%s' % (py_version, ext)
+SCRIPT1 = 'unit2'
+SCRIPT2 = 'unit2-%s' % (py_version,)
 
 try:
     from setuptools import setup
