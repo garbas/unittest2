@@ -144,6 +144,13 @@ failure messages. These methods use ``prettyprint`` and ``difflib``.
 CHANGELOG
 =========
 
+2010/XX/XX - 0.X.X
+------------------
+
+Reverted script names created by setuptools back to "unit2" instead of
+"unit2.py". (Not necessary as setuptools creates stub .exes for console scripts
+anyway.)
+
 
 2010/07/11 - 0.5.0
 ------------------
