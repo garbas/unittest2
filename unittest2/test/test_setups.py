@@ -30,10 +30,10 @@ class TestSetups(unittest2.TestCase):
     def test_setup_class(self):
         class Test(unittest2.TestCase):
             setUpCalled = 0
-            @classmethod
             def setUpClass(cls):
                 Test.setUpCalled += 1
                 unittest2.TestCase.setUpClass()
+            setUpClass = classmethod(setUpClass)
             def test_one(self):
                 pass
             def test_two(self):
@@ -48,10 +48,10 @@ class TestSetups(unittest2.TestCase):
     def test_teardown_class(self):
         class Test(unittest2.TestCase):
             tearDownCalled = 0
-            @classmethod
             def tearDownClass(cls):
                 Test.tearDownCalled += 1
                 unittest2.TestCase.tearDownClass()
+            tearDownClass = classmethod(tearDownClass)
             def test_one(self):
                 pass
             def test_two(self):
@@ -66,10 +66,10 @@ class TestSetups(unittest2.TestCase):
     def test_teardown_class_two_classes(self):
         class Test(unittest2.TestCase):
             tearDownCalled = 0
-            @classmethod
             def tearDownClass(cls):
                 Test.tearDownCalled += 1
                 unittest2.TestCase.tearDownClass()
+            tearDownClass = classmethod(tearDownClass)
             def test_one(self):
                 pass
             def test_two(self):
@@ -77,10 +77,10 @@ class TestSetups(unittest2.TestCase):
             
         class Test2(unittest2.TestCase):
             tearDownCalled = 0
-            @classmethod
             def tearDownClass(cls):
                 Test2.tearDownCalled += 1
                 unittest2.TestCase.tearDownClass()
+            tearDownClass = classmethod(tearDownClass)
             def test_one(self):
                 pass
             def test_two(self):
@@ -95,9 +95,9 @@ class TestSetups(unittest2.TestCase):
 
     def test_error_in_setupclass(self):
         class BrokenTest(unittest2.TestCase):
-            @classmethod
             def setUpClass(cls):
                 raise TypeError('foo')
+            setUpClass = classmethod(setUpClass)
             def test_one(self):
                 pass
             def test_two(self):
@@ -114,10 +114,10 @@ class TestSetups(unittest2.TestCase):
     def test_error_in_teardown_class(self):
         class Test(unittest2.TestCase):
             tornDown = 0
-            @classmethod
             def tearDownClass(cls):
                 Test.tornDown += 1
                 raise TypeError('foo')
+            tearDownClass = classmethod(tearDownClass)
             def test_one(self):
                 pass
             def test_two(self):
@@ -125,10 +125,10 @@ class TestSetups(unittest2.TestCase):
             
         class Test2(unittest2.TestCase):
             tornDown = 0
-            @classmethod
             def tearDownClass(cls):
                 Test2.tornDown += 1
                 raise TypeError('foo')
+            tearDownClass = classmethod(tearDownClass)
             def test_one(self):
                 pass
             def test_two(self):
@@ -147,13 +147,13 @@ class TestSetups(unittest2.TestCase):
     def test_class_not_torndown_when_setup_fails(self):
         class Test(unittest2.TestCase):
             tornDown = False
-            @classmethod
             def setUpClass(cls):
                 raise TypeError
-            @classmethod
+            setUpClass = classmethod(setUpClass)
             def tearDownClass(cls):
                 Test.tornDown = True
                 raise TypeError('foo')
+            tearDownClass = classmethod(tearDownClass)
             def test_one(self):
                 pass
 
@@ -164,12 +164,12 @@ class TestSetups(unittest2.TestCase):
         class Test(unittest2.TestCase):
             classSetUp = False
             tornDown = False
-            @classmethod
             def setUpClass(cls):
                 Test.classSetUp = True
-            @classmethod
+            setUpClass = classmethod(setUpClass)
             def tearDownClass(cls):
                 Test.tornDown = True
+            tearDownClass = classmethod(tearDownClass)
             def test_one(self):
                 pass
 
@@ -182,52 +182,52 @@ class TestSetups(unittest2.TestCase):
         results = []
         
         class Module1(object):
-            @staticmethod
             def setUpModule():
                 results.append('Module1.setUpModule')
-            @staticmethod
+            setUpModule = staticmethod(setUpModule)
             def tearDownModule():
                 results.append('Module1.tearDownModule')
+            tearDownModule = staticmethod(tearDownModule)
     
         class Module2(object):
-            @staticmethod
             def setUpModule():
                 results.append('Module2.setUpModule')
-            @staticmethod
+            setUpModule = staticmethod(setUpModule)
             def tearDownModule():
                 results.append('Module2.tearDownModule')
+            tearDownModule = staticmethod(tearDownModule)
                 
         class Test1(unittest2.TestCase):
-            @classmethod
             def setUpClass(cls):
                 results.append('setup 1')
-            @classmethod
+            setUpClass = classmethod(setUpClass)
             def tearDownClass(cls):
                 results.append('teardown 1')
+            tearDownClass = classmethod(tearDownClass)
             def testOne(self):
                 results.append('Test1.testOne')
             def testTwo(self):
                 results.append('Test1.testTwo')
             
         class Test2(unittest2.TestCase):
-            @classmethod
             def setUpClass(cls):
                 results.append('setup 2')
-            @classmethod
+            setUpClass = classmethod(setUpClass)
             def tearDownClass(cls):
                 results.append('teardown 2')
+            tearDownClass = classmethod(tearDownClass)
             def testOne(self):
                 results.append('Test2.testOne')
             def testTwo(self):
                 results.append('Test2.testTwo')
             
         class Test3(unittest2.TestCase):
-            @classmethod
             def setUpClass(cls):
                 results.append('setup 3')
-            @classmethod
+            setUpClass = classmethod(setUpClass)
             def tearDownClass(cls):
                 results.append('teardown 3')
+            tearDownClass = classmethod(tearDownClass)
             def testOne(self):
                 results.append('Test3.testOne')
             def testTwo(self):
@@ -263,9 +263,9 @@ class TestSetups(unittest2.TestCase):
     def test_setup_module(self):
         class Module(object):
             moduleSetup = 0
-            @staticmethod
             def setUpModule():
                 Module.moduleSetup += 1
+            setUpModule = staticmethod(setUpModule)
         
         class Test(unittest2.TestCase):
             def test_one(self):
@@ -284,23 +284,23 @@ class TestSetups(unittest2.TestCase):
         class Module(object):
             moduleSetup = 0
             moduleTornDown = 0
-            @staticmethod
             def setUpModule():
                 Module.moduleSetup += 1
                 raise TypeError('foo')
-            @staticmethod
+            setUpModule = staticmethod(setUpModule)
             def tearDownModule():
                 Module.moduleTornDown += 1
+            tearDownModule = staticmethod(tearDownModule)
         
         class Test(unittest2.TestCase):
             classSetUp = False
             classTornDown = False
-            @classmethod
             def setUpClass(cls):
                 Test.classSetUp = True
-            @classmethod
+            setUpClass = classmethod(setUpClass)
             def tearDownClass(cls):
                 Test.classTornDown = True
+            tearDownClass = classmethod(tearDownClass)
             def test_one(self):
                 pass
             def test_two(self):
@@ -340,9 +340,9 @@ class TestSetups(unittest2.TestCase):
     def test_teardown_module(self):
         class Module(object):
             moduleTornDown = 0
-            @staticmethod
             def tearDownModule():
                 Module.moduleTornDown += 1
+            tearDownModule = staticmethod(tearDownModule)
         
         class Test(unittest2.TestCase):
             def test_one(self):
@@ -360,20 +360,20 @@ class TestSetups(unittest2.TestCase):
     def test_error_in_teardown_module(self):
         class Module(object):
             moduleTornDown = 0
-            @staticmethod
             def tearDownModule():
                 Module.moduleTornDown += 1
                 raise TypeError('foo')
+            tearDownModule = staticmethod(tearDownModule)
         
         class Test(unittest2.TestCase):
             classSetUp = False
             classTornDown = False
-            @classmethod
             def setUpClass(cls):
                 Test.classSetUp = True
-            @classmethod
+            setUpClass = classmethod(setUpClass)
             def tearDownClass(cls):
                 Test.classTornDown = True
+            tearDownClass = classmethod(tearDownClass)
             def test_one(self):
                 pass
             def test_two(self):
@@ -399,9 +399,9 @@ class TestSetups(unittest2.TestCase):
 
     def test_skiptest_in_setupclass(self):
         class Test(unittest2.TestCase):
-            @classmethod
             def setUpClass(cls):
                 raise unittest2.SkipTest('foo')
+            setUpClass = classmethod(setUpClass)
             def test_one(self):
                 pass
             def test_two(self):
@@ -422,9 +422,9 @@ class TestSetups(unittest2.TestCase):
                 pass
 
         class Module(object):
-            @staticmethod
             def setUpModule():
                 raise unittest2.SkipTest('foo')
+            setUpModule = staticmethod(setUpModule)
 
         Test.__module__ = 'Module'
         sys.modules['Module'] = Module
@@ -440,20 +440,20 @@ class TestSetups(unittest2.TestCase):
         ordering = []
 
         class Module(object):
-            @staticmethod
             def setUpModule():
                 ordering.append('setUpModule')
-            @staticmethod
+            setUpModule = staticmethod(setUpModule)
             def tearDownModule():
                 ordering.append('tearDownModule')
+            tearDownModule = staticmethod(tearDownModule)
 
         class Test(unittest2.TestCase):
-            @classmethod
             def setUpClass(cls):
                 ordering.append('setUpClass')
-            @classmethod
+            setUpClass = classmethod(setUpClass)
             def tearDownClass(cls):
                 ordering.append('tearDownClass')
+            tearDownClass = classmethod(tearDownClass)
             def test_something(self):
                 ordering.append('test_something')
 
@@ -467,24 +467,24 @@ class TestSetups(unittest2.TestCase):
 
     def test_suite_debug_propagates_exceptions(self):
         class Module(object):
-            @staticmethod
             def setUpModule():
                 if phase == 0:
                     raise Exception('setUpModule')
-            @staticmethod
+            setUpModule = staticmethod(setUpModule)
             def tearDownModule():
                 if phase == 1:
                     raise Exception('tearDownModule')
+            tearDownModule = staticmethod(tearDownModule)
 
         class Test(unittest2.TestCase):
-            @classmethod
             def setUpClass(cls):
                 if phase == 2:
                     raise Exception('setUpClass')
-            @classmethod
+            setUpClass = classmethod(setUpClass)
             def tearDownClass(cls):
                 if phase == 3:
                     raise Exception('tearDownClass')
+            tearDownClass = classmethod(tearDownClass)
             def test_something(self):
                 if phase == 4:
                     raise Exception('test_something')

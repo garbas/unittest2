@@ -42,7 +42,6 @@ def installHandler():
 
 def removeHandler(method=None):
     if method is not None:
-        @wraps(method)
         def inner(*args, **kwargs):
             initial = signal.getsignal(signal.SIGINT)
             removeHandler()
@@ -50,6 +49,7 @@ def removeHandler(method=None):
                 return method(*args, **kwargs)
             finally:
                 signal.signal(signal.SIGINT, initial)
+        inner = wraps(method)(inner)
         return inner
 
     global _interrupt_handler
