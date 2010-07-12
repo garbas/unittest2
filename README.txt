@@ -144,7 +144,7 @@ failure messages. These methods use ``prettyprint`` and ``difflib``.
 CHANGELOG
 =========
 
-2010/XX/XX - 0.X.X
+2010/07/12 - 0.5.1
 ------------------
 
 Reverted script names created by setuptools back to "unit2" instead of
