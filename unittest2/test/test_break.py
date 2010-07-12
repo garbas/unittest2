@@ -243,9 +243,9 @@ class TestBreak(unittest2.TestCase):
         default_handler = signal.getsignal(signal.SIGINT)
         unittest2.installHandler()
         
-        @unittest2.removeHandler
         def test():
             self.assertEqual(signal.getsignal(signal.SIGINT), default_handler)
+        test = unittest2.removeHandler(test)
         
         test()
         self.assertNotEqual(signal.getsignal(signal.SIGINT), default_handler)
