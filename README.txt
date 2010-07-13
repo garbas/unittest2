@@ -71,12 +71,12 @@ Look for notes about features added or changed in Python 2.7.
 
 .. note::
 
-    unittest2 is already in use for development of`distutils2
+    unittest2 is already in use for development of `distutils2
     <http://hg.python.org/distutils2>`_.
     
-    Version 0.5.0 of unittest2 has feature parity with unittest_ in Python 2.7
+    Version 0.5.1 of unittest2 has feature parity with unittest_ in Python 2.7
     final. If you want to ensure that your tests run identically under unittest2
-    and unittest in Python 2.7 you should use unittest2 0.5.0.
+    and unittest in Python 2.7 you should use unittest2 0.5.1.
     
     Later versions of unittest2 include changes in unittest made in Python 3.2
     and onwards after the release of Python 2.7.
@@ -143,6 +143,11 @@ failure messages. These methods use ``prettyprint`` and ``difflib``.
 
 CHANGELOG
 =========
+
+2010/XX/XX - 0.X.X
+------------------
+
+
 
 2010/07/12 - 0.5.1
 ------------------
