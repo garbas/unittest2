@@ -1,4 +1,5 @@
-from __future__ import with_statement
+
+import sys
 
 import unittest2
 from unittest2.test.support import OldTestResult, catch_warnings
@@ -12,6 +13,16 @@ class TestWith(unittest2.TestCase):
     module so that all other tests can be run with Python 2.4.
     """
 
+    def runContext(self, ctxobj, func, *funcargs, **funckwargs):
+        bound_to = ctxobj.__enter__()
+        try:
+            func(bound_to, *funcargs, **funckwargs)
+        except Exception, e:
+            if not ctxobj.__exit__(*sys.exc_info()):
+                raise
+        else:
+            ctxobj.__exit__(None, None, None)
+
     def testAssertRaisesExcValue(self):
         class ExceptionMock(Exception):
             pass
@@ -21,87 +32,51 @@ class TestWith(unittest2.TestCase):
         v = "particular value"
 
         ctx = self.assertRaises(ExceptionMock)
-        with ctx:
-            Stub(v)
+        self.runContext(ctx, lambda cm: Stub(v))
         e = ctx.exception
         self.assertIsInstance(e, ExceptionMock)
         self.assertEqual(e.args[0], v)
 
-    
-    def test_assertRaises(self):
-        def _raise(e):
-            raise e
-        self.assertRaises(KeyError, _raise, KeyError)
-        self.assertRaises(KeyError, _raise, KeyError("key"))
-        try:
-            self.assertRaises(KeyError, lambda: None)
-        except self.failureException, e:
-            self.assertIn("KeyError not raised", e.args)
-        else:
-            self.fail("assertRaises() didn't fail")
-        try:
-            self.assertRaises(KeyError, _raise, ValueError)
-        except ValueError:
-            pass
-        else:
-            self.fail("assertRaises() didn't let exception pass through")
-        with self.assertRaises(KeyError) as cm:
-            try:
-                raise KeyError
-            except Exception, e:
-                raise
-        self.assertIs(cm.exception, e)
-
-        with self.assertRaises(KeyError):
-            raise KeyError("key")
-        try:
-            with self.assertRaises(KeyError):
-                pass
-        except self.failureException, e:
-            self.assertIn("KeyError not raised", e.args)
-        else:
-            self.fail("assertRaises() didn't fail")
-        try:
-            with self.assertRaises(KeyError):
-                raise ValueError
-        except ValueError:
-            pass
-        else:
-            self.fail("assertRaises() didn't let exception pass through")
-
     def test_assert_dict_unicode_error(self):
-        with catch_warnings(record=True):
+        def run(cm):
             # This causes a UnicodeWarning due to its craziness
-            one = ''.join(chr(i) for i in range(255))
+            one = ''.join([chr(i) for i in range(255)])
             # this used to cause a UnicodeDecodeError constructing the failure msg
-            with self.assertRaises(self.failureException):
-                self.assertDictContainsSubset({'foo': one}, {'foo': u'\uFFFD'})
+            ar_cm = self.assertRaises(self.failureException)
+            innerrun =lambda x: self.assertDictContainsSubset({'foo': one}, {'foo': u'\uFFFD'})
+            self.runContext(ar_cm, innerrun)
+        cm = catch_warnings(record=True)
+        self.runContext(cm, run)
 
     def test_formatMessage_unicode_error(self):
-        with catch_warnings(record=True):
+        def run(cm):
             # This causes a UnicodeWarning due to its craziness
-            one = ''.join(chr(i) for i in range(255))
+            one = ''.join([chr(i) for i in range(255)])
             # this used to cause a UnicodeDecodeError constructing msg
-            self._formatMessage(one, u'\uFFFD')
-                
+            self._formatMessage(one, u'\uFFFD')        
+        cm = catch_warnings(record=True)
+        self.runContext(cm, run)
+
     def assertOldResultWarning(self, test, failures):
-        with catch_warnings(record=True) as log:
+        def run(log):
             result = OldTestResult()
             test.run(result)
             self.assertEqual(len(result.failures), failures)
             warning, = log
             self.assertIs(warning.category, DeprecationWarning)
+        cm = catch_warnings(record=True)
+        self.runContext(cm, run)
 
     def test_old_testresult(self):
         class Test(unittest2.TestCase):
             def testSkip(self):
                 self.skipTest('foobar')
-            @unittest2.expectedFailure
             def testExpectedFail(self):
                 raise TypeError
-            @unittest2.expectedFailure
+            testExpectedFail = unittest2.expectedFailure(testExpectedFail)
             def testUnexpectedSuccess(self):
                 pass
+            testUnexpectedSuccess = unittest2.expectedFailure(testUnexpectedSuccess)
         
         for test_name, should_pass in (('testSkip', True), 
                                        ('testExpectedFail', True), 
@@ -129,7 +104,7 @@ class TestWith(unittest2.TestCase):
 
         Do not use these methods.  They will go away in 3.3.
         """
-        with catch_warnings(record=True):
+        def run(cm):
             self.failIfEqual(3, 5)
             self.failUnlessEqual(3, 3)
             self.failUnlessAlmostEqual(2.0, 2.0)
@@ -137,6 +112,18 @@ class TestWith(unittest2.TestCase):
             self.failUnless(True)
             self.failUnlessRaises(TypeError, lambda _: 3.14 + u'spam')
             self.failIf(False)
+        cm = catch_warnings(record=True)
+        self.runContext(cm,run)
+
+    def testAssertDictContainsSubset_UnicodeVsStrValues(self):
+        def run(cm):
+            one = ''.join([chr(i) for i in range(255)])
+            two = u'\uFFFD'
+            # this used to cause a UnicodeDecodeError when the values were compared under python 2.3, under
+            # python 2.6 it causes a UnicodeWarning so wrapping in catch_warnings context manager
+            self.assertRaises(self.failureException, self.assertDictContainsSubset, {'foo': one}, {'foo': two})
+        cm = catch_warnings(record=True)
+        self.runContext(cm, run)
 
 
 if __name__ == '__main__':

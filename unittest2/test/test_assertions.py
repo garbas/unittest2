@@ -1,4 +1,9 @@
+
+import sys
 import datetime
+if sys.version_info[:2] == (2,3):
+    from sets import Set as set
+    from sets import ImmutableSet as frozenset
 
 import unittest2
 
