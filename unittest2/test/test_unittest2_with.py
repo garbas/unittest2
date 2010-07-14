@@ -2,7 +2,7 @@ import sys
 
 import unittest2
 
-if sys.version_info[:2] > (2, 5):
+if sys.version_info[:2] >= (2, 5):
     from unittest2.test._test_unittest2_with import *
 else:
     
