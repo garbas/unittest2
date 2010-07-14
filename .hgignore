@@ -6,3 +6,4 @@ dist
 *$py.class
 unittest2.egg-info/*
 build/*
+.tox/*
