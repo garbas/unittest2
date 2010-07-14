@@ -39,22 +39,21 @@ __all__.extend(['getTestCaseNames', 'makeSuite', 'findTestCases'])
 
 from unittest2.collector import collector
 from unittest2.result import TestResult
-from unittest2.case import (
-    TestCase, FunctionTestCase, SkipTest, skip, skipIf,
+from unittest2.case import \
+    TestCase, FunctionTestCase, SkipTest, skip, skipIf,\
     skipUnless, expectedFailure
-)
+
 from unittest2.suite import BaseTestSuite, TestSuite
-from unittest2.loader import (
-    TestLoader, defaultTestLoader, makeSuite, getTestCaseNames,
+from unittest2.loader import \
+    TestLoader, defaultTestLoader, makeSuite, getTestCaseNames,\
     findTestCases
-)
+
 from unittest2.main import TestProgram, main, main_
 from unittest2.runner import TextTestRunner, TextTestResult
 
 try:
-    from unittest2.signals import (
+    from unittest2.signals import\
         installHandler, registerResult, removeResult, removeHandler
-    )
 except ImportError:
     # Compatibility with platforms that don't have the signal module
     pass
