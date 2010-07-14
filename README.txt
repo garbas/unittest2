@@ -1,9 +1,6 @@
 unittest2 is a backport of the new features added to the unittest testing
 framework in Python 2.7. It is tested to run on Python 2.4 - 2.7.
 
-Thanks to Mark Roddy, there is also a version of for Python 2.3. This is
-maintained as a separate branch and is a separate download.
-
 To use unittest2 instead of unittest simply replace ``import unittest`` with
 ``import unittest2``.
 
@@ -16,6 +13,18 @@ google code:
 * `Article / Docs: New features in unittest
   <http://www.voidspace.org.uk/python/articles/unittest2.shtml>`_
 
+Thanks to Mark Roddy, there is also a version of for Python 2.3. This is
+maintained as a separate branch and is a separate download.
+
+To avoid problems with ``pip`` installing the wrong distribution, the Python 2.3
+version of unittest2 can't be hosted on PyPI:
+
+* `Download unittest2 0.5.1 for Python 2.3 <http://voidspace.org.uk/downloads/unittest2-0.5.1-python2.3.zip>`_
+
+There is also a version of unittest2 for Python 3. This has the project name
+"unittest2py3k" but uses the same package name ("unittest2"):
+
+* `unittest2 for Python 3 <http://pypi.python.org/pypi/unittest2py3k>`_
 
 Classes in unittest2 derive from the appropriate classes in unittest, so it
 should be possible to use the unittest2 test running infrastructure without
@@ -143,10 +152,6 @@ failure messages. These methods use ``prettyprint`` and ``difflib``.
 
 CHANGELOG
 =========
-
-2010/XX/XX - 0.X.X
-------------------
-
 
 
 2010/07/12 - 0.5.1
