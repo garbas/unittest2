@@ -1,5 +1,6 @@
 import gc
 import os
+import sys
 import weakref
 
 from cStringIO import StringIO
@@ -254,7 +255,9 @@ class TestBreak(unittest2.TestCase):
 # Should also skip some tests on Jython
 skipper = unittest2.skipUnless(hasattr(os, 'kill') and signal is not None, 
                                "test uses os.kill(...) and the signal module")
-TestBreak = skipper(TestBreak)
+skipper2 = unittest2.skipIf(sys.platform == 'win32', "can't run on windows")
+
+TestBreak = skipper(skipper2(TestBreak))
 
 if __name__ == '__main__':
     unittest2.main()
