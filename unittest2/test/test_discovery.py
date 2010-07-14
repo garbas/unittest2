@@ -354,7 +354,8 @@ class TestDiscovery(unittest2.TestCase):
         loader = unittest2.TestLoader()
         
         tests = [self]
-        expectedPath = os.path.abspath(os.path.dirname(unittest2.test.__file__))
+        from unittest2 import test
+        expectedPath = os.path.abspath(os.path.dirname(test.__file__))
 
         self.wasRun = False
         def _find_tests(start_dir, pattern):
