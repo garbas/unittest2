@@ -9,11 +9,12 @@ class TestEvents(unittest2.TestCase):
         self.assertEqual(hook._handlers, [])
         
         self.called = False
-        event = object()
+        event = unittest2.events._Event()
         return_val = False
         def handler1(arg):
             self.assertIs(arg, event)
             self.called = True
+            arg.handled = bool(return_val)
             return return_val
         
         hook += handler1
@@ -24,6 +25,7 @@ class TestEvents(unittest2.TestCase):
         self.called = False
         def handler2(arg):
             self.assertIs(arg, event)
+            arg.handled = bool(return_val)
             return return_val
         hook += handler2
         
@@ -65,6 +67,7 @@ class TestEvents(unittest2.TestCase):
         def handler(event):
             self.assertIsInstance(event, unittest2.events.HandleFileEvent)
             self.event = event
+            event.handled = True
             return suite
         
         def fake_listdir(_):
