@@ -222,8 +222,6 @@ class TestLoader(unittest.TestLoader):
         if is_not_importable:
             raise ImportError('Start directory is not importable: %r' % start_dir)
 
-        from unittest2.events import loadPlugins
-        loadPlugins(start_dir)
         tests = list(self._find_tests(start_dir, pattern))
         return self.suiteClass(tests)
 
