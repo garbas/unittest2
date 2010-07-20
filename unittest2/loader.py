@@ -254,7 +254,7 @@ class TestLoader(unittest.TestLoader):
             if os.path.isfile(full_path):
                 event = HandleFileEvent(self, path, full_path, pattern,
                                          self._top_level_dir)
-                result = events.HandleFile(event)
+                result = events.handleFile(event)
                 if result:
                     yield result
                     continue

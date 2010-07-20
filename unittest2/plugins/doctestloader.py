@@ -9,4 +9,4 @@ def getDoctests(event):
         return
     return doctest.DocFileTest(path, module_relative=False)
 
-events.HandleFile += getDoctests
+events.handleFile += getDoctests
