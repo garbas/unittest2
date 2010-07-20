@@ -1,3 +1,4 @@
+import os
 import unittest2
 
 from collections import deque
@@ -55,7 +56,45 @@ class TestEvents(unittest2.TestCase):
         self.assertIs(event.path, path)
         self.assertIs(event.name, name)
         self.assertIs(event.pattern, pattern)
+    
+    def test_loader_uses_handlefileevent(self):
+        loader = unittest2.TestLoader()
+        top_level = object()
+        loader._top_level_dir = top_level
         
+        suite = object()
+        def handler(event):
+            self.assertIsInstance(event, unittest2.events.HandleFileEvent)
+            self.event = event
+            return suite
+        
+        def fake_listdir(_):
+            return ['foo']
+        def fake_isfile(_):
+            return True
+        original_listdir = os.listdir
+        original_isfile = os.path.isfile
+        self.event = None
+        def restore():
+            unittest2.events.events.HandleFile -= handler
+            os.listdir = original_listdir
+            os.path.isfile = original_isfile
+        unittest2.events.events.HandleFile += handler
+        os.listdir = fake_listdir
+        os.path.isfile = fake_isfile
+        self.addCleanup(restore)
+    
+        tests = list(loader._find_tests('start', 'pattern'))
+        
+        self.assertIsNotNone(self.event)
+        self.assertEqual(tests, [suite])
+        
+        event = self.event
+        self.assertIs(event.loader, loader)
+        self.assertEqual(event.name, 'foo')
+        self.assertEqual(event.path, os.path.join('start', 'foo'))
+        self.assertEqual(event.pattern, 'pattern')
+        self.assertEqual(event.top_level_directory, top_level)
 
 if __name__ == '__main__':
     unittest2.main()
