@@ -8,6 +8,7 @@ class _Event(object):
     def __init__(self):
         self.handled = False
 
+
 class HandleFileEvent(_Event):
     def __init__(self, loader, name, path, pattern,
                     top_level_directory):
@@ -70,3 +71,12 @@ def loadPluginsConfigFile(path):
                  if line.strip() and not line.strip().startswith('#')]
     except ConfigParserError:
         return plugins
+
+def addOption(callback, opt, longOpt=None, help=None):
+    # delayed import to avoid circular imports
+    from unittest2.main import _options
+    
+    if opt and opt.lower() == opt:
+        raise ValueError('Lowercase short options are reserved: %s' % opt)
+    wrappedCallback = lambda *_: callback()
+    _options.append((opt, longOpt, help, wrappedCallback))

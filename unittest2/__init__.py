@@ -48,7 +48,9 @@ from unittest2.loader import (
     TestLoader, defaultTestLoader, makeSuite, getTestCaseNames,
     findTestCases
 )
-from unittest2.main import TestProgram, main, main_
+from unittest2.main import TestProgram, main_
+main = TestProgram
+
 from unittest2.runner import TextTestRunner, TextTestResult
 
 try:

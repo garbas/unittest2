@@ -10,6 +10,8 @@ try:
 except ImportError:
     installHandler = None
 
+from unittest2.events import loadPlugins
+
 __unittest = True
 
 FAILFAST     = "  -f, --failfast   Stop on first failure\n"
@@ -112,6 +114,7 @@ class TestProgram(object):
         sys.exit(2)
 
     def parseArgs(self, argv):
+        
         if len(argv) > 1 and argv[1].lower() == 'discover':
             self._do_discovery(argv[2:])
             return
@@ -163,6 +166,10 @@ class TestProgram(object):
     def _do_discovery(self, argv, Loader=loader.TestLoader):
         # handle command line args for test discovery
         self.progName = '%s discover' % self.progName
+        
+        # should use project top level directory - but we don't know it yet
+        loadPlugins(os.getcwd())
+        
         import optparse
         parser = optparse.OptionParser()
         parser.prog = self.progName
@@ -187,10 +194,20 @@ class TestProgram(object):
         parser.add_option('-t', '--top-level-directory', dest='top', default=None,
                           help='Top level directory of project (defaults to start directory)')
 
+        for opt, longopt, help_text, callback in _options:
+            opts = []
+            if opt is not None:
+                opts.append('-' + opt)
+            if longopt is not None:
+                opts.append('--' + longopt)
+            option = optparse.Option(*opts, action='callback',
+                                     help=help_text, callback=callback)
+            parser.add_option(option)
+            
         options, args = parser.parse_args(argv)
         if len(args) > 3:
             self.usageExit()
-
+        
         for name, value in zip(('start', 'pattern', 'top'), args):
             setattr(options, name, value)
         
@@ -233,9 +250,10 @@ class TestProgram(object):
         if self.exit:
             sys.exit(not self.result.wasSuccessful())
 
-main = TestProgram
+    
 
 def main_():
     TestProgram.USAGE = USAGE_AS_MAIN
-    main(module=None)
+    TestProgram(module=None)
 
+_options = []
