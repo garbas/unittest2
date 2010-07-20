@@ -10,7 +10,7 @@ import unittest
 from fnmatch import fnmatch
 
 from unittest2 import case, suite
-from unittest2.events import events
+from unittest2.events import events, HandleFileEvent
 
 try:
     from os.path import relpath
@@ -252,8 +252,8 @@ class TestLoader(unittest.TestLoader):
         for path in paths:
             full_path = os.path.join(start_dir, path)
             if os.path.isfile(full_path):
-                from unittest2.events import HandleFileEvent
-                event = HandleFileEvent(self, path, full_path, pattern)
+                event = HandleFileEvent(self, path, full_path, pattern,
+                                         self._top_level_dir)
                 result = events.HandleFile(event)
                 if result:
                     yield result
