@@ -10,6 +10,7 @@ import unittest
 from fnmatch import fnmatch
 
 from unittest2 import case, suite
+from unittest2.events import events
 
 try:
     from os.path import relpath
@@ -42,7 +43,7 @@ def _make_failed_import_test(name, suiteClass):
         # format_exc returns two frames of discover.py as well
         message += '\n%s' % traceback.format_exc()
     return _make_failed_test('ModuleImportFailure', name, ImportError(message),
-                             suiteClass)
+                               suiteClass)
 
 def _make_failed_load_tests(name, exception, suiteClass):
     return _make_failed_test('LoadTestsFailure', name, exception, suiteClass)
@@ -221,6 +222,8 @@ class TestLoader(unittest.TestLoader):
         if is_not_importable:
             raise ImportError('Start directory is not importable: %r' % start_dir)
 
+        from unittest2.events import loadPlugins
+        loadPlugins(start_dir)
         tests = list(self._find_tests(start_dir, pattern))
         return self.suiteClass(tests)
 
@@ -249,6 +252,13 @@ class TestLoader(unittest.TestLoader):
         for path in paths:
             full_path = os.path.join(start_dir, path)
             if os.path.isfile(full_path):
+                from unittest2.events import HandleFileEvent
+                event = HandleFileEvent(self, path, full_path, pattern)
+                result = events.HandleFile(event)
+                if result:
+                    yield result
+                    continue
+                
                 if not VALID_MODULE_NAME.match(path):
                     # valid Python identifiers only
                     continue
