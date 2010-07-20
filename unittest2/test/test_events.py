@@ -42,6 +42,20 @@ class TestEvents(unittest2.TestCase):
         hook(object())
         self.assertEqual(hook._handlers, deque())
 
+    def test_handlefileevent(self):
+        loader = object()
+        path = object()
+        name = object()
+        pattern = object()
+        top_level_directory = object()
+        event = unittest2.events.HandleFileEvent(loader, name, path, pattern,
+                                                  top_level_directory)
+        
+        self.assertIs(event.loader, loader)
+        self.assertIs(event.path, path)
+        self.assertIs(event.name, name)
+        self.assertIs(event.pattern, pattern)
+        
 
 if __name__ == '__main__':
     unittest2.main()

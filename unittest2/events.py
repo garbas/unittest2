@@ -9,12 +9,13 @@ class _Event(object):
     pass
 
 class HandleFileEvent(_Event):
-    def __init__(self, loader, name, path, pattern):
+    def __init__(self, loader, name, path, pattern,
+                    top_level_directory):
         self.path = path
         self.loader = loader
         self.name = name
         self.pattern = pattern
-
+        self.top_level_directory = top_level_directory
 
 class _EventHook(object):
     def __init__(self):
