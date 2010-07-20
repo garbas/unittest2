@@ -5,16 +5,26 @@ from ConfigParser import Error as ConfigParserError
 
 
 class _Event(object):
-    pass
+    def __init__(self):
+        self.handled = False
 
 class HandleFileEvent(_Event):
     def __init__(self, loader, name, path, pattern,
                     top_level_directory):
+        _Event.__init__(self)
         self.path = path
         self.loader = loader
         self.name = name
         self.pattern = pattern
         self.top_level_directory = top_level_directory
+
+class MatchPathEvent(_Event):
+    def __init__(self, name, path, pattern):
+        _Event.__init__(self)
+        self.path = path
+        self.name = name
+        self.pattern = pattern
+
 
 class _EventHook(object):
     def __init__(self):
@@ -25,7 +35,7 @@ class _EventHook(object):
     def __call__(self, event):
         for handler in self._handlers:
             result = handler(event)
-            if result:
+            if event.handled:
                 return result
     
     def __iadd__(self, handler):
@@ -39,6 +49,7 @@ class _EventHook(object):
 
 class events(object):
     handleFile = _EventHook()
+    matchPath = _EventHook()
 
 
 
@@ -56,6 +67,6 @@ def loadPluginsConfigFile(path):
     try:
         return [line for line in 
                  parser.get('unittest', 'plugins').splitlines()
-                 if line.strip()]
+                 if line.strip() and not line.strip().startswith('#')]
     except ConfigParserError:
         return plugins
