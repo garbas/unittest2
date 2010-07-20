@@ -1,13 +1,12 @@
 import os
 import unittest2
 
-from collections import deque
 
 class TestEvents(unittest2.TestCase):
     
     def test_eventhook(self):
         hook = unittest2.events._EventHook()
-        self.assertEqual(hook._handlers, deque())
+        self.assertEqual(hook._handlers, [])
         
         self.called = False
         event = object()
@@ -41,7 +40,7 @@ class TestEvents(unittest2.TestCase):
         hook -= handler1
         hook -= handler2
         hook(object())
-        self.assertEqual(hook._handlers, deque())
+        self.assertEqual(hook._handlers, [])
 
     def test_handlefileevent(self):
         loader = object()
@@ -76,10 +75,10 @@ class TestEvents(unittest2.TestCase):
         original_isfile = os.path.isfile
         self.event = None
         def restore():
-            unittest2.events.events.HandleFile -= handler
+            unittest2.events.events.handleFile -= handler
             os.listdir = original_listdir
             os.path.isfile = original_isfile
-        unittest2.events.events.HandleFile += handler
+        unittest2.events.events.handleFile += handler
         os.listdir = fake_listdir
         os.path.isfile = fake_isfile
         self.addCleanup(restore)

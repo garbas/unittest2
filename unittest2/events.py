@@ -1,6 +1,5 @@
 import os
 
-from collections import deque
 from ConfigParser import SafeConfigParser
 from ConfigParser import Error as ConfigParserError
 
@@ -19,7 +18,9 @@ class HandleFileEvent(_Event):
 
 class _EventHook(object):
     def __init__(self):
-        self._handlers = deque()
+        # can't use a deque because it has no remove in
+        # python 2.4
+        self._handlers = []
     
     def __call__(self, event):
         for handler in self._handlers:
@@ -28,7 +29,7 @@ class _EventHook(object):
                 return result
     
     def __iadd__(self, handler):
-        self._handlers.appendleft(handler)
+        self._handlers.insert(0, handler)
         return self
         
     def __isub__(self, handler):
@@ -37,7 +38,7 @@ class _EventHook(object):
 
 
 class events(object):
-    HandleFile = _EventHook()
+    handleFile = _EventHook()
 
 
 
