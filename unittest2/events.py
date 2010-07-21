@@ -51,6 +51,7 @@ class _EventHook(object):
 class hooks(object):
     handleFile = _EventHook()
     matchPath = _EventHook()
+    loadTestsFromModule = _EventHook()
 
 
 
