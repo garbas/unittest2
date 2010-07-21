@@ -78,10 +78,10 @@ class TestEvents(unittest2.TestCase):
         original_isfile = os.path.isfile
         self.event = None
         def restore():
-            unittest2.events.events.handleFile -= handler
+            unittest2.events.hooks.handleFile -= handler
             os.listdir = original_listdir
             os.path.isfile = original_isfile
-        unittest2.events.events.handleFile += handler
+        unittest2.events.hooks.handleFile += handler
         os.listdir = fake_listdir
         os.path.isfile = fake_isfile
         self.addCleanup(restore)

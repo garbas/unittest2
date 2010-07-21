@@ -48,7 +48,7 @@ class _EventHook(object):
         return self
 
 
-class events(object):
+class hooks(object):
     handleFile = _EventHook()
     matchPath = _EventHook()
 

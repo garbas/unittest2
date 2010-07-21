@@ -1,4 +1,4 @@
-from unittest2.events import events
+from unittest2.events import hooks
 
 import doctest
 
@@ -11,4 +11,4 @@ def getDoctests(event):
     return doctest.DocFileTest(path, module_relative=False)
 
 
-events.handleFile += getDoctests
+hooks.handleFile += getDoctests
