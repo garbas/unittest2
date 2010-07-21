@@ -12,7 +12,7 @@ def matchRegexp(event):
 
 def enable():
     events.matchPath += matchRegexp
-    unittest2.loader.DEFAULT_PATTERN = r'test[_a-z]\w*\.py$'
+    unittest2.loader.DEFAULT_PATTERN = r'test.*\.py$'
 
 help_text = ('Match filenames during test discovery'
              ' with regular expressions instead of glob')
