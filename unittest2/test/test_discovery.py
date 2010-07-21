@@ -240,25 +240,25 @@ class TestDiscovery(unittest2.TestCase):
         program._do_discovery(['-v'], Loader=Loader)
         self.assertEqual(program.verbosity, 2)
         self.assertEqual(program.test, 'tests')
-        self.assertEqual(Loader.args, [('.', 'test*.py', None)])
+        self.assertEqual(Loader.args, [('.', None, None)])
 
         Loader.args = []
         program = object.__new__(unittest2.TestProgram)
         program._do_discovery(['--verbose'], Loader=Loader)
         self.assertEqual(program.test, 'tests')
-        self.assertEqual(Loader.args, [('.', 'test*.py', None)])
+        self.assertEqual(Loader.args, [('.', None, None)])
 
         Loader.args = []
         program = object.__new__(unittest2.TestProgram)
         program._do_discovery([], Loader=Loader)
         self.assertEqual(program.test, 'tests')
-        self.assertEqual(Loader.args, [('.', 'test*.py', None)])
+        self.assertEqual(Loader.args, [('.', None, None)])
 
         Loader.args = []
         program = object.__new__(unittest2.TestProgram)
         program._do_discovery(['fish'], Loader=Loader)
         self.assertEqual(program.test, 'tests')
-        self.assertEqual(Loader.args, [('fish', 'test*.py', None)])
+        self.assertEqual(Loader.args, [('fish', None, None)])
 
         Loader.args = []
         program = object.__new__(unittest2.TestProgram)
@@ -276,13 +276,13 @@ class TestDiscovery(unittest2.TestCase):
         program = object.__new__(unittest2.TestProgram)
         program._do_discovery(['-s', 'fish'], Loader=Loader)
         self.assertEqual(program.test, 'tests')
-        self.assertEqual(Loader.args, [('fish', 'test*.py', None)])
+        self.assertEqual(Loader.args, [('fish', None, None)])
 
         Loader.args = []
         program = object.__new__(unittest2.TestProgram)
         program._do_discovery(['-t', 'fish'], Loader=Loader)
         self.assertEqual(program.test, 'tests')
-        self.assertEqual(Loader.args, [('.', 'test*.py', 'fish')])
+        self.assertEqual(Loader.args, [('.', None, 'fish')])
 
         Loader.args = []
         program = object.__new__(unittest2.TestProgram)
