@@ -98,5 +98,6 @@ class TestEvents(unittest2.TestCase):
         self.assertEqual(event.pattern, 'pattern')
         self.assertEqual(event.top_level_directory, top_level)
 
+
 if __name__ == '__main__':
     unittest2.main()
