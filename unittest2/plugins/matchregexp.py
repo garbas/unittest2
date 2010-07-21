@@ -1,5 +1,5 @@
 import unittest2
-from unittest2.events import events, addOption, getConfig
+from unittest2.events import hooks, addOption, getConfig
 
 import re
 
@@ -15,7 +15,7 @@ def matchRegexp(event):
 
 
 def enable():
-    events.matchPath += matchRegexp
+    hooks.matchPath += matchRegexp
     unittest2.loader.DEFAULT_PATTERN = r'test.*\.py$'
 
 options = getConfig()
