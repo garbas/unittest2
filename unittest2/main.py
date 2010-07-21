@@ -189,7 +189,7 @@ class TestProgram(object):
                               action='store_true')
         parser.add_option('-s', '--start-directory', dest='start', default='.',
                           help="Directory to start discovery ('.' default)")
-        parser.add_option('-p', '--pattern', dest='pattern', default='test*.py',
+        parser.add_option('-p', '--pattern', dest='pattern', default=None,
                           help="Pattern to match tests ('test*.py' default)")
         parser.add_option('-t', '--top-level-directory', dest='top', default=None,
                           help='Top level directory of project (defaults to start directory)')
@@ -200,8 +200,12 @@ class TestProgram(object):
                 opts.append('-' + opt)
             if longopt is not None:
                 opts.append('--' + longopt)
-            option = optparse.Option(*opts, action='callback',
-                                     help=help_text, callback=callback)
+            kwargs = {
+                'action': 'callback',
+                'help': help_text,
+                'callback': callback
+            }
+            option = optparse.Option(*opts, **kwargs)
             parser.add_option(option)
             
         options, args = parser.parse_args(argv)

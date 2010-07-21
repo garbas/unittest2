@@ -10,7 +10,7 @@ import unittest
 from fnmatch import fnmatch
 
 from unittest2 import case, suite
-from unittest2.events import events, HandleFileEvent
+from unittest2.events import events, HandleFileEvent, MatchPathEvent
 
 try:
     from os.path import relpath
@@ -18,6 +18,8 @@ except ImportError:
     from unittest2.compatibility import relpath
 
 __unittest = True
+
+DEFAULT_PATTERN = 'test*.py'
 
 
 def _CmpToKey(mycmp):
@@ -161,7 +163,7 @@ class TestLoader(unittest.TestLoader):
             testFnNames.sort(key=_CmpToKey(self.sortTestMethodsUsing))
         return testFnNames
 
-    def discover(self, start_dir, pattern='test*.py', top_level_dir=None):
+    def discover(self, start_dir, pattern=None, top_level_dir=None):
         """Find and return all test modules from the specified start
         directory, recursing into subdirectories to find them. Only test files
         that match the pattern will be loaded. (Using shell style pattern
@@ -182,6 +184,8 @@ class TestLoader(unittest.TestLoader):
         packages can continue discovery themselves. top_level_dir is stored so
         load_tests does not need to pass this argument in to loader.discover().
         """
+        if pattern is None:
+            pattern = DEFAULT_PATTERN
         set_implicit_top = False
         if top_level_dir is None and self._top_level_dir is not None:
             # make top_level_dir optional if called from load_tests in a package
@@ -260,8 +264,15 @@ class TestLoader(unittest.TestLoader):
                 if not VALID_MODULE_NAME.match(path):
                     # valid Python identifiers only
                     continue
-                if not self._match_path(path, full_path, pattern):
+                
+                event = MatchPathEvent(path, full_path, pattern)
+                result = events.matchPath(event)
+                if event.handled:
+                    if not result:
+                        continue
+                elif not self._match_path(path, full_path, pattern):
                     continue
+                
                 # if the test file matches, load it
                 name = self._get_name_from_path(full_path)
                 try:
