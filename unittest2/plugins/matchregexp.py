@@ -26,7 +26,6 @@ ourOptions = options.get('matchregexp', {})
 if 'always-on' in ourOptions:
     alwaysOn = ourOptions.as_bool('always-on')
 
-
 if 'full-path' in ourOptions:
     matchFullPath = ourOptions.as_bool('full-path')
 

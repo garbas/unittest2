@@ -70,24 +70,36 @@ def loadPlugins():
         __import__(plugin)
 
 
-class UsefulDict(dict):
+class Section(dict):
+    def __new__(cls, name, items=()):
+        return dict.__new__(cls, items)
+
+    def __init__(self, name, items=()):
+        self.name = name
+
     def as_bool(self, item):
         value = self[item].lower().strip()
-        return value in ('1', 'true', 'on', 'yes')
+        if value in ('1', 'true', 'on', 'yes'):
+            return True
+        if value in ('0', 'false', 'off', 'no'):
+            return False
+        raise ConfigParserError('Config file value %s:%s:%s not recognised'
+                                 ' as a boolean' % (self.name, item, value))
     
     def as_int(self, item):
-        return int(self[item])
+        return int(self[item].strip())
     
     def as_float(self, item):
-        return float(self[item])
+        return float(self[item].strip())
+
 
 def combineConfigs(globalParser, localParser):
-    options = UsefulDict()
+    options = {}
     for section in globalParser.sections():
-        options[section] = UsefulDict(globalParser.items(section))
+        options[section] = Section(section, globalParser.items(section))
     for section in localParser.sections():
-        items = UsefulDict(localParser.items(section))
-        options.setdefault(section, UsefulDict()).update(items)
+        items = dict(localParser.items(section))
+        options.setdefault(section, Section(section)).update(items)
     return options
 
 
@@ -111,6 +123,7 @@ def addOption(callback, opt, longOpt=None, help=None):
         raise ValueError('Lowercase short options are reserved: %s' % opt)
     wrappedCallback = lambda *_: callback()
     _options.append((opt, longOpt, help, wrappedCallback))
+
 
 def getConfig():
     # warning! mutable
