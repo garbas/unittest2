@@ -168,7 +168,7 @@ class TestProgram(object):
         self.progName = '%s discover' % self.progName
         
         # should use project top level directory - but we don't know it yet
-        loadPlugins(os.getcwd())
+        loadPlugins()
         
         import optparse
         parser = optparse.OptionParser()

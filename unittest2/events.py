@@ -54,23 +54,54 @@ class events(object):
 
 
 
+_config = None
 CFG_NAME = 'unittest.cfg'
-def loadPlugins(projectDir):
-    cfgPath = os.path.join(projectDir, CFG_NAME)
-    plugins = loadPluginsConfigFile(cfgPath)
-    for plugin in plugins:
+def loadPlugins():
+    global _config
+    
+    cfgPath = os.path.join(os.path.expanduser('~'), CFG_NAME)
+    globalPlugins, globalParser = loadPluginsConfigFile(cfgPath)
+    cfgPath = os.path.join(os.getcwd(), CFG_NAME)
+    localPlugins, localParser = loadPluginsConfigFile(cfgPath)
+
+    _config = combineConfigs(globalParser, localParser)
+
+    for plugin in set(globalPlugins + localPlugins):
         __import__(plugin)
+
+
+class UsefulDict(dict):
+    def as_bool(self, item):
+        value = self[item].lower().strip()
+        return value in ('1', 'true', 'on', 'yes')
+    
+    def as_int(self, item):
+        return int(self[item])
+    
+    def as_float(self, item):
+        return float(self[item])
+
+def combineConfigs(globalParser, localParser):
+    options = UsefulDict()
+    for section in globalParser.sections():
+        options[section] = UsefulDict(globalParser.items(section))
+    for section in localParser.sections():
+        items = UsefulDict(localParser.items(section))
+        options.setdefault(section, UsefulDict()).update(items)
+    return options
+
 
 def loadPluginsConfigFile(path):
     parser = SafeConfigParser()
     parser.read(path)
     plugins = []
     try:
-        return [line for line in 
-                 parser.get('unittest', 'plugins').splitlines()
-                 if line.strip() and not line.strip().startswith('#')]
+        plugins = [line for line in 
+                   parser.get('unittest', 'plugins').splitlines()
+                   if line.strip() and not line.strip().startswith('#')]
+        return plugins, parser
     except ConfigParserError:
-        return plugins
+        return plugins, parser
 
 def addOption(callback, opt, longOpt=None, help=None):
     # delayed import to avoid circular imports
@@ -80,3 +111,7 @@ def addOption(callback, opt, longOpt=None, help=None):
         raise ValueError('Lowercase short options are reserved: %s' % opt)
     wrappedCallback = lambda *_: callback()
     _options.append((opt, longOpt, help, wrappedCallback))
+
+def getConfig():
+    # warning! mutable
+    return _config
