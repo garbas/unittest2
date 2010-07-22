@@ -32,6 +32,14 @@ class LoadFromModuleEvent(_Event):
         self.loader = loader
         self.module = module
 
+class OnTestFailEvent(_Event):
+    def __init__(self, test, result, exc_info):
+        _Event.__init__(self)
+        self.test = test
+        self.result = result
+        self.exc_info = exc_info
+    
+
 class _EventHook(object):
     def __init__(self):
         # can't use a deque because it has no remove in
@@ -57,7 +65,7 @@ class hooks(object):
     handleFile = _EventHook()
     matchPath = _EventHook()
     loadTestsFromModule = _EventHook()
-
+    onTestFail = _EventHook()
 
 
 _config = None
