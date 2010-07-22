@@ -113,36 +113,6 @@ class TestCommandLineArgs(unittest2.TestCase):
         FakeRunner.initArgs = None
         FakeRunner.test = None
         FakeRunner.raiseError = False
-    
-    def DONTtestHelpAndUnknown(self):
-        program = self.program
-        def usageExit(msg=None):
-            program.msg = msg
-            program.exit = True
-        program.usageExit = usageExit
-        
-        for opt in '-h', '-H', '--help':
-            program.exit = False
-            program.parseArgs([None, opt])
-            self.assertTrue(program.exit)
-            self.assertIsNone(program.msg)
-    
-        program.parseArgs([None, '-$'])
-        self.assertTrue(program.exit)
-        self.assertIsNotNone(program.msg)
-    
-    def DONTtestVerbosity(self):
-        program = self.program
-        
-        for opt in '-q', '--quiet':
-            program.verbosity = 1
-            program.parseArgs([None, opt])
-            self.assertEqual(program.verbosity, 0)
-
-        for opt in '-v', '--verbose':
-            program.verbosity = 1
-            program.parseArgs([None, opt])
-            self.assertEqual(program.verbosity, 2)
 
     def testBufferCatchFailfast(self):
         program = self.program
