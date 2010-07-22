@@ -1,4 +1,4 @@
-from unittest2 import FunctionTestCase
+import unittest2
 from unittest2.events import hooks
 
 import types
@@ -15,10 +15,10 @@ def loadModules(event):
     tests = []
     for name in dir(module):
         obj = getattr(module, name)
-        if isinstance(obj, type) and issubclass(obj, unittest.TestCase):
+        if isinstance(obj, type) and issubclass(obj, unittest2.TestCase):
             tests.append(loader.loadTestsFromTestCase(obj))
         elif isinstance(obj, types.FunctionType) and is_test(obj):
-            case = FunctionTestCase(obj)
+            case = unittest2.FunctionTestCase(obj)
             tests.append(case)
     return loader.suiteClass(tests)
 

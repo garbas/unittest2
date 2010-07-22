@@ -1,7 +1,8 @@
 """Unittest main program"""
 
-import sys
+import optparse
 import os
+import sys
 import types
 
 from unittest2 import loader, runner
@@ -118,47 +119,26 @@ class TestProgram(object):
         sys.exit(2)
 
     def parseArgs(self, argv):
-        
         if len(argv) > 1 and argv[1].lower() == 'discover':
             self._do_discovery(argv[2:])
             return
-
-        import getopt
-        long_opts = ['help', 'verbose', 'quiet', 'failfast', 'catch', 'buffer']
-        try:
-            options, args = getopt.getopt(argv[1:], 'hHvqfcb', long_opts)
-            for opt, value in options:
-                if opt in ('-h','-H','--help'):
-                    self.usageExit()
-                if opt in ('-q','--quiet'):
-                    self.verbosity = 0
-                if opt in ('-v','--verbose'):
-                    self.verbosity = 2
-                if opt in ('-f','--failfast'):
-                    if self.failfast is None:
-                        self.failfast = True
-                    # Should this raise an exception if -f is not valid?
-                if opt in ('-c','--catch'):
-                    if self.catchbreak is None and installHandler is not None:
-                        self.catchbreak = True
-                    # Should this raise an exception if -c is not valid?
-                if opt in ('-b','--buffer'):
-                    if self.buffer is None:
-                        self.buffer = True
-                    # Should this raise an exception if -b is not valid?
-            if len(args) == 0 and self.defaultTest is None:
-                # createTests will load tests from self.module
-                self.testNames = None
-            elif len(args) > 0:
-                self.testNames = args
-                if __name__ == '__main__':
-                    # to support python -m unittest ...
-                    self.module = None
-            else:
-                self.testNames = (self.defaultTest,)
-            self.createTests()
-        except getopt.error, msg:
-            self.usageExit(msg)
+        
+        options, args = self._parseArgs(argv[1:], forDiscovery=True)
+        # Missing --quiet / -q and help message
+        
+        if options.verbose:
+            self.verbosity = 2
+        if len(args) == 0 and self.defaultTest is None:
+            # createTests will load tests from self.module
+            self.testNames = None
+        elif len(args) > 0:
+            self.testNames = args
+            if __name__ == '__main__':
+                # to support python -m unittest ...
+                self.module = None
+        else:
+            self.testNames = (self.defaultTest,)
+        self.createTests()
 
     def createTests(self):
         if self.testNames is None:
@@ -167,11 +147,7 @@ class TestProgram(object):
             self.test = self.testLoader.loadTestsFromNames(self.testNames,
                                                            self.module)
 
-    def _do_discovery(self, argv, Loader=loader.TestLoader):
-        # handle command line args for test discovery
-        self.progName = '%s discover' % self.progName
-        
-        import optparse
+    def _parseArgs(self, argv, forDiscovery):
         parser = optparse.OptionParser()
         parser.prog = self.progName
         parser.add_option('-v', '--verbose', dest='verbose', default=False,
@@ -188,12 +164,14 @@ class TestProgram(object):
             parser.add_option('-b', '--buffer', dest='buffer', default=False,
                               help='Buffer stdout and stderr during tests', 
                               action='store_true')
-        parser.add_option('-s', '--start-directory', dest='start', default='.',
-                          help="Directory to start discovery ('.' default)")
-        parser.add_option('-p', '--pattern', dest='pattern', default=None,
-                          help="Pattern to match tests ('test*.py' default)")
-        parser.add_option('-t', '--top-level-directory', dest='top', default=None,
-                          help='Top level directory of project (defaults to start directory)')
+
+        if forDiscovery:
+            parser.add_option('-s', '--start-directory', dest='start', default='.',
+                              help="Directory to start discovery ('.' default)")
+            parser.add_option('-p', '--pattern', dest='pattern', default=None,
+                              help="Pattern to match tests ('test*.py' default)")
+            parser.add_option('-t', '--top-level-directory', dest='top', default=None,
+                              help='Top level directory of project (defaults to start directory)')
 
         for opt, longopt, help_text, callback in _options:
             opts = []
@@ -210,12 +188,7 @@ class TestProgram(object):
             parser.add_option(option)
             
         options, args = parser.parse_args(argv)
-        if len(args) > 3:
-            self.usageExit()
-        
-        for name, value in zip(('start', 'pattern', 'top'), args):
-            setattr(options, name, value)
-        
+
         # only set options from the parsing here
         # if they weren't set explicitly in the constructor
         if self.failfast is None:
@@ -227,6 +200,19 @@ class TestProgram(object):
         
         if options.verbose:
             self.verbosity = 2
+            
+        return options, args
+        
+    def _do_discovery(self, argv, Loader=loader.TestLoader):
+        # handle command line args for test discovery
+        self.progName = '%s discover' % self.progName
+        options, args = self._parseArgs(argv, forDiscovery=True)
+        
+        if len(args) > 3:
+            self.usageExit()
+        
+        for name, value in zip(('start', 'pattern', 'top'), args):
+            setattr(options, name, value)
 
         start_dir = options.start
         pattern = options.pattern
