@@ -18,16 +18,9 @@ def enable():
     hooks.matchPath += matchRegexp
     unittest2.loader.DEFAULT_PATTERN = r'test.*\.py$'
 
-options = getConfig()
-
-alwaysOn = False
-matchFullPath = False
-ourOptions = options.get('matchregexp', {})
-if 'always-on' in ourOptions:
-    alwaysOn = ourOptions.as_bool('always-on')
-
-if 'full-path' in ourOptions:
-    matchFullPath = ourOptions.as_bool('full-path')
+ourOptions = getConfig('matchregexp')
+alwaysOn = ourOptions.as_bool('always-on', default=False)
+matchFullPath = ourOptions.as_bool('full-path', default=False)
 
 if alwaysOn:
     enable()
