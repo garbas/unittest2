@@ -5,6 +5,7 @@ import time
 import unittest
 
 from unittest2 import result
+from unittest2.events import hooks, TestRunStartStopEvent
 
 try:
     from unittest2.signals import registerResult
@@ -158,6 +159,7 @@ class TextTestRunner(unittest.TextTestRunner):
         startTestRun = getattr(result, 'startTestRun', None)
         if startTestRun is not None:
             startTestRun()
+        hooks.testRunStart(TestRunStartStopEvent())
         try:
             test(result)
         finally:
@@ -166,6 +168,8 @@ class TextTestRunner(unittest.TextTestRunner):
                 stopTestRun()
             else:
                 result.printErrors()
+
+        hooks.testRunStop(TestRunStartStopEvent())
         stopTime = time.time()
         timeTaken = stopTime - startTime
         if hasattr(result, 'separator2'):

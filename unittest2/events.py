@@ -38,7 +38,9 @@ class OnTestFailEvent(_Event):
         self.test = test
         self.result = result
         self.exc_info = exc_info
-    
+
+class TestRunStartStopEvent(_Event):
+    pass
 
 class _EventHook(object):
     def __init__(self):
@@ -66,6 +68,8 @@ class hooks(object):
     matchPath = _EventHook()
     loadTestsFromModule = _EventHook()
     onTestFail = _EventHook()
+    testRunStart = _EventHook()
+    testRunStop = _EventHook()
 
 
 _config = None
@@ -147,4 +151,4 @@ def getConfig(section=None):
     # warning! mutable
     if section is None:
         return _config
-    return _config.get(section, {})
+    return _config.get(section, Section(section))
