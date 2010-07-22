@@ -10,7 +10,10 @@ import unittest
 from fnmatch import fnmatch
 
 from unittest2 import case, suite
-from unittest2.events import hooks, HandleFileEvent, MatchPathEvent
+from unittest2.events import (
+    hooks, HandleFileEvent, MatchPathEvent,
+    LoadFromModuleEvent
+)
 
 try:
     from os.path import relpath
@@ -81,14 +84,19 @@ class TestLoader(unittest.TestLoader):
 
     def loadTestsFromModule(self, module, use_load_tests=True):
         """Return a suite of all tests cases contained in the given module"""
-        tests = []
-        for name in dir(module):
-            obj = getattr(module, name)
-            if isinstance(obj, type) and issubclass(obj, unittest.TestCase):
-                tests.append(self.loadTestsFromTestCase(obj))
+        event = LoadFromModuleEvent(self, module)
+        result = hooks.loadTestsFromModule(event)
+        if event.handled:
+            tests = result
+        else:
+            tests = []
+            for name in dir(module):
+                obj = getattr(module, name)
+                if isinstance(obj, type) and issubclass(obj, unittest.TestCase):
+                    tests.append(self.loadTestsFromTestCase(obj))
+            tests = self.suiteClass(tests)
 
         load_tests = getattr(module, 'load_tests', None)
-        tests = self.suiteClass(tests)
         if use_load_tests and load_tests is not None:
             try:
                 return load_tests(self, tests, None)

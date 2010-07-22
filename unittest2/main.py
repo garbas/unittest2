@@ -96,6 +96,10 @@ class TestProgram(object):
         self.testRunner = testRunner
         self.testLoader = testLoader
         self.progName = os.path.basename(argv[0])
+        
+        # should use project top level directory - but we don't know it yet
+        loadPlugins()
+        
         self.parseArgs(argv)
         self.runTests()
 
@@ -166,9 +170,6 @@ class TestProgram(object):
     def _do_discovery(self, argv, Loader=loader.TestLoader):
         # handle command line args for test discovery
         self.progName = '%s discover' % self.progName
-        
-        # should use project top level directory - but we don't know it yet
-        loadPlugins()
         
         import optparse
         parser = optparse.OptionParser()
