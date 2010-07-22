@@ -26,6 +26,11 @@ class MatchPathEvent(_Event):
         self.name = name
         self.pattern = pattern
 
+class LoadFromModuleEvent(_Event):
+    def __init__(self, loader, module):
+        _Event.__init__(self)
+        self.loader = loader
+        self.module = module
 
 class _EventHook(object):
     def __init__(self):
