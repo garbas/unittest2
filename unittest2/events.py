@@ -83,7 +83,7 @@ def loadPlugins():
     for plugin in set(globalPlugins + localPlugins):
         __import__(plugin)
 
-
+DEFAULT = object()
 class Section(dict):
     def __new__(cls, name, items=()):
         return dict.__new__(cls, items)
@@ -91,8 +91,12 @@ class Section(dict):
     def __init__(self, name, items=()):
         self.name = name
 
-    def as_bool(self, item):
-        value = self[item].lower().strip()
+    def as_bool(self, item, default=DEFAULT):
+        try:
+            value = self[item].lower().strip()
+        except KeyError:
+            if default is not DEFAULT:
+                return default
         if value in ('1', 'true', 'on', 'yes'):
             return True
         if value in ('0', 'false', 'off', 'no'):
@@ -139,6 +143,8 @@ def addOption(callback, opt, longOpt=None, help=None):
     _options.append((opt, longOpt, help, wrappedCallback))
 
 
-def getConfig():
+def getConfig(section=None):
     # warning! mutable
-    return _config
+    if section is None:
+        return _config
+    return _config.get(section, {})
