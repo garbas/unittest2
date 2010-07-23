@@ -13,7 +13,6 @@ __all__ = (
     'TestRunStartEvent',
     'TestRunStopEvent',
     'PluginsLoadedEvent',
-    'ArgumentsParsedEvent',
     # for plugins
     'hooks',
     'addOption',
@@ -99,12 +98,9 @@ class _EventHook(object):
 class PluginsLoadedEvent(_Event):
     pass
 
-class ArgumentsParsedEvent(_Event):
-    pass
 
 class hooks(object):
     pluginsLoaded = _EventHook()
-    argumentsParsed = _EventHook()
     handleFile = _EventHook()
     matchPath = _EventHook()
     loadTestsFromModule = _EventHook()
