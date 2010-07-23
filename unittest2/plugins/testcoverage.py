@@ -36,7 +36,7 @@ class CoveragePlugin(object):
         self.cov.start()
 
     def get_modules(self):
-        allModules = set(modules + extraModules)
+        allModules = set(modules)
         if not allModules:
             return
         
@@ -87,7 +87,6 @@ reportHtml = ourOptions.as_bool('report-html', default=True)
 excludeLines = ourOptions.as_list('exclude-lines', default=[])
 ignoreErrors = ourOptions.as_bool('ignore-errors', default=False)
 modules = ourOptions.as_list('modules', default=[])
-extraModules = []
 
 def initialise():
     if alwaysOn:
@@ -96,4 +95,4 @@ def initialise():
         help_text1 = 'Enable coverage reporting'
         help_text2 = 'Specify a module or package for coverage reporting'
         addOption(enable, 'C', 'coverage', help_text1)
-        addOption(extraModules, None, 'cover-module', help_text2)
+        addOption(modules, None, 'cover-module', help_text2)
