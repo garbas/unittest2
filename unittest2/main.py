@@ -13,7 +13,7 @@ except ImportError:
 
 from unittest2.events import (
     loadPlugins, PluginsLoadedEvent,
-    ArgumentsParsedEvent, hooks
+    hooks
 )
 
 __unittest = True
@@ -111,9 +111,8 @@ class TestProgram(object):
             loadPlugins()
             TestProgram.pluginsLoaded = True
         
-        hooks.pluginsLoaded(PluginsLoadedEvent())
         self.parseArgs(argv)
-        hooks.argumentsParsed(ArgumentsParsedEvent())
+        hooks.pluginsLoaded(PluginsLoadedEvent())
         self.runTests()
 
     def usageExit(self, msg=None):
