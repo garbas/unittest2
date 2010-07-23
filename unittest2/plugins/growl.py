@@ -12,9 +12,6 @@ import warnings
 # py-Growl uses md5
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-import os
-import sys
-import re
 import datetime
 
 try:
