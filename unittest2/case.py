@@ -305,6 +305,15 @@ class TestCase(unittest.TestCase):
                           DeprecationWarning, 2)
             result.addSuccess(self)
 
+    def withTestFailEvent(self, func, result, when):
+        try:
+            func()
+        except:
+            info = sys.exc_info()
+            event = TestFailEvent(self, result, info, 'call')
+            hooks.onTestFail(event)
+            raise
+
     def run(self, result=None):
         orig_result = result
         if result is None:
@@ -331,20 +340,14 @@ class TestCase(unittest.TestCase):
         try:
             success = False
             try:
-                self.setUp()
+                self.withTestFailEvent(self.setUp, result, 'setUp')
             except SkipTest, e:
                 self._addSkip(result, str(e))
             except Exception:
                 result.addError(self, sys.exc_info())
             else:
                 try:
-                    try:
-                        testMethod()
-                    except:
-                        info = sys.exc_info()
-                        event = TestFailEvent(self, result, info)
-                        hooks.onTestFail(event)
-                        raise
+                    self.withTestFailEvent(testMethod, result, 'call')
                 except self.failureException:
                     result.addFailure(self, sys.exc_info())
                 except _ExpectedFailure, e:
@@ -371,7 +374,7 @@ class TestCase(unittest.TestCase):
                     success = True
 
                 try:
-                    self.tearDown()
+                    self.withTestFailEvent(self.tearDown, result, 'tearDown')
                 except Exception:
                     result.addError(self, sys.exc_info())
                     success = False
@@ -395,7 +398,8 @@ class TestCase(unittest.TestCase):
         while self._cleanups:
             function, args, kwargs = self._cleanups.pop(-1)
             try:
-                function(*args, **kwargs)
+                cleanUp = lambda: function(*args, **kwargs)
+                self.withTestFailEvent(cleanUp, result, 'cleanUp')
             except Exception:
                 ok = False
                 result.addError(self, sys.exc_info())
