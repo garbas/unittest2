@@ -96,6 +96,8 @@ class TestLoader(unittest.TestLoader):
                     tests.append(self.loadTestsFromTestCase(obj))
             tests = self.suiteClass(tests)
 
+        if event.extraTests:
+            tests.addTests(self.suiteClass(event.extraTests))
         load_tests = getattr(module, 'load_tests', None)
         if use_load_tests and load_tests is not None:
             try:
@@ -266,8 +268,10 @@ class TestLoader(unittest.TestLoader):
                                          self._top_level_dir)
                 result = hooks.handleFile(event)
                 if result:
-                    yield result
-                    continue
+                    suite, _complete = result
+                    yield suite
+                    if _complete:
+                        continue
                 
                 if not VALID_MODULE_NAME.match(path):
                     # valid Python identifiers only

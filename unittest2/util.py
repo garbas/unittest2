@@ -2,6 +2,8 @@
 
 __unittest = True
 
+import os
+import sys
 
 _MAX_LENGTH = 80
 def safe_repr(obj, short=False):
@@ -97,3 +99,14 @@ def unorderable_list_difference(expected, actual, ignore_duplicate=False):
 
     # anything left in actual is unexpected
     return missing, actual
+
+
+def getSource(path):
+    if path is None:
+        return
+    if sys.platform.startswith('java') and path.endswith('$py.class'):
+        return '.'.join((path[:-9], 'py'))
+    base, ext = os.path.splitext(path)
+    if ext.lower() in ('.pyc', '.pyo', '.py'):
+        return '.'.join((base, 'py'))
+    return path
