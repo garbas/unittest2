@@ -8,3 +8,4 @@ unittest2.egg-info/*
 build/*
 .tox/*
 .coverage/*
+htmlcov/*

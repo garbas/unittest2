@@ -210,13 +210,15 @@ def loadPluginsConfigFile(path):
     except ConfigParserError:
         return plugins, parser
 
-def addOption(callback, opt, longOpt=None, help=None):
+def addOption(callback, opt=None, longOpt=None, help=None):
     # delayed import to avoid circular imports
     from unittest2.main import _options
     
     if opt and opt.lower() == opt:
         raise ValueError('Lowercase short options are reserved: %s' % opt)
     wrappedCallback = lambda *_: callback()
+    if isinstance(callback, list):
+        wrappedCallback = callback
     _options.append((opt, longOpt, help, wrappedCallback))
 
 
