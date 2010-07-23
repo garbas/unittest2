@@ -23,7 +23,6 @@ class CoveragePlugin(object):
         self.cov = coverage.coverage(**args)
         self.cov.erase()
 
-    def start(self, event):
         self.cov.exclude('#pragma[: ]+[nN][oO] [cC][oO][vV][eE][rR]')
         for line in excludeLines:
             self.cov.exclude(line)
@@ -45,7 +44,7 @@ def enable():
     if coverage is None:
         raise coverageImportError
     _plugin = CoveragePlugin()
-    hooks.testRunStart += _plugin.start
+    #hooks.testRunStart += _plugin.start
     hooks.testRunStop += _plugin.stop
 
 ourOptions = getConfig('coverage')
