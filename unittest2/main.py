@@ -50,7 +50,7 @@ level directory of the project.
 """
 
 USAGE_FROM_MODULE = """\
-Usage: %(progName)s [options] [test] [...]
+Usage: %(progName)s [options] [tests]
 
 Options:
   -h, --help       Show this message
@@ -64,6 +64,9 @@ Examples:
   %(progName)s MyTestCase                    - run all 'test*' test methods
                                                in MyTestCase
 """
+
+DESCRIPTION = ('[tests] can be a list of any number of test modules, classes '
+               'and test methods.')
 
 
 class TestProgram(object):
@@ -127,11 +130,9 @@ class TestProgram(object):
             self._do_discovery(argv[2:])
             return
         
-        options, args = self._parseArgs(argv[1:], forDiscovery=True)
+        options, args = self._parseArgs(argv[1:], forDiscovery=False)
         # Missing --quiet / -q and help message
         
-        if options.verbose:
-            self.verbosity = 2
         if len(args) == 0 and self.defaultTest is None:
             # createTests will load tests from self.module
             self.testNames = None
@@ -153,6 +154,11 @@ class TestProgram(object):
 
     def _parseArgs(self, argv, forDiscovery):
         parser = optparse.OptionParser()
+        if forDiscovery:
+            parser.usage = '%prog [options] [...]'
+        else:
+            parser.description = DESCRIPTION
+            parser.usage = '%prog [options] [tests]'
         parser.prog = self.progName
         parser.add_option('-v', '--verbose', dest='verbose', default=False,
                           help='Verbose output', action='store_true')

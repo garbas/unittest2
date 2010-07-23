@@ -161,11 +161,31 @@ class Section(dict):
     def __repr__(self):
         return 'Section(%r, %r)' % (self.name, self.items())
     
-    def as_int(self, item):
-        return int(self[item].strip())
+    def as_int(self, item, default=DEFAULT):
+        try:
+            return int(self[item].strip())
+        except KeyError:
+            if default is not DEFAULT:
+                return default
+            raise
     
-    def as_float(self, item):
-        return float(self[item].strip())
+    def as_float(self, item, default=DEFAULT):
+        try:
+            return float(self[item].strip())
+        except KeyError:
+            if default is not DEFAULT:
+                return default
+            raise
+    
+    def as_list(self, item, default=DEFAULT):
+        try:
+            entry = self[item]
+        except KeyError:
+            if default is not DEFAULT:
+                return default
+            raise
+        return [line.strip() for line in entry.splitlines()
+                 if line.strip() and not line.strip().startswith('#')]
 
 
 def combineConfigs(globalParser, localParser):

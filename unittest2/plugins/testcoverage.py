@@ -25,14 +25,20 @@ class CoveragePlugin(object):
 
     def start(self, event):
         self.cov.exclude('#pragma[: ]+[nN][oO] [cC][oO][vV][eE][rR]')
+        for line in excludeLines:
+            self.cov.exclude(line)
+            
         self.cov.start()
 
     def stop(self, event):
         self.cov.stop()
+        args = dict(
+            ignore_errors=ignoreErrors,
+        )
         if reportHtml:
-            self.cov.html_report(directory=htmlDirectory)
+            self.cov.html_report(directory=htmlDirectory, **args)
         else:
-            self.cov.report(file=textFile)
+            self.cov.report(file=textFile, **args)
 
 
 def enable():
@@ -51,6 +57,9 @@ branch = ourOptions.as_bool('branch', default=None)
 timid = ourOptions.as_bool('timid', default=False)
 cover_pylib = ourOptions.as_bool('cover-pylib', default=False)
 reportHtml = ourOptions.as_bool('report-html', default=True)
+excludeLines = ourOptions.as_list('exclude-lines', default=[])
+ignoreErrors = ourOptions.as_bool('ignore-errors', default=False)
+
 
 def initialise():
     if alwaysOn:
