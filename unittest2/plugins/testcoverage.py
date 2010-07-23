@@ -11,10 +11,11 @@ except ImportError:
 
 
 class CoveragePlugin(object):
-    
-    def start(self, event):
+    def __init__(self):
         self.initialModules = set(sys.modules.keys())
         coverage.erase()
+
+    def start(self, event):
         coverage.exclude('#pragma[: ]+[nN][oO] [cC][oO][vV][eE][rR]')
         coverage.start()
 
