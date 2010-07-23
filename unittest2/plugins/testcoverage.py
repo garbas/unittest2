@@ -10,7 +10,13 @@ except ImportError, e:
     coverage = None
     coverageImportError = e
 
-
+def get_src(filename):
+    if sys.platform.startswith('java') and filename.endswith('$py.class'):
+        return '.'.join((filename[:-9], 'py'))
+    base, ext = os.path.splitext(filename)
+    if ext in ('.pyc', '.pyo', '.py'):
+        return '.'.join((base, 'py'))
+    return filename
 
 class CoveragePlugin(object):
     def __init__(self):
@@ -29,11 +35,33 @@ class CoveragePlugin(object):
             
         self.cov.start()
 
+    def get_modules(self):
+        allModules = set(modules + extraModules)
+        if not allModules:
+            return
+        
+        morfs = []
+        for name, module in sys.modules.items():
+            parts = []
+            path = getattr(module, '__file__', None)
+            if path is None:
+                continue
+            for part in name.split('.'):
+                parts.append(part)
+                this_name = '.'.join(parts)
+                if this_name in allModules:
+                    morfs.append(get_src(path))
+                    continue
+        return morfs
+
     def stop(self, event):
         self.cov.stop()
         args = dict(
             ignore_errors=ignoreErrors,
         )
+        allModules = self.get_modules()
+        if allModules:
+            args['morfs'] = allModules
         if reportHtml:
             self.cov.html_report(directory=htmlDirectory, **args)
         else:
@@ -58,11 +86,14 @@ cover_pylib = ourOptions.as_bool('cover-pylib', default=False)
 reportHtml = ourOptions.as_bool('report-html', default=True)
 excludeLines = ourOptions.as_list('exclude-lines', default=[])
 ignoreErrors = ourOptions.as_bool('ignore-errors', default=False)
-
+modules = ourOptions.as_list('modules', default=[])
+extraModules = []
 
 def initialise():
     if alwaysOn:
         enable()
     else:
-        help_text = 'Enable coverage reporting'
-        addOption(enable, 'C', 'coverage', help_text)
+        help_text1 = 'Enable coverage reporting'
+        help_text2 = 'Specify a module or package for coverage reporting'
+        addOption(enable, 'C', 'coverage', help_text1)
+        addOption(extraModules, None, 'cover-module', help_text2)

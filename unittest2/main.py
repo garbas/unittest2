@@ -184,21 +184,29 @@ class TestProgram(object):
             parser.add_option('-t', '--top-level-directory', dest='top', default=None,
                               help='Top level directory of project (defaults to start directory)')
 
+        list_options = []
         for opt, longopt, help_text, callback in _options:
             opts = []
             if opt is not None:
                 opts.append('-' + opt)
             if longopt is not None:
                 opts.append('--' + longopt)
-            kwargs = {
-                'action': 'callback',
-                'help': help_text,
-                'callback': callback
-            }
+            kwargs = dict(
+                action='callback',
+                help=help_text,
+            )
+            if isinstance(callback, list):
+                kwargs['action'] = 'append'
+                kwargs['dest'] = longopt
+                list_options.append((longopt, callback))
+            else:
+                kwargs['callback'] = callback
             option = optparse.make_option(*opts, **kwargs)
             parser.add_option(option)
             
         options, args = parser.parse_args(argv)
+        for attr, _list in list_options:
+            _list[:] = getattr(options, attr)
 
         # only set options from the parsing here
         # if they weren't set explicitly in the constructor
