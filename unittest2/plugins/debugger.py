@@ -1,4 +1,3 @@
-import unittest2
 from unittest2.events import hooks, addOption, getConfig
 
 import pdb
@@ -8,8 +7,6 @@ import sys
 def onTestFail(event):
     value, tb = event.exc_info[1:]
     test = event.test
-    if isinstance(value, unittest2.SkipTest):
-        return
     if errorsOnly and isinstance(value, test.failureException):
         return
     original = sys.stdout

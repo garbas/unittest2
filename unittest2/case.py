@@ -308,10 +308,11 @@ class TestCase(unittest.TestCase):
     def withTestFailEvent(self, func, result, when):
         try:
             func()
-        except:
-            info = sys.exc_info()
-            event = TestFailEvent(self, result, info, 'call')
-            hooks.onTestFail(event)
+        except Exception, e:
+            if not isinstance(e, SkipTest):
+                info = sys.exc_info()
+                event = TestFailEvent(self, result, info, 'call')
+                hooks.onTestFail(event)
             raise
 
     def run(self, result=None):
