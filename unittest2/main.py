@@ -195,7 +195,7 @@ class TestProgram(object):
                 'help': help_text,
                 'callback': callback
             }
-            option = optparse.Option(*opts, **kwargs)
+            option = optparse.make_option(*opts, **kwargs)
             parser.add_option(option)
             
         options, args = parser.parse_args(argv)
