@@ -11,7 +11,10 @@ try:
 except ImportError:
     installHandler = None
 
-from unittest2.events import loadPlugins
+from unittest2.events import (
+    loadPlugins, PluginsLoadedEvent,
+    ArgumentsParsedEvent, hooks
+)
 
 __unittest = True
 
@@ -108,7 +111,9 @@ class TestProgram(object):
             loadPlugins()
             TestProgram.pluginsLoaded = True
         
+        hooks.pluginsLoaded(PluginsLoadedEvent())
         self.parseArgs(argv)
+        hooks.argumentsParsed(ArgumentsParsedEvent())
         self.runTests()
 
     def usageExit(self, msg=None):
@@ -206,7 +211,8 @@ class TestProgram(object):
             
         options, args = parser.parse_args(argv)
         for attr, _list in list_options:
-            _list[:] = getattr(options, attr)
+            values = getattr(options, attr) or []
+            _list.extend(values)
 
         # only set options from the parsing here
         # if they weren't set explicitly in the constructor
