@@ -14,7 +14,7 @@ from unittest2.util import (
 )
 
 from unittest2.compatibility import wraps
-from unittest2.events import hooks, OnTestFailEvent
+from unittest2.events import hooks, TestFailEvent
 
 __unittest = True
 
@@ -342,7 +342,7 @@ class TestCase(unittest.TestCase):
                         testMethod()
                     except:
                         info = sys.exc_info()
-                        event = OnTestFailEvent(self, result, info)
+                        event = TestFailEvent(self, result, info)
                         hooks.onTestFail(event)
                         raise
                 except self.failureException:
