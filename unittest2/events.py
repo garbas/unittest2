@@ -51,6 +51,7 @@ class LoadFromModuleEvent(_Event):
         _Event.__init__(self)
         self.loader = loader
         self.module = module
+        self.extraTests = []
 
 class TestFailEvent(_Event):
     def __init__(self, test, result, exc_info, when):

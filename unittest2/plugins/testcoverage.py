@@ -1,4 +1,5 @@
 from unittest2.events import hooks, addOption, getConfig
+from unittest2.util import getSource
 
 import os
 import sys
@@ -8,14 +9,6 @@ try:
 except ImportError, e:
     coverage = None
     coverageImportError = e
-
-def get_src(filename):
-    if sys.platform.startswith('java') and filename.endswith('$py.class'):
-        return '.'.join((filename[:-9], 'py'))
-    base, ext = os.path.splitext(filename)
-    if ext in ('.pyc', '.pyo', '.py'):
-        return '.'.join((base, 'py'))
-    return filename
 
 class CoveragePlugin(object):
     def __init__(self):
@@ -49,7 +42,7 @@ class CoveragePlugin(object):
                 parts.append(part)
                 this_name = '.'.join(parts)
                 if this_name in allModules:
-                    morfs.append(get_src(path))
+                    morfs.append(getSource(path))
                     continue
         return morfs
 

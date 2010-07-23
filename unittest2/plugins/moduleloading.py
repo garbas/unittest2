@@ -7,7 +7,6 @@ import types
 def loadModules(event):
     loader = event.loader
     module = event.module
-    event.handled = True
     
     def is_test(obj):
         return obj.__name__.startswith(loader.testMethodPrefix)
@@ -27,7 +26,7 @@ def loadModules(event):
                 args['tearDown'] = tearDown
             case = unittest2.FunctionTestCase(obj, **args)
             tests.append(case)
-    return loader.suiteClass(tests)
+    event.extraTests = tests
 
 hooks.loadTestsFromModule += loadModules
 
