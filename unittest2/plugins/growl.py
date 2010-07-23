@@ -5,6 +5,8 @@ Requires py-Growl.
 
 Code liberally "borrowed" from NoseGrowl:
     http://bitbucket.org/crankycoder/nosegrowl/
+    
+This plugin is licensed under GNU LGPL (inherited from nosegrowl).
 """
 from unittest2.events import hooks, addOption, getConfig
 
