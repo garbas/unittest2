@@ -53,11 +53,14 @@ class LoadFromModuleEvent(_Event):
         self.module = module
 
 class TestFailEvent(_Event):
-    def __init__(self, test, result, exc_info):
+    def __init__(self, test, result, exc_info, when):
         _Event.__init__(self)
         self.test = test
         self.result = result
         self.exc_info = exc_info
+        
+        # 'setUp', 'call', 'tearDown', 'cleanUp'
+        self.when = when
 
 class TestRunStartEvent(_Event):
     def __init__(self, runner, result, startTime):
