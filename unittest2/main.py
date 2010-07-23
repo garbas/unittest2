@@ -131,7 +131,6 @@ class TestProgram(object):
             return
         
         options, args = self._parseArgs(argv[1:], forDiscovery=False)
-        # Missing --quiet / -q and help message
         
         if len(args) == 0 and self.defaultTest is None:
             # createTests will load tests from self.module
@@ -150,7 +149,7 @@ class TestProgram(object):
             self.test = self.testLoader.loadTestsFromModule(self.module)
         else:
             self.test = self.testLoader.loadTestsFromNames(self.testNames,
-                                                           self.module)
+                                                            self.module)
 
     def _parseArgs(self, argv, forDiscovery):
         parser = optparse.OptionParser()
@@ -162,6 +161,8 @@ class TestProgram(object):
         parser.prog = self.progName
         parser.add_option('-v', '--verbose', dest='verbose', default=False,
                           help='Verbose output', action='store_true')
+        parser.add_option('-q', '--quiet', dest='quiet', default=False,
+                          help='Quiet output', action='store_true')
         if self.failfast != False:
             parser.add_option('-f', '--failfast', dest='failfast', default=False,
                               help='Stop on first fail or error', 
@@ -210,6 +211,8 @@ class TestProgram(object):
         
         if options.verbose:
             self.verbosity = 2
+        if options.quiet:
+            self.verbosity = 0
             
         return options, args
         
