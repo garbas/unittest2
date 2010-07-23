@@ -5,7 +5,7 @@ import os
 import sys
 import types
 
-from unittest2 import loader, runner
+from unittest2 import loader, runner, __version__
 try:
     from unittest2.signals import installHandler
 except ImportError:
@@ -152,7 +152,7 @@ class TestProgram(object):
                                                             self.module)
 
     def _parseArgs(self, argv, forDiscovery):
-        parser = optparse.OptionParser()
+        parser = optparse.OptionParser(version='unittest2 %s' % __version__)
         if forDiscovery:
             parser.usage = '%prog [options] [...]'
         else:
