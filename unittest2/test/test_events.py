@@ -4,6 +4,9 @@ import unittest2
 
 class TestEvents(unittest2.TestCase):
     
+    def test__all__(self):
+        exec("from unittest2.events import *")
+        
     def test_eventhook(self):
         hook = unittest2.events._EventHook()
         self.assertEqual(hook._handlers, [])

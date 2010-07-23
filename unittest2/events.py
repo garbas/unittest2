@@ -4,6 +4,24 @@ import sys
 from ConfigParser import SafeConfigParser
 from ConfigParser import Error as ConfigParserError
 
+__all__ = (
+    # events
+    'HandleFileEvent',
+    'MatchPathEvent',
+    'LoadFromModuleEvent',
+    'TestFailEvent',
+    'TestRunStartEvent',
+    'TestRunStopEvent',
+    # for plugins
+    'hooks',
+    'addOption',
+    'getConfig',
+    # API for test frameworks
+    'loadedPlugins',
+    'loadPlugins',
+    'loadPlugin',
+    'loadConfig',
+)
 
 class _Event(object):
     def __init__(self):
@@ -33,7 +51,7 @@ class LoadFromModuleEvent(_Event):
         self.loader = loader
         self.module = module
 
-class OnTestFailEvent(_Event):
+class TestFailEvent(_Event):
     def __init__(self, test, result, exc_info):
         _Event.__init__(self)
         self.test = test
@@ -90,23 +108,30 @@ _config = None
 loadedPlugins = []
 CFG_NAME = 'unittest.cfg'
 def loadPlugins():
+    allPlugins = loadConfig()
+    for plugin in allPlugins:
+        loadPlugin(plugin)
+
+def loadPlugin(plugin):
+    __import__(plugin)
+    mod = sys.modules[plugin]
+    initialise = getattr(mod, 'initialise', None)
+    if initialise is not None:
+        initialise()
+    loadedPlugins.append(plugin)
+
+def loadConfig(name=CFG_NAME, localDir=None):
     global _config
+    if localDir is None:
+        localDir = os.getcwd()
     
-    cfgPath = os.path.join(os.path.expanduser('~'), CFG_NAME)
+    cfgPath = os.path.join(os.path.expanduser('~'), name)
     globalPlugins, globalParser = loadPluginsConfigFile(cfgPath)
-    cfgPath = os.path.join(os.getcwd(), CFG_NAME)
+    cfgPath = os.path.join(localDir, name)
     localPlugins, localParser = loadPluginsConfigFile(cfgPath)
 
     _config = combineConfigs(globalParser, localParser)
-
-    for plugin in set(globalPlugins + localPlugins):
-        __import__(plugin)
-        mod = sys.modules[plugin]
-        initialise = getattr(mod, 'initialise', None)
-        if initialise is not None:
-            initialise()
-        loadedPlugins.append(plugin)
-
+    return set(globalPlugins + localPlugins)
 
 DEFAULT = object()
 TRUE = set(('1', 'true', 'on', 'yes'))
