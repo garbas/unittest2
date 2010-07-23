@@ -1,4 +1,3 @@
-import unittest2
 from unittest2.events import hooks, addOption, getConfig
 
 import os
