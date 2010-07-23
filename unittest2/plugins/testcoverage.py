@@ -1,45 +1,50 @@
 import unittest2
 from unittest2.events import hooks, addOption, getConfig
 
+import os
 import sys
 
 try:
     import coverage
-except ImportError:
+except ImportError, coverageImportError:
     coverage = None
 
 
 
 class CoveragePlugin(object):
     def __init__(self):
-        self.initialModules = set(sys.modules.keys())
-        coverage.erase()
+        args = dict(
+            config_file=configFile,
+            cover_pylib=False
+        )
+        if reportDirectory:
+            args['directory'] = reportDirectory
+        
+        self.cov = coverage.coverage(**args)
+        self.cov.erase()
 
     def start(self, event):
-        coverage.exclude('#pragma[: ]+[nN][oO] [cC][oO][vV][eE][rR]')
-        coverage.start()
+        self.cov.exclude('#pragma[: ]+[nN][oO] [cC][oO][vV][eE][rR]')
+        self.cov.start()
 
     def stop(self, event):
-        coverage.stop()
-        modules = [module
-                    for name, module in sys.modules.items()
-                    if name not in self.initialModules and
-                    hasattr(module, '__file__') and
-                    module.__file__ is not None and
-                    not name.startswith('unittest2') and
-                    not 'test' in name]
-        coverage.report(modules, file=open('coverage.txt', 'w'))
+        self.cov.stop()
+        self.cov.html_report()
 
 
 def enable():
+    if coverage is None:
+        raise coverageImportError
     _plugin = CoveragePlugin()
     hooks.testRunStart += _plugin.start
     hooks.testRunStop += _plugin.stop
 
 ourOptions = getConfig('coverage')
 alwaysOn = ourOptions.as_bool('always-on', default=False)
+configFile = ourOptions.get('config', '').strip() or True
+reportDirectory = ourOptions.get('directory', '').strip()
 
-if coverage is not None:
+def initialise():
     if alwaysOn:
         enable()
     else:

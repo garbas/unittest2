@@ -1,4 +1,5 @@
 import os
+import sys
 
 from ConfigParser import SafeConfigParser
 from ConfigParser import Error as ConfigParserError
@@ -39,8 +40,21 @@ class OnTestFailEvent(_Event):
         self.result = result
         self.exc_info = exc_info
 
-class TestRunStartStopEvent(_Event):
-    pass
+class TestRunStartEvent(_Event):
+    def __init__(self, runner, result, startTime):
+        _Event.__init__(self)
+        self.runner = runner
+        self.result = result
+        self.startTime = startTime
+
+class TestRunStopEvent(_Event):
+    def __init__(self, runner, result, stopTime, timeTaken):
+        _Event.__init__(self)
+        self.runner = runner
+        self.result = result
+        self.stopTime = stopTime
+        self.timeTaken = timeTaken
+        
 
 class _EventHook(object):
     def __init__(self):
@@ -73,6 +87,7 @@ class hooks(object):
 
 
 _config = None
+loadedPlugins = []
 CFG_NAME = 'unittest.cfg'
 def loadPlugins():
     global _config
@@ -86,8 +101,17 @@ def loadPlugins():
 
     for plugin in set(globalPlugins + localPlugins):
         __import__(plugin)
+        mod = sys.modules[plugin]
+        initialise = getattr(mod, 'initialise', None)
+        if initialise is not None:
+            initialise()
+        loadedPlugins.append(plugin)
+
 
 DEFAULT = object()
+TRUE = set(('1', 'true', 'on', 'yes'))
+FALSE = set(('0', 'false', 'off', 'no', ''))
+
 class Section(dict):
     def __new__(cls, name, items=()):
         return dict.__new__(cls, items)
@@ -101,12 +125,16 @@ class Section(dict):
         except KeyError:
             if default is not DEFAULT:
                 return default
-        if value in ('1', 'true', 'on', 'yes'):
+            raise
+        if value in TRUE:
             return True
-        if value in ('0', 'false', 'off', 'no'):
+        if value in FALSE:
             return False
         raise ConfigParserError('Config file value %s:%s:%s not recognised'
                                  ' as a boolean' % (self.name, item, value))
+
+    def __repr__(self):
+        return 'Section(%r, %r)' % (self.name, self.items())
     
     def as_int(self, item):
         return int(self[item].strip())

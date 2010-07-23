@@ -74,6 +74,8 @@ class TestProgram(object):
     
     # defaults for testing
     failfast = catchbreak = buffer = progName = None
+    
+    pluginsLoaded = False
 
     def __init__(self, module='__main__', defaultTest=None,
                  argv=None, testRunner=None,
@@ -99,7 +101,9 @@ class TestProgram(object):
         self.progName = os.path.basename(argv[0])
         
         # should use project top level directory - but we don't know it yet
-        loadPlugins()
+        if not TestProgram.pluginsLoaded:
+            loadPlugins()
+            TestProgram.pluginsLoaded = True
         
         self.parseArgs(argv)
         self.runTests()

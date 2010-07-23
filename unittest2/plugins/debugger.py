@@ -27,8 +27,9 @@ ourOptions = getConfig('debugger')
 alwaysOn = ourOptions.as_bool('always-on', default=False)
 errorsOnly = ourOptions.as_bool('errors-only', default=False)
 
-if alwaysOn:
-    enable()
-else:
-    help_text = 'Enter pdb on test fail or error'
-    addOption(enable, 'D', 'debugger', help_text)
+def initialise():
+    if alwaysOn:
+        enable()
+    else:
+        help_text = 'Enter pdb on test fail or error'
+        addOption(enable, 'D', 'debugger', help_text)
