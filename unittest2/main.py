@@ -106,8 +106,8 @@ class TestProgram(object):
         self.testLoader = testLoader
         self.progName = os.path.basename(argv[0])
         
-        # should use project top level directory - but we don't know it yet
         if not TestProgram.pluginsLoaded:
+            # only needed because we call several times during tests
             loadPlugins()
             TestProgram.pluginsLoaded = True
         

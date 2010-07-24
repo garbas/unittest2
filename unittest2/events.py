@@ -231,6 +231,8 @@ def loadPlugin(plugin):
 def loadConfig(name=CFG_NAME, localDir=None):
     global _config
     if localDir is None:
+        # should use project top level directory - but we
+        # don't know it when this is called
         localDir = os.getcwd()
     
     cfgPath = os.path.join(os.path.expanduser('~'), name)
