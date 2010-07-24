@@ -67,13 +67,13 @@ class UnittestGrowl(Plugin):
             raise growlImportError
         self.register()
         
-    def testRunStart(self, event):
+    def startTestRun(self, event):
         growl = SimpleNotifier()
         growl.register()
         self.start_time = datetime.datetime.now()
         growl.start("Starting tests...", 'Started at : [%s]' % self.start_time.isoformat())
 
-    def testRunStop(self, event):
+    def stopTestRun(self, event):
         growl = SimpleNotifier()
         result = event.result
         

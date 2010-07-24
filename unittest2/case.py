@@ -4,6 +4,7 @@ import sys
 import difflib
 import pprint
 import re
+import time
 import unittest
 import warnings
 
@@ -14,7 +15,10 @@ from unittest2.util import (
 )
 
 from unittest2.compatibility import wraps
-from unittest2.events import hooks, TestFailEvent
+from unittest2.events import (
+    hooks, TestFailEvent, StartTestEvent,
+    StopTestEvent
+)
 
 __unittest = True
 
@@ -194,6 +198,9 @@ class TestCase(unittest.TestCase):
     
     _classSetupFailed = False
 
+    # Attribute used by cleanups for timing tests
+    _startTime = 0
+
     def __init__(self, methodName='runTest'):
         """Create an instance of the class that will use the named test
            method when executed. Raises a ValueError if the instance does
@@ -301,7 +308,7 @@ class TestCase(unittest.TestCase):
         if addSkip is not None:
             addSkip(self, reason)
         else:
-            warnings.warn("Use of a TestResult without an addSkip method is deprecated", 
+            warnings.warn("Use of a TestResult out an addSkip method is deprecated", 
                           DeprecationWarning, 2)
             result.addSuccess(self)
 
@@ -309,7 +316,7 @@ class TestCase(unittest.TestCase):
         try:
             func()
         except Exception, e:
-            if not isinstance(e, SkipTest):
+            if not isinstance(e, (SkipTest, _ExpectedFailure, _UnexpectedSuccess)):
                 info = sys.exc_info()
                 event = TestFailEvent(self, result, info, 'call')
                 hooks.onTestFail(event)
@@ -322,11 +329,23 @@ class TestCase(unittest.TestCase):
             startTestRun = getattr(result, 'startTestRun', None)
             if startTestRun is not None:
                 startTestRun()
+            # Note: we don't call the startTestRun event here
 
         self._resultForDoCleanups = result
         result.startTest(self)
         
+        self._startTime = startTime = time.time()
+        event = StartTestEvent(self, result, startTime)
+        hooks.startTest(event)
+        
         testMethod = getattr(self, self._testMethodName)
+        
+        def doStop(outcome, exc_info, stage):
+            stopTime = time.time()
+            timeTaken = stopTime - startTime
+            event = StopTestEvent(self, result, stopTime, timeTaken, 
+                                  outcome, exc_info, stage)
+            hooks.stopTest(event)
         
         if (getattr(self.__class__, "__unittest_skip__", False) or 
             getattr(testMethod, "__unittest_skip__", False)):
@@ -337,6 +356,8 @@ class TestCase(unittest.TestCase):
                 self._addSkip(result, skip_why)
             finally:
                 result.stopTest(self)
+                exc_info = (SkipTest, SkipTest(skip_why), None)
+                doStop('skipped', exc_info, 'class')
             return
         try:
             success = False
@@ -344,22 +365,31 @@ class TestCase(unittest.TestCase):
                 self.withTestFailEvent(self.setUp, result, 'setUp')
             except SkipTest, e:
                 self._addSkip(result, str(e))
+                doStop('skipped', sys.exc_info(), 'setUp')
             except Exception:
-                result.addError(self, sys.exc_info())
+                exc_info = sys.exc_info()
+                doStop('error', exc_info, 'setUp')
+                result.addError(self, exc_info)
             else:
                 try:
                     self.withTestFailEvent(testMethod, result, 'call')
                 except self.failureException:
-                    result.addFailure(self, sys.exc_info())
+                    exc_info = sys.exc_info()
+                    doStop('failed', exc_info, 'call')
+                    result.addFailure(self, exc_info)
                 except _ExpectedFailure, e:
+                    exc_info = e.exc_info
+                    doStop('expectedFailure', exc_info, 'call')
                     addExpectedFailure = getattr(result, 'addExpectedFailure', None)
                     if addExpectedFailure is not None:
-                        addExpectedFailure(self, e.exc_info)
+                        addExpectedFailure(self, exc_info)
                     else: 
                         warnings.warn("Use of a TestResult without an addExpectedFailure method is deprecated", 
                                       DeprecationWarning)
                         result.addSuccess(self)
                 except _UnexpectedSuccess:
+                    exc_info = sys.exc_info()
+                    doStop('unexpectedSuccess', exc_info, 'call')
                     addUnexpectedSuccess = getattr(result, 'addUnexpectedSuccess', None)
                     if addUnexpectedSuccess is not None:
                         addUnexpectedSuccess(self)
@@ -368,21 +398,27 @@ class TestCase(unittest.TestCase):
                                       DeprecationWarning)
                         result.addFailure(self, sys.exc_info())
                 except SkipTest, e:
+                    doStop('skipped', sys.exc_info(), 'call')
                     self._addSkip(result, str(e))
                 except Exception:
-                    result.addError(self, sys.exc_info())
+                    exc_info = sys.exc_info()
+                    doStop('error', exc_info, 'call')
+                    result.addError(self, exc_info)
                 else:
                     success = True
 
                 try:
                     self.withTestFailEvent(self.tearDown, result, 'tearDown')
                 except Exception:
-                    result.addError(self, sys.exc_info())
+                    exc_info = sys.exc_info()
+                    doStop('error', exc_info, 'tearDown')
+                    result.addError(self, exc_info)
                     success = False
 
             cleanUpSuccess = self.doCleanups()
             success = success and cleanUpSuccess
             if success:
+                doStop('passed', None, None)
                 result.addSuccess(self)
         finally:
             result.stopTest(self)
@@ -402,8 +438,14 @@ class TestCase(unittest.TestCase):
                 cleanUp = lambda: function(*args, **kwargs)
                 self.withTestFailEvent(cleanUp, result, 'cleanUp')
             except Exception:
+                exc_info = sys.exc_info()
+                stopTime = time.time()
+                timeTaken = stopTime - self._startTime
+                event = StopTestEvent(self, result, timeTaken, 'error',
+                                      exc_info, 'cleanup')
+                hooks.stopTest(event)
                 ok = False
-                result.addError(self, sys.exc_info())
+                result.addError(self, exc_info)
         return ok
 
     def __call__(self, *args, **kwds):
