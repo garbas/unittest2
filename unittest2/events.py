@@ -99,7 +99,9 @@ class GetTestCaseNamesEvent(_Event):
         _Event.__init__(self)
         self.loader = loader
         self.testCase = testCase
+        self.testMethodPrefix = None
         self.extraNames = []
+        self.excludedNames = []
 
 class TestFailEvent(_Event):
     def __init__(self, test, result, exc_info, when):
