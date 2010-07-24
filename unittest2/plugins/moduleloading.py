@@ -14,9 +14,7 @@ def loadModules(event):
     tests = []
     for name in dir(module):
         obj = getattr(module, name)
-        if isinstance(obj, type) and issubclass(obj, unittest2.TestCase):
-            tests.append(loader.loadTestsFromTestCase(obj))
-        elif isinstance(obj, types.FunctionType) and is_test(obj):
+        if isinstance(obj, types.FunctionType) and is_test(obj):
             args = {}
             setUp = getattr(obj, 'setUp', None)
             tearDown = getattr(obj, 'tearDown', None)
@@ -26,6 +24,7 @@ def loadModules(event):
                 args['tearDown'] = tearDown
             case = unittest2.FunctionTestCase(obj, **args)
             tests.append(case)
+            
     event.extraTests = tests
 
 hooks.loadTestsFromModule += loadModules

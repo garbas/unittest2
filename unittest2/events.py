@@ -4,6 +4,11 @@ import sys
 from ConfigParser import SafeConfigParser
 from ConfigParser import Error as ConfigParserError
 
+# TODO: messaging API that respects verbosity
+# self.completed instead of returning completed in
+# file handling event
+
+
 __all__ = (
     # events
     'HandleFileEvent',
@@ -17,12 +22,20 @@ __all__ = (
     'hooks',
     'addOption',
     'getConfig',
+    'Plugin',
+    'pluginInstances',
     # API for test frameworks
     'loadedPlugins',
     'loadPlugins',
     'loadPlugin',
     'loadConfig',
 )
+
+
+_config = None
+loadedPlugins = []
+CFG_NAME = 'unittest.cfg'
+pluginInstances = set()
 
 class _Event(object):
     def __init__(self):
@@ -100,7 +113,7 @@ class _EventHook(object):
         return self
 
 class PluginsLoadedEvent(_Event):
-    pass
+    loadedPlugins = loadedPlugins
 
 
 class hooks(object):
@@ -113,9 +126,56 @@ class hooks(object):
     testRunStop = _EventHook()
 
 
-_config = None
-loadedPlugins = []
-CFG_NAME = 'unittest.cfg'
+class Register(type):
+    def __new__(meta, name, bases, contents):
+        autoCreate = contents.get('autoCreate')
+        if autoCreate is not None:
+            del contents['autoCreate']
+        else:
+            autoCreate = True
+        cls = type.__new__(meta, name, bases, contents)
+        
+        if autoCreate:
+            cls()
+        return cls
+        
+
+class Plugin(object):
+    __metaclass__ = Register
+    
+    def __new__(cls, *args, **kw):
+        instance = object.__new__(cls)
+        pluginInstances.add(instance)
+        if cls.instance is None:
+            cls.instance = instance
+        return instance
+    
+    def register(self):
+        hook_points = set(dir(hooks))
+        for entry in dir(self):
+            if entry.startswith('_'):
+                continue
+            if entry in hook_points:
+                point = getattr(hooks, entry)
+                point += getattr(self, entry)
+    
+    def unregister(self):
+        cls = self.__class__
+        pluginInstances.remove(self)
+        hook_points = set(dir(hooks))
+        for entry in dir(self):
+            if entry.startswith('_'):
+                continue
+            if entry in hook_points:
+                point = getattr(hooks, entry)
+                point -= getattr(self, entry)
+        if cls.instance is self:
+            cls.instance = None
+    
+    instance = None
+    autoCreate = False
+
+    
 def loadPlugins():
     allPlugins = loadConfig()
     for plugin in allPlugins:
