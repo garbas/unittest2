@@ -8,7 +8,7 @@ Code liberally "borrowed" from NoseGrowl:
     
 This plugin is licensed under GNU LGPL (inherited from nosegrowl).
 """
-from unittest2.events import hooks, addOption, getConfig
+from unittest2.events import Plugin, addOption, getConfig
 
 import warnings
 # py-Growl uses md5
@@ -48,18 +48,31 @@ class SimpleNotifier(object):
             icon=icon,
             sticky=sticky)
 
-class UnittestGrowl(object):
+class UnittestGrowl(Plugin):
     """
     Enable Growl notifications
     """
-
-    def start(self, event):
+    def __init__(self):
+        ourOptions = getConfig('coverage')
+        alwaysOn = ourOptions.as_bool('always-on', default=False)
+        if alwaysOn:
+            self.enable()
+        else:
+            help_text = 'Growl notifications on test run start and stop'
+            addOption(self.enable, 'G', 'growl', help_text)
+    
+    def enable(self):
+        if GrowlNotifier is None:
+            raise growlImportError
+        self.register()
+        
+    def testRunStart(self, event):
         growl = SimpleNotifier()
         growl.register()
         self.start_time = datetime.datetime.now()
         growl.start("Starting tests...", 'Started at : [%s]' % self.start_time.isoformat())
 
-    def stop(self, event):
+    def testRunStop(self, event):
         growl = SimpleNotifier()
         result = event.result
         
@@ -77,19 +90,3 @@ class UnittestGrowl(object):
         else:
             growl.fail("%s tests. %s failed. %s errors." % (result.testsRun, len(result.failures), len(result.errors)), "%s\n%s" % (big_msg, endtime_msg))
 
-def enable():
-    if GrowlNotifier is None:
-        raise growlImportError
-    _plugin = UnittestGrowl()
-    hooks.testRunStart += _plugin.start
-    hooks.testRunStop += _plugin.stop
-
-ourOptions = getConfig('coverage')
-alwaysOn = ourOptions.as_bool('always-on', default=False)
-
-def initialise():
-    if alwaysOn:
-        enable()
-    else:
-        help_text = 'Growl notifications on test run start and stop'
-        addOption(enable, 'G', 'growl', help_text)
