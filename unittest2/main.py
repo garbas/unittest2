@@ -189,7 +189,10 @@ class TestProgram(object):
                               help='Top level directory of project (defaults to start directory)')
 
         list_options = []
-        for opt, longopt, help_text, callback in _options:
+        extra_options = []
+        if forDiscovery:
+            extra_options = _discoveryOptions
+        for opt, longopt, help_text, callback in _options + extra_options:
             opts = []
             if opt is not None:
                 opts.append('-' + opt)
@@ -275,3 +278,4 @@ def main_():
     TestProgram(module=None)
 
 _options = []
+_discoveryOptions = []
