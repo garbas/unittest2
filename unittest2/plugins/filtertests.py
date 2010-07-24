@@ -1,4 +1,4 @@
-from unittest2.events import Plugin, addOption, loadConfig
+from unittest2.events import Plugin, addOption
 
 import re
 
