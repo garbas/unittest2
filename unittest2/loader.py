@@ -177,11 +177,22 @@ class TestLoader(unittest.TestLoader):
     def getTestCaseNames(self, testCaseClass):
         """Return a sorted sequence of method names found within testCaseClass
         """
+        event = GetTestCaseNamesEvent(self, testCaseClass)
+        result = hooks.getTestCaseNames(event)
+        if event.handled:
+            return results
+        prefix = event.testMethodPrefix or self.testMethodPrefix 
+        excluded = set(event.excludedNames)
         def isTestMethod(attrname, testCaseClass=testCaseClass,
-                         prefix=self.testMethodPrefix):
-            return attrname.startswith(prefix) and \
-                hasattr(getattr(testCaseClass, attrname), '__call__')
+                             prefix=prefix, excluded=excluded):
+            return (
+                attrname.startswith(prefix) and 
+                hasattr(getattr(testCaseClass, attrname), '__call__') and
+                attrname not in excluded
+            )
         testFnNames = filter(isTestMethod, dir(testCaseClass))
+        if event.extraNames:
+            testFnNames.extend(event.extraNames)
         if self.sortTestMethodsUsing:
             testFnNames.sort(key=_CmpToKey(self.sortTestMethodsUsing))
         return testFnNames

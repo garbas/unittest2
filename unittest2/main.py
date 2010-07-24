@@ -112,7 +112,6 @@ class TestProgram(object):
             TestProgram.pluginsLoaded = True
         
         self.parseArgs(argv)
-        hooks.pluginsLoaded(PluginsLoadedEvent())
         self.runTests()
 
     def usageExit(self, msg=None):
@@ -146,6 +145,7 @@ class TestProgram(object):
                 self.module = None
         else:
             self.testNames = (self.defaultTest,)
+        
         self.createTests()
 
     def createTests(self):
@@ -226,7 +226,8 @@ class TestProgram(object):
             self.verbosity = 2
         if options.quiet:
             self.verbosity = 0
-            
+        
+        hooks.pluginsLoaded(PluginsLoadedEvent())
         return options, args
         
     def _do_discovery(self, argv, Loader=loader.TestLoader):
