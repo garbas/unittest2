@@ -5,8 +5,7 @@ from ConfigParser import SafeConfigParser
 from ConfigParser import Error as ConfigParserError
 
 # TODO: messaging API that respects verbosity
-# self.completed instead of returning completed in
-# file handling event
+# TestFailEvent in setUpClass and setUpModule etc
 
 
 __all__ = (
@@ -19,8 +18,10 @@ __all__ = (
     'LoadFromNameEvent',
     'LoadFromModuleEvent',
     'LoadFromTestCaseEvent',
-    'TestRunStartEvent',
-    'TestRunStopEvent',
+    'StartTestRunEvent',
+    'StopTestRunEvent',
+    'StartTestEvent',
+    'StopTestEvent',
     'TestFailEvent',
     # for plugins
     'hooks',
@@ -112,22 +113,62 @@ class TestFailEvent(_Event):
         
         # 'setUp', 'call', 'tearDown', 'cleanUp'
         self.when = when
+        
 
-class TestRunStartEvent(_Event):
+class StartTestRunEvent(_Event):
     def __init__(self, runner, result, startTime):
         _Event.__init__(self)
         self.runner = runner
         self.result = result
         self.startTime = startTime
 
-class TestRunStopEvent(_Event):
+class StopTestRunEvent(_Event):
     def __init__(self, runner, result, stopTime, timeTaken):
         _Event.__init__(self)
         self.runner = runner
         self.result = result
         self.stopTime = stopTime
         self.timeTaken = timeTaken
+
+class StartTestEvent(_Event):
+    def __init__(self, test, result, startTime):
+        _Event.__init__(self)
+        self.test = test
+        self.result = result
+        self.startTime = startTime
+
+class StopTestEvent(_Event):
+    def __init__(self, test, result, stopTime, timeTaken, 
+                    outcome, exc_info=None, stage=None):
+        self.test = test
+        self.result = result
+        self.stopTime = stopTime
+        self.timeTaken = timeTaken
+        self.exc_info = exc_info
         
+        # class, setUp, call, tearDown, cleanUp
+        # or None for a pass
+        self.stage = stage
+        self.outcome = outcome
+        
+        self.passed = False
+        self.failed = False
+        self.error = False
+        self.skipped = False
+        self.unexpectedSuccess = False
+        self.expectedFailure = False
+        if outcome == 'passed':
+            self.passed = True
+        elif outcome == 'failed':
+            self.failed = True
+        elif outcome == 'error':
+            self.error = True
+        elif outcome == 'skipped':
+            self.skipped = True
+        elif outcome == 'unexpectedSuccess':
+            self.unexpectedSuccess = True
+        elif outcome == 'expectedFailure':
+            self.expectedFailure = True
 
 class _EventHook(object):
     def __init__(self):
@@ -166,8 +207,11 @@ class hooks(object):
     loadTestsFromNames = _EventHook()
     getTestCaseNames = _EventHook()
     onTestFail = _EventHook()
-    testRunStart = _EventHook()
-    testRunStop = _EventHook()
+    startTestRun = _EventHook()
+    stopTestRun = _EventHook()
+    
+    startTest = _EventHook()
+    stopTest = _EventHook()
 
 
 class Register(type):

@@ -64,8 +64,7 @@ def enable():
     if coverage is None:
         raise coverageImportError
     _plugin = CoveragePlugin()
-    #hooks.testRunStart += _plugin.start
-    hooks.testRunStop += _plugin.stop
+    hooks.stopTestRun += _plugin.stop
 
 ourOptions = getConfig('coverage')
 alwaysOn = ourOptions.as_bool('always-on', default=False)
