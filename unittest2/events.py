@@ -42,6 +42,11 @@ loadedPlugins = []
 CFG_NAME = 'unittest.cfg'
 pluginInstances = set()
 
+DEFAULT = object()
+TRUE = set(('1', 'true', 'on', 'yes'))
+FALSE = set(('0', 'false', 'off', 'no', ''))
+
+
 class _Event(object):
     def __init__(self):
         self.handled = False
@@ -236,6 +241,21 @@ class Plugin(object):
         pluginInstances.add(instance)
         if cls.instance is None:
             cls.instance = instance
+        
+        alwaysOn = False
+        configSection = getattr(instance, 'configSection', None)
+        if configSection is not None:
+            instance.config = getConfig(configSection)
+            alwaysOn = instance.config.as_bool('always-on', default=False)
+        
+        if alwaysOn:
+            self.register()
+        else:
+            commandLineSwitch = getattr(instance, 'commandLineSwitch', None)
+            if commandLineSwitch is not None:
+                opt, longOpt, help_text = commandLineSwitch
+                addOption(instance.register, opt, longOpt, help_text)
+
         return instance
     
     def register(self):
@@ -292,9 +312,6 @@ def loadConfig(name=CFG_NAME, localDir=None):
     _config = combineConfigs(globalParser, localParser)
     return set(globalPlugins + localPlugins)
 
-DEFAULT = object()
-TRUE = set(('1', 'true', 'on', 'yes'))
-FALSE = set(('0', 'false', 'off', 'no', ''))
 
 class Section(dict):
     def __new__(cls, name, items=()):
