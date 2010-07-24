@@ -21,25 +21,21 @@ except ImportError:
     pep8 = None
 
 
-class Pep8Checker(FunctionTestCase):
+class CheckerCase(FunctionTestCase):
     def __init__(self, path, func):
         FunctionTestCase.__init__(self, func)
         self.path = path
 
     def __repr__(self):
-        return "Pep8Checker(%r)" % self.path
+        return "%s(%r)" % (self.__class__.__name__, self.path)
 
     __str__ = __repr__
 
-class PyFlakesChecker(FunctionTestCase):
-    def __init__(self, path, func):
-        FunctionTestCase.__init__(self, func)
-        self.path = path
+class Pep8Checker(CheckerCase):
+    pass
 
-    def __repr__(self):
-        return "PyFlakesChecker(%r)" % self.path
-
-    __str__ = __repr__
+class PyFlakesChecker(CheckerCase):
+    pass
 
 class Stdout(object):
     def __init__(self):
