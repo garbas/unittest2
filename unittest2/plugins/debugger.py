@@ -1,32 +1,30 @@
-from unittest2.events import hooks, addOption, getConfig
+from unittest2.events import Plugin, addOption, getConfig
 
 import pdb
 import sys
 
 
-def onTestFail(event):
-    value, tb = event.exc_info[1:]
-    test = event.test
-    if errorsOnly and isinstance(value, test.failureException):
-        return
-    original = sys.stdout
-    sys.stdout = sys.__stdout__
-    try:
-        pdb.post_mortem(tb)
-    finally:
-        sys.stdout = original
+class Debugger(Plugin):
 
+    def __init__(self):
+        ourOptions = getConfig('debugger')
+        self.errorsOnly = ourOptions.as_bool('errors-only', default=False)
+        
+        alwaysOn = ourOptions.as_bool('always-on', default=False)
+        if alwaysOn:
+            self.register()
+        else:
+            help_text = 'Enter pdb on test fail or error'
+            addOption(self.register, 'D', 'debugger', help_text)
 
-def enable():
-    hooks.onTestFail += onTestFail
-
-ourOptions = getConfig('debugger')
-alwaysOn = ourOptions.as_bool('always-on', default=False)
-errorsOnly = ourOptions.as_bool('errors-only', default=False)
-
-def initialise():
-    if alwaysOn:
-        enable()
-    else:
-        help_text = 'Enter pdb on test fail or error'
-        addOption(enable, 'D', 'debugger', help_text)
+    def onTestFail(self, event):
+        value, tb = event.exc_info[1:]
+        test = event.test
+        if self.errorsOnly and isinstance(value, test.failureException):
+            return
+        original = sys.stdout
+        sys.stdout = sys.__stdout__
+        try:
+            pdb.post_mortem(tb)
+        finally:
+            sys.stdout = original
