@@ -11,13 +11,17 @@ from ConfigParser import Error as ConfigParserError
 
 __all__ = (
     # events
+    'PluginsLoadedEvent',
     'HandleFileEvent',
     'MatchPathEvent',
+    'GetTestCaseNamesEvent',
+    'LoadFromNamesEvent',
+    'LoadFromNameEvent',
     'LoadFromModuleEvent',
-    'TestFailEvent',
+    'LoadFromTestCaseEvent',
     'TestRunStartEvent',
     'TestRunStopEvent',
-    'PluginsLoadedEvent',
+    'TestFailEvent',
     # for plugins
     'hooks',
     'addOption',
@@ -46,6 +50,7 @@ class HandleFileEvent(_Event):
     def __init__(self, loader, name, path, pattern,
                     top_level_directory):
         _Event.__init__(self)
+        self.extraTests = []
         self.path = path
         self.loader = loader
         self.name = name
@@ -65,6 +70,36 @@ class LoadFromModuleEvent(_Event):
         self.loader = loader
         self.module = module
         self.extraTests = []
+
+class LoadFromTestCaseEvent(_Event):
+    def __init__(self, loader, testCase):
+        _Event.__init__(self)
+        self.loader = loader
+        self.testCase = testCase
+        self.extraTests = []
+
+class LoadFromNameEvent(_Event):
+    def __init__(self, loader, name, module):
+        _Event.__init__(self)
+        self.loader = loader
+        self.name = name
+        self.module = module
+        self.extraTests = []
+
+class LoadFromNamesEvent(_Event):
+    def __init__(self, loader, names, module):
+        _Event.__init__(self)
+        self.loader = loader
+        self.names = names
+        self.module = module
+        self.extraTests = []
+
+class GetTestCaseNamesEvent(_Event):
+    def __init__(self, loader, testCase):
+        _Event.__init__(self)
+        self.loader = loader
+        self.testCase = testCase
+        self.extraNames = []
 
 class TestFailEvent(_Event):
     def __init__(self, test, result, exc_info, when):
@@ -121,6 +156,10 @@ class hooks(object):
     handleFile = _EventHook()
     matchPath = _EventHook()
     loadTestsFromModule = _EventHook()
+    loadTestsFromTestCase = _EventHook()
+    loadTestsFromName = _EventHook()
+    loadTestsFromNames = _EventHook()
+    getTestCaseNames = _EventHook()
     onTestFail = _EventHook()
     testRunStart = _EventHook()
     testRunStop = _EventHook()

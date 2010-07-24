@@ -7,9 +7,7 @@ def getDoctests(event):
     path = event.path
     if not path.lower().endswith('.txt'):
         return
-    event.handled = True
     suite = doctest.DocFileTest(path, module_relative=False)
-    return suite, True
-
+    event.extraTests.append(suite)
 
 hooks.handleFile += getDoctests

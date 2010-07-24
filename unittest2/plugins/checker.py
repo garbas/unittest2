@@ -118,9 +118,8 @@ def checkFile(event):
     if not path.lower().endswith('.py'):
         return
     
-    event.handled = True
     suite = getSuite(path, loader)
-    return suite, False
+    event.extraTests.append(suite)
 
 if not pep8 and not pyflakes_check:
     raise AssertionError('checker plugin requires pep8 or pyflakes')

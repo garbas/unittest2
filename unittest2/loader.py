@@ -11,9 +11,11 @@ from fnmatch import fnmatch
 
 from unittest2 import case, suite
 from unittest2.events import (
-    hooks, HandleFileEvent, MatchPathEvent,
-    LoadFromModuleEvent
+    hooks, HandleFileEvent, MatchPathEvent, LoadFromModuleEvent,
+    LoadFromNameEvent, LoadFromNamesEvent, LoadFromTestCaseEvent,
+    GetTestCaseNamesEvent
 )
+from unittest2.util import getObjectFromName
 
 try:
     from os.path import relpath
@@ -76,10 +78,17 @@ class TestLoader(unittest.TestLoader):
         if issubclass(testCaseClass, suite.TestSuite):
             raise TypeError("Test cases should not be derived from TestSuite."
                             " Maybe you meant to derive from TestCase?")
-        testCaseNames = self.getTestCaseNames(testCaseClass)
-        if not testCaseNames and hasattr(testCaseClass, 'runTest'):
-            testCaseNames = ['runTest']
-        loaded_suite = self.suiteClass(map(testCaseClass, testCaseNames))
+        event = LoadFromTestCaseEvent(self, testCaseClass)
+        result = hooks.loadTestsFromTestCase(event)
+        if event.handled:
+            loaded_suite = result
+        else:
+            testCaseNames = self.getTestCaseNames(testCaseClass)
+            if not testCaseNames and hasattr(testCaseClass, 'runTest'):
+                testCaseNames = ['runTest']
+            loaded_suite = self.suiteClass(map(testCaseClass, testCaseNames))
+        if event.extraTests:
+            loaded_suite.addTests(event.extraTests)
         return loaded_suite
 
     def loadTestsFromModule(self, module, use_load_tests=True):
@@ -116,22 +125,19 @@ class TestLoader(unittest.TestLoader):
 
         The method optionally resolves the names relative to a given module.
         """
-        parts = name.split('.')
-        if module is None:
-            parts_copy = parts[:]
-            while parts_copy:
-                try:
-                    module = __import__('.'.join(parts_copy))
-                    break
-                except ImportError:
-                    del parts_copy[-1]
-                    if not parts_copy:
-                        raise
-            parts = parts[1:]
-        obj = module
-        for part in parts:
-            parent, obj = obj, getattr(obj, part)
-
+        event = LoadFromNameEvent(self, name, module)
+        result = hooks.loadTestsFromName(event)
+        if event.handled:
+            suite =  result
+        else:
+            suite = self._loadTestsFromName(name, module)
+        if event.extraTests:
+            suite.addTests(event.extraTests)
+        return suite
+            
+    def _loadTestsFromName(self, name, module=None):
+        parent, obj = getObjectFromName(name, module)
+        
         if isinstance(obj, types.ModuleType):
             return self.loadTestsFromModule(obj)
         elif isinstance(obj, type) and issubclass(obj, unittest.TestCase):
@@ -158,7 +164,14 @@ class TestLoader(unittest.TestLoader):
         """Return a suite of all tests cases found using the given sequence
         of string specifiers. See 'loadTestsFromName()'.
         """
-        suites = [self.loadTestsFromName(name, module) for name in names]
+        event = LoadFromNamesEvent(self, names, module)
+        result = hooks.loadTestsFromNames(event)
+        if event.handled:
+            suites =  result
+        else:
+            suites = [self.loadTestsFromName(name, module) for name in names]
+        if event.extraTests:
+            suites.extend(event.extraTests)
         return self.suiteClass(suites)
 
     def getTestCaseNames(self, testCaseClass):
@@ -267,11 +280,12 @@ class TestLoader(unittest.TestLoader):
                 event = HandleFileEvent(self, path, full_path, pattern,
                                          self._top_level_dir)
                 result = hooks.handleFile(event)
-                if result:
-                    suite, _complete = result
-                    yield suite
-                    if _complete:
-                        continue
+                if event.handled:
+                    yield result
+                    continue
+
+                if event.extraTests:
+                    yield self.suiteClass(event.extraTests)
                 
                 if not VALID_MODULE_NAME.match(path):
                     # valid Python identifiers only
