@@ -48,6 +48,7 @@ class SimpleNotifier(object):
             icon=icon,
             sticky=sticky)
 
+
 class UnittestGrowl(Plugin):
     """
     Enable Growl notifications

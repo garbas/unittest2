@@ -238,6 +238,15 @@ class Section(dict):
                 return default
             raise
     
+    def as_str(self, item, default=DEFAULT):
+        try:
+            # to strip or not to strip here?
+            return self[item]
+        except KeyError:
+            if default is not DEFAULT:
+                return default
+            raise
+    
     def as_float(self, item, default=DEFAULT):
         try:
             return float(self[item].strip())
