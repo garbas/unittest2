@@ -244,6 +244,8 @@ class Plugin(object):
         
         alwaysOn = False
         configSection = getattr(instance, 'configSection', None)
+        commandLineSwitch = getattr(instance, 'commandLineSwitch', None)
+        
         if configSection is not None:
             instance.config = getConfig(configSection)
             alwaysOn = instance.config.as_bool('always-on', default=False)
@@ -251,7 +253,6 @@ class Plugin(object):
         if alwaysOn:
             self.register()
         else:
-            commandLineSwitch = getattr(instance, 'commandLineSwitch', None)
             if commandLineSwitch is not None:
                 opt, longOpt, help_text = commandLineSwitch
                 addOption(instance.register, opt, longOpt, help_text)
