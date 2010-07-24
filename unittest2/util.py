@@ -100,7 +100,24 @@ def unorderable_list_difference(expected, actual, ignore_duplicate=False):
     # anything left in actual is unexpected
     return missing, actual
 
-
+def getObjectFromName(name, module=None):
+        parts = name.split('.')
+        if module is None:
+            parts_copy = parts[:]
+            while parts_copy:
+                try:
+                    module = __import__('.'.join(parts_copy))
+                    break
+                except ImportError:
+                    del parts_copy[-1]
+                    if not parts_copy:
+                        raise
+            parts = parts[1:]
+        obj = module
+        for part in parts:
+            parent, obj = obj, getattr(obj, part)
+        return parent, obj
+    
 def getSource(path):
     if path is None:
         return

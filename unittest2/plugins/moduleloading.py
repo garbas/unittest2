@@ -25,7 +25,7 @@ def loadModules(event):
             case = unittest2.FunctionTestCase(obj, **args)
             tests.append(case)
             
-    event.extraTests = tests
+    event.extraTests.extend(tests)
 
 hooks.loadTestsFromModule += loadModules
 
