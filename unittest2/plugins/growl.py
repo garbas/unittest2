@@ -48,24 +48,19 @@ class SimpleNotifier(object):
             icon=icon,
             sticky=sticky)
 
+help_text = 'Growl notifications on test run start and stop'
 
 class UnittestGrowl(Plugin):
     """
     Enable Growl notifications
     """
-    def __init__(self):
-        ourOptions = getConfig('coverage')
-        alwaysOn = ourOptions.as_bool('always-on', default=False)
-        if alwaysOn:
-            self.enable()
-        else:
-            help_text = 'Growl notifications on test run start and stop'
-            addOption(self.enable, 'G', 'growl', help_text)
+    configSection = 'growl'
+    commandLineSwitch = ('G', 'growl', help_text)
     
-    def enable(self):
+    def register(self):
         if GrowlNotifier is None:
             raise growlImportError
-        self.register()
+        Plugin.register(self)
         
     def startTestRun(self, event):
         growl = SimpleNotifier()

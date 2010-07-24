@@ -6,16 +6,12 @@ import sys
 
 class Debugger(Plugin):
 
+    configSection = 'debugger'
+    commandLineSwitch = ('D', 'debugger', 'Enter pdb on test fail or error')
+    
     def __init__(self):
-        ourOptions = getConfig('debugger')
-        self.errorsOnly = ourOptions.as_bool('errors-only', default=False)
+        self.errorsOnly = self.config.as_bool('errors-only', default=False)
         
-        alwaysOn = ourOptions.as_bool('always-on', default=False)
-        if alwaysOn:
-            self.register()
-        else:
-            help_text = 'Enter pdb on test fail or error'
-            addOption(self.register, 'D', 'debugger', help_text)
 
     def onTestFail(self, event):
         value, tb = event.exc_info[1:]
