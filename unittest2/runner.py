@@ -171,11 +171,11 @@ class TextTestRunner(unittest.TextTestRunner):
             else:
                 result.printErrors()
         
-        stopTime = time.time()
-        timeTaken = stopTime - startTime
-        
-        event = StopTestRunEvent(self, result, stopTime, timeTaken)
-        hooks.stopTestRun(event)
+            stopTime = time.time()
+            timeTaken = stopTime - startTime
+            
+            event = StopTestRunEvent(self, result, stopTime, timeTaken)
+            hooks.stopTestRun(event)
 
         if hasattr(result, 'separator2'):
             self.stream.writeln(result.separator2)
