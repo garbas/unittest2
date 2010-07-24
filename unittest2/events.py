@@ -145,6 +145,7 @@ class StartTestEvent(_Event):
 class StopTestEvent(_Event):
     def __init__(self, test, result, stopTime, timeTaken, 
                     outcome, exc_info=None, stage=None):
+        _Event.__init__(self)
         self.test = test
         self.result = result
         self.stopTime = stopTime
@@ -257,9 +258,14 @@ class Plugin(object):
                 opt, longOpt, help_text = commandLineSwitch
                 addOption(instance.register, opt, longOpt, help_text)
 
+        instance._registered = False
         return instance
     
     def register(self):
+        if self._registered:
+            return
+        
+        self._registered = True
         hook_points = set(dir(hooks))
         for entry in dir(self):
             if entry.startswith('_'):
@@ -269,6 +275,7 @@ class Plugin(object):
                 point += getattr(self, entry)
     
     def unregister(self):
+        self._registered = False
         cls = self.__class__
         pluginInstances.remove(self)
         hook_points = set(dir(hooks))
