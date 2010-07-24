@@ -113,6 +113,8 @@ def getObjectFromName(name, module=None):
                     if not parts_copy:
                         raise
             parts = parts[1:]
+        
+        parent = None
         obj = module
         for part in parts:
             parent, obj = obj, getattr(obj, part)

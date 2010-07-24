@@ -5,7 +5,7 @@ Based on pytest-codecheckers:
 By: Ronny Pfannschmidt
 """
 from unittest2 import FunctionTestCase
-from unittest2.events import hooks
+from unittest2.events import hooks, addDiscoveryOption, getConfig
 from unittest2.util import getSource
 
 import sys
@@ -121,7 +121,17 @@ def checkFile(event):
     suite = getSuite(path, loader)
     event.extraTests.append(suite)
 
-if not pep8 and not pyflakes_check:
-    raise AssertionError('checker plugin requires pep8 or pyflakes')
+def enable():
+    if not pep8 and not pyflakes_check:
+        raise AssertionError('checker plugin requires pep8 or pyflakes')
+    hooks.handleFile += checkFile
 
-hooks.handleFile += checkFile
+ourOptions = getConfig('checker')
+alwaysOn = ourOptions.as_bool('always-on', default=False)
+
+if alwaysOn:
+    enable()
+else:
+    help_text = 'Check all Python files with pep8 and pyflakes'
+    addDiscoveryOption(enable, None, 'checker', help_text)
+

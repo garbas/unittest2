@@ -1,4 +1,4 @@
-from unittest2.events import hooks
+from unittest2.events import hooks, getConfig, addDiscoveryOption
 
 import doctest
 
@@ -10,4 +10,14 @@ def getDoctests(event):
     suite = doctest.DocFileTest(path, module_relative=False)
     event.extraTests.append(suite)
 
-hooks.handleFile += getDoctests
+def enable():
+    hooks.handleFile += getDoctests
+
+ourOptions = getConfig('doctest')
+alwaysOn = ourOptions.as_bool('always-on', default=False)
+
+if alwaysOn:
+    enable()
+else:
+    help_text = 'Load doctests from text files'
+    addDiscoveryOption(enable, None, 'doctest', help_text)

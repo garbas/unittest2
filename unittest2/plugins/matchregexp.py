@@ -1,5 +1,5 @@
 import unittest2
-from unittest2.events import hooks, addOption, getConfig
+from unittest2.events import hooks, addDiscoveryOption, getConfig
 
 import re
 
@@ -27,4 +27,4 @@ if alwaysOn:
 else:
     help_text = ('Match filenames during test discovery'
                  ' with regular expressions instead of glob')
-    addOption(enable, 'R', 'match-regexp', help_text)
+    addDiscoveryOption(enable, 'R', 'match-regexp', help_text)

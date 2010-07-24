@@ -155,8 +155,11 @@ class PluginsLoadedEvent(_Event):
 
 class hooks(object):
     pluginsLoaded = _EventHook()
+    
+    # discovery only
     handleFile = _EventHook()
     matchPath = _EventHook()
+    
     loadTestsFromModule = _EventHook()
     loadTestsFromTestCase = _EventHook()
     loadTestsFromName = _EventHook()
@@ -334,15 +337,22 @@ def loadPluginsConfigFile(path):
 def addOption(callback, opt=None, longOpt=None, help=None):
     # delayed import to avoid circular imports
     from unittest2.main import _options
-    
+    _addOption(callback, opt, longOpt, help, optionList=_options)
+
+def _addOption(callback, opt, longOpt, help, optionList):
     if opt and opt.lower() == opt:
         raise ValueError('Lowercase short options are reserved: %s' % opt)
     wrappedCallback = lambda *_: callback()
     if isinstance(callback, list):
         wrappedCallback = callback
-    _options.append((opt, longOpt, help, wrappedCallback))
+    optionList.append((opt, longOpt, help, wrappedCallback))
 
-
+def addDiscoveryOption(callback, opt=None, longOpt=None, help=None):
+    # delayed import to avoid circular imports
+    from unittest2.main import _discoveryOptions
+    _addOption(callback, opt, longOpt, help, optionList=_discoveryOptions)
+    
+    
 def getConfig(section=None):
     # warning! mutable
     if section is None:

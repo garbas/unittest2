@@ -1,5 +1,5 @@
 import unittest2
-from unittest2.events import hooks
+from unittest2.events import hooks, getConfig, addOption
 
 import types
 
@@ -27,8 +27,6 @@ def loadModules(event):
             
     event.extraTests.extend(tests)
 
-hooks.loadTestsFromModule += loadModules
-
 def setUp(setupFunction):
     def decorator(func):
         func.setUp = setupFunction
@@ -40,3 +38,16 @@ def tearDown(tearDownFunction):
         func.tearDown = tearDownFunction
         return func
     return decorator
+
+def enable():
+    hooks.loadTestsFromModule += loadModules
+
+ourOptions = getConfig('module-loading')
+alwaysOn = ourOptions.as_bool('always-on', default=False)
+
+if alwaysOn:
+    enable()
+else:
+    help_text = 'Load test functions from test modules'
+    addOption(enable, None, 'test-functions', help_text)
+
