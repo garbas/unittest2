@@ -21,7 +21,7 @@ except ImportError:
     pep8 = None
 
 
-class CheckerCase(FunctionTestCase):
+class CheckerTestCase(FunctionTestCase):
     def __init__(self, path, func):
         FunctionTestCase.__init__(self, func)
         self.path = path
@@ -31,10 +31,10 @@ class CheckerCase(FunctionTestCase):
 
     __str__ = __repr__
 
-class Pep8Checker(CheckerCase):
+class Pep8CheckerTestCase(CheckerTestCase):
     pass
 
-class PyFlakesChecker(CheckerCase):
+class PyFlakesCheckerTestCase(CheckerTestCase):
     pass
 
 class Stdout(object):
@@ -105,9 +105,9 @@ def check_file_pyflakes(path):
 def getSuite(path, loader):
     tests = []
     if pep8:
-        tests.append(Pep8Checker(path, lambda: check_file_pep8(path)))
+        tests.append(Pep8CheckerTestCase(path, lambda: check_file_pep8(path)))
     if pyflakes_check:
-        tests.append(PyFlakesChecker(path, lambda: check_file_pyflakes(path)))
+        tests.append(PyFlakesCheckerTestCase(path, lambda: check_file_pyflakes(path)))
     
     return loader.suiteClass(tests)
 
