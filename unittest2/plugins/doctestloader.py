@@ -9,7 +9,7 @@ def getDoctests(event):
         return
     event.handled = True
     suite = doctest.DocFileTest(path, module_relative=False)
-    return suite, False
+    return suite, True
 
 
 hooks.handleFile += getDoctests
