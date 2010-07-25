@@ -133,6 +133,11 @@ class TestProgram(object):
             self._do_discovery(argv[2:])
             return
         
+        if len(argv) == 1 and self.module is None and self.defaultTest is None:
+            # launched with no args from script
+            self._do_discovery([])
+            return
+
         options, args = self._parseArgs(argv[1:], forDiscovery=False)
         
         if len(args) == 0 and self.defaultTest is None:

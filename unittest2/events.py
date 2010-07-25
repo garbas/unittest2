@@ -4,8 +4,15 @@ import sys
 from ConfigParser import SafeConfigParser
 from ConfigParser import Error as ConfigParserError
 
-# TODO: messaging API that respects verbosity
+# TODO: 
+# messaging API that respects verbosity
+# allow options, like verbosity, to be specified in the config file
 # TestFailEvent in setUpClass and setUpModule etc
+# a command line option to specify a config file location
+# running test discovery by default if no arguments are supplied
+# if a *filename* rather than a module name is provided then attempt to execute
+# it. Include firing the HandleFile event to give an opportunity for plugins to
+# work on it.
 
 
 __all__ = (
