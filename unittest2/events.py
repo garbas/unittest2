@@ -67,6 +67,8 @@ class HandleFileEvent(_Event):
         self.path = path
         self.loader = loader
         self.name = name
+        
+        # note: pattern may be None if not called during test discovery
         self.pattern = pattern
         self.top_level_directory = top_level_directory
 

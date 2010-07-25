@@ -291,12 +291,13 @@ class TestLoader(unittest.TestLoader):
                 event = HandleFileEvent(self, path, full_path, pattern,
                                          self._top_level_dir)
                 result = hooks.handleFile(event)
+                
+                if event.extraTests:
+                    yield self.suiteClass(event.extraTests)
+                
                 if event.handled:
                     yield result
                     continue
-
-                if event.extraTests:
-                    yield self.suiteClass(event.extraTests)
                 
                 if not VALID_MODULE_NAME.match(path):
                     # valid Python identifiers only

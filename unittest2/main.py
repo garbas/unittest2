@@ -13,7 +13,7 @@ except ImportError:
 
 from unittest2.events import (
     loadPlugins, PluginsLoadedEvent,
-    hooks
+    hooks, HandleFileEvent
 )
 
 __unittest = True
@@ -157,8 +157,40 @@ class TestProgram(object):
         if self.testNames is None:
             self.test = self.testLoader.loadTestsFromModule(self.module)
         else:
-            self.test = self.testLoader.loadTestsFromNames(self.testNames,
-                                                            self.module)
+            tests = []
+            top_level = os.getcwd()
+            loader = self.testLoader
+            pattern = None
+            # we could store the original and then restore after monkeypatch
+            # probably not really an issue as this test runner is not intended
+            # to be reused
+            loader._top_level_dir = top_level
+            
+            for name in self.testNames:
+                try:
+                    test = self.testLoader.loadTestsFromName(name, self.module)
+                except ImportError, e:
+                    if not os.path.isfile(name):
+                        raise
+                    else:
+                        path = os.path.split(name)[1]
+                        event = HandleFileEvent(loader, path, name, pattern,
+                                                top_level)
+                        result = hooks.handleFile(event)
+                        tests.extend(event.extraTests)
+                        if event.handled:
+                            tests.extend(result)
+                            continue
+                        
+                        try:
+                            name = loader._get_name_from_path(name)
+                            test = self.testLoader.loadTestsFromName(name,
+                                                                     self.module)
+                        except (ImportError, AssertionError):
+                            raise e
+                        tests.append(test)
+                        
+            self.test = self.testLoader.suiteClass(tests)
 
     def _parseArgs(self, argv, forDiscovery):
         parser = optparse.OptionParser(version='unittest2 %s' % __version__)
