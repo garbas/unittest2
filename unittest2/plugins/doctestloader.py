@@ -1,4 +1,4 @@
-from unittest2.events import hooks, getConfig, addDiscoveryOption
+from unittest2.events import hooks, getConfig, addOption
 
 import doctest
 
@@ -20,4 +20,4 @@ if alwaysOn:
     enable()
 else:
     help_text = 'Load doctests from text files'
-    addDiscoveryOption(enable, None, 'doctest', help_text)
+    addOption(enable, None, 'doctest', help_text)
