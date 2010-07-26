@@ -1,3 +1,12 @@
+"""
+An example plugin that generates junit compatible xml test reports. Useful
+for continuous integration with hudson and other tools.
+
+Code for this plugin mainly derived from the py.test junit plugin:
+    http://codespeak.net/py/dist/test/plugin/junitxml.html
+
+"""
+
 from unittest2.events import Plugin, addOption
 
 def xmlEscape(value):

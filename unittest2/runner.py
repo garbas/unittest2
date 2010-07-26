@@ -160,10 +160,13 @@ class TextTestRunner(unittest.TextTestRunner):
         if startTestRun is not None:
             startTestRun()
         
-        event = StartTestRunEvent(self, result, startTime)
+        event = StartTestRunEvent(self, test, result, startTime)
         hooks.startTestRun(event)
+        # allows startTestRun to modify test suite
+        test = event.suite
         try:
-            test(result)
+            if not event.handled:
+                test(result)
         finally:
             stopTestRun = getattr(result, 'stopTestRun', None)
             if stopTestRun is not None:

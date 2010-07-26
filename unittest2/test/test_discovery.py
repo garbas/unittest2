@@ -237,26 +237,26 @@ class TestDiscovery(unittest2.TestCase):
                 self.args.append((start_dir, pattern, top_level_dir))
                 return 'tests'
 
-        program._do_discovery(['-v'], Loader=Loader)
+        program.parseArgs(['unittest2', 'discover', '-v'], Loader=Loader)
         self.assertEqual(program.verbosity, 2)
         self.assertEqual(program.test, 'tests')
         self.assertEqual(Loader.args, [('.', None, None)])
 
         Loader.args = []
         program = object.__new__(unittest2.TestProgram)
-        program._do_discovery(['--verbose'], Loader=Loader)
+        program.parseArgs(['unittest2', 'discover', '--verbose'], Loader=Loader)
         self.assertEqual(program.test, 'tests')
         self.assertEqual(Loader.args, [('.', None, None)])
 
         Loader.args = []
         program = object.__new__(unittest2.TestProgram)
-        program._do_discovery([], Loader=Loader)
+        program.parseArgs(['unittest2'], Loader=Loader)
         self.assertEqual(program.test, 'tests')
         self.assertEqual(Loader.args, [('.', None, None)])
 
         Loader.args = []
         program = object.__new__(unittest2.TestProgram)
-        program._do_discovery(['fish'], Loader=Loader)
+        program.parseArgs(['unittest2', 'discover', 'fish'], Loader=Loader)
         self.assertEqual(program.test, 'tests')
         self.assertEqual(Loader.args, [('fish', None, None)])
 
