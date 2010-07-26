@@ -108,6 +108,11 @@ class GetTestCaseNamesEvent(_Event):
         self.extraNames = []
         self.excludedNames = []
 
+class RunnerCreatedEvent(_Event):
+    def __init__(self, runner):
+        _Event.__init__(self)
+        self.runner = runner
+
 class TestFailEvent(_Event):
     def __init__(self, test, result, exc_info, when):
         _Event.__init__(self)
@@ -222,6 +227,7 @@ class hooks(object):
     
     startTest = _EventHook()
     stopTest = _EventHook()
+    runnerCreated = _EventHook()
 
 
 class Register(type):

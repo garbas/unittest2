@@ -5,7 +5,10 @@ import time
 import unittest
 
 from unittest2 import result
-from unittest2.events import hooks, StartTestRunEvent, StopTestRunEvent
+from unittest2.events import (
+    hooks, StartTestRunEvent, StopTestRunEvent,
+    RunnerCreatedEvent
+)
 
 try:
     from unittest2.signals import registerResult
@@ -138,12 +141,17 @@ class TextTestRunner(unittest.TextTestRunner):
     def __init__(self, stream=sys.stderr, descriptions=True, verbosity=1,
                     failfast=False, buffer=False, resultclass=None):
         self.stream = _WritelnDecorator(stream)
+        
         self.descriptions = descriptions
         self.verbosity = verbosity
         self.failfast = failfast
         self.buffer = buffer
         if resultclass is not None:
             self.resultclass = resultclass
+            
+        event = RunnerCreatedEvent(self)
+        hooks.runnerCreated(event)
+        
 
     def _makeResult(self):
         return self.resultclass(self.stream, self.descriptions, self.verbosity)
