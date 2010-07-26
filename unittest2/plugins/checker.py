@@ -5,7 +5,8 @@ Based on pytest-codecheckers:
 By: Ronny Pfannschmidt
 """
 from unittest2 import FunctionTestCase
-from unittest2.events import hooks, addDiscoveryOption, getConfig
+from unittest2.events import Plugin
+#hooks, addDiscoveryOption, getConfig
 from unittest2.util import getSource
 
 import sys
@@ -19,6 +20,30 @@ try:
     import pep8
 except ImportError:
     pep8 = None
+
+# needs config options for independently controlling pep8 and pyflakes
+# plus configuring which PEP8 warnings are enabled
+
+
+help_text = 'Check all Python files with pep8 and pyflakes'
+
+class Checker(Plugin):
+    
+    configSection = 'checker'
+    commandLineSwitch = (None, 'checker', help_text)
+    
+    def initialise(self):
+        if not pep8 and not pyflakes_check:
+            raise AssertionError('checker plugin requires pep8 or pyflakes')
+
+    def handleFile(self, event):
+        path = event.path
+        loader = event.loader
+        if not path.lower().endswith('.py'):
+            return
+        
+        suite = getSuite(path, loader)
+        event.extraTests.append(suite)
 
 
 class CheckerTestCase(FunctionTestCase):
@@ -55,7 +80,14 @@ def captured(func):
         data = sys.stdout.data
         sys.stdout = original
     return ''.join(data), result
-    
+
+
+# ignore list taken from moin
+# should be a config option
+PEP8_IGNORE_LIST = (
+    '--ignore=E202,E221,E222,E241,E301,E302,E401,E501,E701,W391,W601,W602'
+)
+
     
 def check_file_pep8(path):
     if not pep8:
@@ -71,8 +103,7 @@ def check_file_pep8(path):
     
     def checkFile():
         pep8.process_options(['pep8',
-            # ignore list taken from moin
-            '--ignore=E202,E221,E222,E241,E301,E302,E401,E501,E701,W391,W601,W602',
+            PEP8_IGNORE_LIST,
             '--show-source',
             '--repeat',
             'dummy file',
@@ -112,26 +143,4 @@ def getSuite(path, loader):
     return loader.suiteClass(tests)
 
 
-def checkFile(event):
-    path = event.path
-    loader = event.loader
-    if not path.lower().endswith('.py'):
-        return
-    
-    suite = getSuite(path, loader)
-    event.extraTests.append(suite)
-
-def enable():
-    if not pep8 and not pyflakes_check:
-        raise AssertionError('checker plugin requires pep8 or pyflakes')
-    hooks.handleFile += checkFile
-
-ourOptions = getConfig('checker')
-alwaysOn = ourOptions.as_bool('always-on', default=False)
-
-if alwaysOn:
-    enable()
-else:
-    help_text = 'Check all Python files with pep8 and pyflakes'
-    addDiscoveryOption(enable, None, 'checker', help_text)
 

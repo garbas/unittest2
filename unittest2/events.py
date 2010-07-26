@@ -4,16 +4,6 @@ import sys
 from ConfigParser import SafeConfigParser
 from ConfigParser import Error as ConfigParserError
 
-# TODO: 
-# messaging API that respects verbosity
-# allow options, like verbosity, to be specified in the config file
-# TestFailEvent in setUpClass and setUpModule etc
-# a command line option to specify a config file location
-# running test discovery by default if no arguments are supplied
-# if a *filename* rather than a module name is provided then attempt to execute
-# it. Include firing the HandleFile event to give an opportunity for plugins to
-# work on it.
-
 
 __all__ = (
     # events
@@ -130,8 +120,9 @@ class TestFailEvent(_Event):
         
 
 class StartTestRunEvent(_Event):
-    def __init__(self, runner, result, startTime):
+    def __init__(self, runner, suite, result, startTime):
         _Event.__init__(self)
+        self.suite = suite
         self.runner = runner
         self.result = result
         self.startTime = startTime
@@ -185,6 +176,8 @@ class StopTestEvent(_Event):
         elif outcome == 'expectedFailure':
             self.expectedFailure = True
 
+_pluginsEnabled = True
+
 class _EventHook(object):
     def __init__(self):
         # can't use a deque because it has no remove in
@@ -192,6 +185,8 @@ class _EventHook(object):
         self._handlers = []
     
     def __call__(self, event):
+        if not _pluginsEnabled:
+            return
         for handler in self._handlers:
             result = handler(event)
             if event.handled:
@@ -300,35 +295,6 @@ class Plugin(object):
     instance = None
     autoCreate = False
 
-    
-def loadPlugins():
-    allPlugins = loadConfig()
-    for plugin in allPlugins:
-        loadPlugin(plugin)
-
-def loadPlugin(plugin):
-    __import__(plugin)
-    mod = sys.modules[plugin]
-    initialise = getattr(mod, 'initialise', None)
-    if initialise is not None:
-        initialise()
-    loadedPlugins.append(plugin)
-
-def loadConfig(name=CFG_NAME, localDir=None):
-    global _config
-    if localDir is None:
-        # should use project top level directory - but we
-        # don't know it when this is called
-        localDir = os.getcwd()
-    
-    cfgPath = os.path.join(os.path.expanduser('~'), name)
-    globalPlugins, globalParser = loadPluginsConfigFile(cfgPath)
-    cfgPath = os.path.join(localDir, name)
-    localPlugins, localParser = loadPluginsConfigFile(cfgPath)
-
-    _config = combineConfigs(globalParser, localParser)
-    return set(globalPlugins + localPlugins)
-
 
 class Section(dict):
     def __new__(cls, name, items=()):
@@ -390,13 +356,64 @@ class Section(dict):
                  if line.strip() and not line.strip().startswith('#')]
 
 
-def combineConfigs(globalParser, localParser):
+    
+def loadPlugins(pluginsDisabled, noUserConfig, configLocations):
+    allPlugins = loadConfig(noUserConfig, configLocations)
+    
+    if not pluginsDisabled:
+        for plugin in allPlugins:
+            loadPlugin(plugin)
+
+
+def loadPlugin(plugin):
+    __import__(plugin)
+    mod = sys.modules[plugin]
+    initialise = getattr(mod, 'initialise', None)
+    if initialise is not None:
+        initialise()
+    loadedPlugins.append(plugin)
+
+
+def loadConfig(noUserConfig, configLocations):
+    global _config
+    
+    configs = []
+    if not noUserConfig:
+        cfgPath = os.path.join(os.path.expanduser('~'), CFG_NAME)
+        userPlugins, userParser = loadPluginsConfigFile(cfgPath)
+        configs.append((userPlugins, userParser))
+    
+    
+    if not configLocations:
+        cfgPath = os.path.join(os.getcwd(), CFG_NAME)
+        localPlugins, localParser = loadPluginsConfigFile(cfgPath)
+        configs.append((localPlugins, localParser))
+    else:
+        for entry in configLocations:
+            path = entry
+            if not os.path.isfile(path):
+                path = os.path.join(path, CFG_NAME)
+                if not os.path.isfile(path):
+                    # exception type?
+                    raise Exception('Config file location %r could not be found'
+                                    % entry)
+            
+            plugins, parser = loadPluginsConfigFile(path)
+            configs.append((plugins, parser))
+                    
+
+    plugins = set(sum([plugins for plugins, parser in configs], []))
+    parsers = [parser for plugins, parser in configs]
+    _config = combineConfigs(parsers)
+    return plugins
+
+
+def combineConfigs(parsers):
     options = {}
-    for section in globalParser.sections():
-        options[section] = Section(section, globalParser.items(section))
-    for section in localParser.sections():
-        items = dict(localParser.items(section))
-        options.setdefault(section, Section(section)).update(items)
+    for parser in parsers:
+        for section in parser.sections():
+            items = dict(parser.items(section))
+            options.setdefault(section, Section(section)).update(items)
     return options
 
 
@@ -412,10 +429,12 @@ def loadPluginsConfigFile(path):
     except ConfigParserError:
         return plugins, parser
 
+
 def addOption(callback, opt=None, longOpt=None, help=None):
     # delayed import to avoid circular imports
     from unittest2.main import _options
     _addOption(callback, opt, longOpt, help, optionList=_options)
+
 
 def _addOption(callback, opt, longOpt, help, optionList):
     if opt and opt.lower() == opt:
@@ -424,6 +443,7 @@ def _addOption(callback, opt, longOpt, help, optionList):
     if isinstance(callback, list):
         wrappedCallback = callback
     optionList.append((opt, longOpt, help, wrappedCallback))
+
 
 def addDiscoveryOption(callback, opt=None, longOpt=None, help=None):
     # delayed import to avoid circular imports

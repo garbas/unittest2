@@ -1,0 +1,27 @@
+This file tracks changes made in the plugins branch. It was started after the
+work was well under way, so the early changes aren't exhaustive.
+
+
+
+Command line parsing is all done by optparse, removing the use of getopt. This
+makes the help messages more consistent but makes the usage messages less
+useful in some situations.
+
+unit2 runs test discovery if invoked without any arguments.
+
+unit2 can execute tests in filenames as well as module names - so long as the
+module pointed to by the filename is importable from the current directory.
+
+
+
+TODO: 
+
+messaging API that respects verbosity
+allow options, like verbosity, to be specified in the config file
+TestFailEvent in setUpClass and setUpModule etc
+a command line option to specify a config file location
+running test discovery by default if no arguments are supplied
+if a *filename* rather than a module name is provided then attempt to execute
+it. Include firing the HandleFile event to give an opportunity for plugins to
+work on it.
+unit2 -h should mention the discover subcommand.

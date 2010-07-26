@@ -11,9 +11,10 @@ try:
 except ImportError:
     installHandler = None
 
+from unittest2 import events
 from unittest2.events import (
     loadPlugins, PluginsLoadedEvent,
-    hooks, HandleFileEvent
+    hooks, HandleFileEvent, loadConfig
 )
 
 __unittest = True
@@ -71,6 +72,14 @@ Examples:
 DESCRIPTION = ('[tests] can be a list of any number of test modules, classes '
                'and test methods.')
 
+class _ImperviousOptionParser(optparse.OptionParser):
+    def error(self, msg):
+        pass
+    def exit(self, status=0, msg=None):
+        pass
+    
+    print_usage = print_version = print_help = lambda self, file=None: None
+
 
 class TestProgram(object):
     """A command-line program that runs a set of tests; this is primarily
@@ -79,8 +88,7 @@ class TestProgram(object):
     USAGE = USAGE_FROM_MODULE
     
     # defaults for testing
-    failfast = catchbreak = buffer = progName = None
-    
+    failfast = catchbreak = buffer = progName = module = defaultTest = None
     pluginsLoaded = False
 
     def __init__(self, module='__main__', defaultTest=None,
@@ -103,13 +111,11 @@ class TestProgram(object):
         self.buffer = buffer
         self.defaultTest = defaultTest
         self.testRunner = testRunner
+        
+        if isinstance(testLoader, type):
+            testLoader = testLoader()
         self.testLoader = testLoader
         self.progName = os.path.basename(argv[0])
-        
-        if not TestProgram.pluginsLoaded:
-            # only needed because we call several times during tests
-            loadPlugins()
-            TestProgram.pluginsLoaded = True
         
         self.parseArgs(argv)
         self.runTests()
@@ -129,16 +135,22 @@ class TestProgram(object):
         sys.exit(2)
 
     def parseArgs(self, argv):
+        forDiscovery = False
         if len(argv) > 1 and argv[1].lower() == 'discover':
-            self._do_discovery(argv[2:])
-            return
-        
-        if len(argv) == 1 and self.module is None and self.defaultTest is None:
-            # launched with no args from script
-            self._do_discovery([])
-            return
+            # handle command line args for test discovery
+            self.progName = '%s discover' % self.progName
+            argv = argv[1:]
 
-        options, args = self._parseArgs(argv[1:], forDiscovery=False)
+        options, args = self._parseArgs(argv[1:], forDiscovery=forDiscovery)
+        if not args and self.module is None and self.defaultTest is None:
+            # launched with no args from script
+            options.start = '.'
+            options.top = options.pattern = None
+            self._do_discovery(options, args)
+            return
+        if forDiscovery:
+            self._do_discovery(options, args)
+            return
         
         if len(args) == 0 and self.defaultTest is None:
             # createTests will load tests from self.module
@@ -187,12 +199,41 @@ class TestProgram(object):
                             test = self.testLoader.loadTestsFromName(name,
                                                                      self.module)
                         except (ImportError, AssertionError):
+                            # better error message here perhaps?
                             raise e
                         tests.append(test)
                         
             self.test = self.testLoader.suiteClass(tests)
 
+    def _getConfigOptions(self, argv):
+        # an initial pass over command line options to load config files
+        # and plugins
+        parser = _ImperviousOptionParser()
+        parser.add_option('--config', dest='configLocations', action='append')
+        parser.add_option('--no-user-config', dest='noUserConfig', default=False,
+                          action='store_true')
+        parser.add_option('--no-plugins', dest='pluginsDisabled', default=False,
+                          action='store_true')
+        
+        # we catch any optparse errors here as they will be
+        # reraised on the second pass through
+        try:
+            options, _ = parser.parse_args(argv)
+        except optparse.OptionError:
+            return False
+        
+        if not TestProgram.pluginsLoaded:
+            # only needs to be conditional because we call several times during
+            # tests
+            loadPlugins(options.pluginsDisabled, options.noUserConfig, 
+                        options.configLocations)
+            TestProgram.pluginsLoaded = True
+        
+        return options.pluginsDisabled
+
     def _parseArgs(self, argv, forDiscovery):
+        pluginsDisabled = self._getConfigOptions(argv)
+        
         parser = optparse.OptionParser(version='unittest2 %s' % __version__)
         if forDiscovery:
             parser.usage = '%prog [options] [...]'
@@ -204,6 +245,15 @@ class TestProgram(object):
                           help='Verbose output', action='store_true')
         parser.add_option('-q', '--quiet', dest='quiet', default=False,
                           help='Quiet output', action='store_true')
+        
+        parser.add_option('--config', dest='configLocations', action='append',
+                          help='Specify local config file location')
+        parser.add_option('--no-user-config', dest='noUserConfig', default=False,
+                          action='store_true',
+                          help="Don't use user config file")
+        parser.add_option('--no-plugins', dest='pluginsDisabled', default=False,
+                          action='store_true', help="Disable all plugins")
+        
         if self.failfast != False:
             parser.add_option('-f', '--failfast', dest='failfast', default=False,
                               help='Stop on first fail or error', 
@@ -227,31 +277,39 @@ class TestProgram(object):
 
         list_options = []
         extra_options = []
-        if forDiscovery:
-            extra_options = _discoveryOptions
-        for opt, longopt, help_text, callback in _options + extra_options:
-            opts = []
-            if opt is not None:
-                opts.append('-' + opt)
-            if longopt is not None:
-                opts.append('--' + longopt)
-            kwargs = dict(
-                action='callback',
-                help=help_text,
-            )
-            if isinstance(callback, list):
-                kwargs['action'] = 'append'
-                kwargs['dest'] = longopt
-                list_options.append((longopt, callback))
-            else:
-                kwargs['callback'] = callback
-            option = optparse.make_option(*opts, **kwargs)
-            parser.add_option(option)
-            
+        active_callbacks = []
+        
+        if not pluginsDisabled:
+            if forDiscovery:
+                extra_options = _discoveryOptions
+            for opt, longopt, help_text, callback in _options + extra_options:
+                opts = []
+                if opt is not None:
+                    opts.append('-' + opt)
+                if longopt is not None:
+                    opts.append('--' + longopt)
+                kwargs = dict(
+                    action='callback',
+                    help=help_text,
+                )
+                if isinstance(callback, list):
+                    kwargs['action'] = 'append'
+                    kwargs['dest'] = longopt
+                    list_options.append((longopt, callback))
+                else:
+                    def enablePlugin(callback=callback):
+                        active_callbacks.append(callback)
+                    kwargs['callback'] = enablePlugin
+                option = optparse.make_option(*opts, **kwargs)
+                parser.add_option(option)
+                
         options, args = parser.parse_args(argv)
+            
         for attr, _list in list_options:
             values = getattr(options, attr) or []
             _list.extend(values)
+        for callback in active_callbacks:
+            callback()
 
         # only set options from the parsing here
         # if they weren't set explicitly in the constructor
@@ -261,7 +319,7 @@ class TestProgram(object):
             self.catchbreak = options.catchbreak
         if self.buffer is None:
             self.buffer = options.buffer
-        
+            
         if options.verbose:
             self.verbosity = 2
         if options.quiet:
@@ -270,11 +328,7 @@ class TestProgram(object):
         hooks.pluginsLoaded(PluginsLoadedEvent())
         return options, args
         
-    def _do_discovery(self, argv, Loader=loader.TestLoader):
-        # handle command line args for test discovery
-        self.progName = '%s discover' % self.progName
-        options, args = self._parseArgs(argv, forDiscovery=True)
-        
+    def _do_discovery(self, options, args):
         if len(args) > 3:
             self.usageExit()
         
@@ -285,7 +339,7 @@ class TestProgram(object):
         pattern = options.pattern
         top_level_dir = options.top
 
-        loader = Loader()
+        loader = self.testLoader
         self.test = loader.discover(start_dir, pattern, top_level_dir)
 
     def runTests(self):

@@ -16,6 +16,7 @@ def enable():
 ourOptions = getConfig('doctest')
 alwaysOn = ourOptions.as_bool('always-on', default=False)
 
+
 if alwaysOn:
     enable()
 else:
