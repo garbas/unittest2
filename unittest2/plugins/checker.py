@@ -6,7 +6,6 @@ By: Ronny Pfannschmidt
 """
 from unittest2 import FunctionTestCase
 from unittest2.events import Plugin
-#hooks, addDiscoveryOption, getConfig
 from unittest2.util import getSource
 
 import sys
