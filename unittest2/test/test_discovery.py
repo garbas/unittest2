@@ -229,64 +229,60 @@ class TestDiscovery(unittest2.TestCase):
 
 
     def test_command_line_handling_do_discovery_calls_loader(self):
-        program = object.__new__(unittest2.TestProgram)
-
         class Loader(object):
             args = []
             def discover(self, start_dir, pattern, top_level_dir):
                 self.args.append((start_dir, pattern, top_level_dir))
                 return 'tests'
-
-        program.parseArgs(['unittest2', 'discover', '-v'], Loader=Loader)
+        def makeProgram():
+            Loader.args = []
+            program = object.__new__(unittest2.TestProgram)
+            program.testLoader = Loader()
+            return program
+        
+        program = makeProgram()
+        program.parseArgs(['unittest2', 'discover', '-v'])
         self.assertEqual(program.verbosity, 2)
         self.assertEqual(program.test, 'tests')
         self.assertEqual(Loader.args, [('.', None, None)])
 
-        Loader.args = []
-        program = object.__new__(unittest2.TestProgram)
-        program.parseArgs(['unittest2', 'discover', '--verbose'], Loader=Loader)
+        program = makeProgram()
+        program.parseArgs(['unittest2', 'discover', '--verbose'])
         self.assertEqual(program.test, 'tests')
         self.assertEqual(Loader.args, [('.', None, None)])
 
-        Loader.args = []
-        program = object.__new__(unittest2.TestProgram)
-        program.parseArgs(['unittest2'], Loader=Loader)
+        program = makeProgram()
+        program.parseArgs(['unittest2'])
         self.assertEqual(program.test, 'tests')
         self.assertEqual(Loader.args, [('.', None, None)])
 
-        Loader.args = []
-        program = object.__new__(unittest2.TestProgram)
-        program.parseArgs(['unittest2', 'discover', 'fish'], Loader=Loader)
+        program = makeProgram()
+        program.parseArgs(['unittest2', 'discover', 'fish'])
         self.assertEqual(program.test, 'tests')
         self.assertEqual(Loader.args, [('fish', None, None)])
 
-        Loader.args = []
-        program = object.__new__(unittest2.TestProgram)
-        program._do_discovery(['fish', 'eggs'], Loader=Loader)
+        program = makeProgram()
+        program._do_discovery(['fish', 'eggs'])
         self.assertEqual(program.test, 'tests')
         self.assertEqual(Loader.args, [('fish', 'eggs', None)])
 
-        Loader.args = []
-        program = object.__new__(unittest2.TestProgram)
-        program._do_discovery(['fish', 'eggs', 'ham'], Loader=Loader)
+        program = makeProgram()
+        program._do_discovery(['fish', 'eggs', 'ham'])
         self.assertEqual(program.test, 'tests')
         self.assertEqual(Loader.args, [('fish', 'eggs', 'ham')])
 
-        Loader.args = []
-        program = object.__new__(unittest2.TestProgram)
-        program._do_discovery(['-s', 'fish'], Loader=Loader)
+        program = makeProgram()
+        program._do_discovery(['-s', 'fish'])
         self.assertEqual(program.test, 'tests')
         self.assertEqual(Loader.args, [('fish', None, None)])
 
-        Loader.args = []
-        program = object.__new__(unittest2.TestProgram)
-        program._do_discovery(['-t', 'fish'], Loader=Loader)
+        program = makeProgram()
+        program._do_discovery(['-t', 'fish'])
         self.assertEqual(program.test, 'tests')
         self.assertEqual(Loader.args, [('.', None, 'fish')])
 
-        Loader.args = []
-        program = object.__new__(unittest2.TestProgram)
-        program._do_discovery(['-p', 'fish'], Loader=Loader)
+        program = makeProgram()
+        program._do_discovery(['-p', 'fish'])
         self.assertEqual(program.test, 'tests')
         self.assertEqual(Loader.args, [('.', 'fish', None)])
         self.assertFalse(program.failfast)
@@ -299,9 +295,9 @@ class TestDiscovery(unittest2.TestCase):
             signal = None
         else:
             args.append('-c')
-        Loader.args = []
-        program = object.__new__(unittest2.TestProgram)
-        program._do_discovery(args, Loader=Loader)
+
+        program = makeProgram()
+        program._do_discovery(args)
         self.assertEqual(program.test, 'tests')
         self.assertEqual(Loader.args, [('fish', 'eggs', None)])
         self.assertEqual(program.verbosity, 2)

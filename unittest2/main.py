@@ -140,6 +140,7 @@ class TestProgram(object):
             # handle command line args for test discovery
             self.progName = '%s discover' % self.progName
             argv = argv[1:]
+            forDiscovery = True
 
         options, args = self._parseArgs(argv[1:], forDiscovery=forDiscovery)
         if not args and self.module is None and self.defaultTest is None:
