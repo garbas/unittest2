@@ -237,7 +237,9 @@ class TestDiscovery(unittest2.TestCase):
 
         self.assertRaises(Stop,
             # too many args
-            lambda: program._do_discovery(['one', 'two', 'three', 'four']))
+            lambda: program._do_discovery(Options(), 
+                                            ['one', 'two', 'three', 'four'])
+            )
 
 
     def test_command_line_handling_do_discovery_calls_loader(self):
