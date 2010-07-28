@@ -74,6 +74,9 @@ DESCRIPTION = (
     'and test methods. The discover subcommand starts test discovery.'
 )
 
+# AttributeError only needed for Python 2.4
+_OPT_ERRS = (optparse.BadOptionError, optparse.OptionValueError, AttributeError)
+
 class _ImperviousOptionParser(optparse.OptionParser):
     def error(self, msg):
         pass
@@ -85,13 +88,13 @@ class _ImperviousOptionParser(optparse.OptionParser):
     def _process_short_opts(self, rargs, values):
         try:
             optparse.OptionParser._process_short_opts(self, rargs, values)
-        except (optparse.BadOptionError, optparse.OptionValueError):
+        except _OPT_ERRS:
             pass
 
     def _process_long_opt(self, rargs, values):
         try:
             optparse.OptionParser._process_long_opt(self, rargs, values)
-        except (optparse.BadOptionError, optparse.OptionValueError):
+        except _OPT_ERRS:
             pass
 
 
@@ -236,10 +239,8 @@ class TestProgram(object):
         try:
             options, _ = parser.parse_args(argv)
         except optparse.OptionError:
-            parser.destroy()
             return False
-        
-        parser.destroy()
+
         if not TestProgram.pluginsLoaded:
             # only needs to be conditional because we call several times during
             # tests
@@ -346,8 +347,7 @@ class TestProgram(object):
             self.verbosity = 2
         if options.quiet:
             self.verbosity = 0
-        
-        parser.destroy()
+
         hooks.pluginsLoaded(PluginsLoadedEvent())
         return options, args
         
