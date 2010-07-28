@@ -82,6 +82,18 @@ class _ImperviousOptionParser(optparse.OptionParser):
     
     print_usage = print_version = print_help = lambda self, file=None: None
 
+    def _process_short_opts(self, rargs, values):
+        try:
+            optparse.OptionParser._process_short_opts(self, rargs, values)
+        except (optparse.BadOptionError, optparse.OptionValueError):
+            pass
+
+    def _process_long_opt(self, rargs, values):
+        try:
+            optparse.OptionParser._process_long_opt(self, rargs, values)
+        except (optparse.BadOptionError, optparse.OptionValueError):
+            pass
+
 
 class TestProgram(object):
     """A command-line program that runs a set of tests; this is primarily
@@ -224,8 +236,10 @@ class TestProgram(object):
         try:
             options, _ = parser.parse_args(argv)
         except optparse.OptionError:
+            parser.destroy()
             return False
         
+        parser.destroy()
         if not TestProgram.pluginsLoaded:
             # only needs to be conditional because we call several times during
             # tests
@@ -239,6 +253,7 @@ class TestProgram(object):
         pluginsDisabled = self._getConfigOptions(argv)
         
         parser = optparse.OptionParser(version='unittest2 %s' % __version__)
+
         if forDiscovery:
             parser.usage = '%prog [options] [...]'
         else:
@@ -280,7 +295,11 @@ class TestProgram(object):
                               help='Top level directory of project (defaults to start directory)')
 
         list_options = []
-        active_callbacks = []
+        class _Closure(object):
+            def __init__(self, callback):
+                self.callback = callback
+            def __call__(self, *_):
+                self.callback()
 
         if not pluginsDisabled:
             extra_options = []
@@ -303,17 +322,16 @@ class TestProgram(object):
                 else:
                     def enablePlugin(callback=callback):
                         active_callbacks.append(callback)
-                    kwargs['callback'] = lambda *_: enablePlugin()
+                    
+                    kwargs['callback'] = _Closure(callback)
                 option = optparse.make_option(*opts, **kwargs)
                 parser.add_option(option)
-                
+
         options, args = parser.parse_args(argv)
-            
+
         for attr, _list in list_options:
             values = getattr(options, attr) or []
             _list.extend(values)
-        for callback in active_callbacks:
-            callback()
 
         # only set options from the parsing here
         # if they weren't set explicitly in the constructor
@@ -329,6 +347,7 @@ class TestProgram(object):
         if options.quiet:
             self.verbosity = 0
         
+        parser.destroy()
         hooks.pluginsLoaded(PluginsLoadedEvent())
         return options, args
         
