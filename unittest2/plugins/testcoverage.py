@@ -81,7 +81,7 @@ class CoveragePlugin(Plugin):
         allModules = self.get_modules()
         if allModules:
             args['morfs'] = allModules
-        if reportHtml:
+        if self.reportHtml:
             self.cov.html_report(directory=self.htmlDirectory, **args)
         else:
             self.cov.report(file=self.textFile, **args)
