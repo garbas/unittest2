@@ -441,8 +441,8 @@ class TestCase(unittest.TestCase):
                 exc_info = sys.exc_info()
                 stopTime = time.time()
                 timeTaken = stopTime - self._startTime
-                event = StopTestEvent(self, result, timeTaken, 'error',
-                                      exc_info, 'cleanup')
+                event = StopTestEvent(self, result, stopTime, timeTaken, 
+                                      'error', exc_info, 'cleanup')
                 hooks.stopTest(event)
                 ok = False
                 result.addError(self, exc_info)

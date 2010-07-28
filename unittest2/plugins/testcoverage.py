@@ -1,4 +1,4 @@
-from unittest2.events import hooks, addOption, getConfig
+from unittest2.events import Plugin, addOption, getConfig
 from unittest2.util import getSource
 
 import os
@@ -10,25 +10,52 @@ except ImportError, e:
     coverage = None
     coverageImportError = e
 
-class CoveragePlugin(object):
+
+help_text1 = 'Enable coverage reporting'
+help_text2 = 'Specify a module or package for coverage reporting'
+
+class CoveragePlugin(Plugin):
+    
+    configSection = 'coverage'
+    commandLineSwitch = ('C', 'coverage', help_text1)
+    
     def __init__(self):
+        self.configFile = self.config.get('config', '').strip() or True
+        self.htmlDirectory = self.config.get('html-directory', '').strip() or None
+        self.textFile = self.config.get('text-file', '').strip() or None
+        self.branch = self.config.as_bool('branch', default=None)
+        self.timid = self.config.as_bool('timid', default=False)
+        self.cover_pylib = self.config.as_bool('cover-pylib', default=False)
+        self.reportHtml = self.config.as_bool('report-html', default=True)
+        self.excludeLines = self.config.as_list('exclude-lines', default=[])
+        self.ignoreErrors = self.config.as_bool('ignore-errors', default=False)
+        self.modules = self.config.as_list('modules', default=[])
+        
+        addOption(self.modules, None, 'cover-module', help_text2)
+    
+    def register(self):
+        if coverage is None:
+            raise coverageImportError
+        Plugin.register(self)
+    
+    def pluginsLoaded(self, event):
         args = dict(
-            config_file=configFile,
+            config_file=self.configFile,
             cover_pylib=False,
-            branch=branch,
-            timid=timid,
+            branch=self.branch,
+            timid=self.timid,
         )
         self.cov = coverage.coverage(**args)
         self.cov.erase()
 
         self.cov.exclude('#pragma[: ]+[nN][oO] [cC][oO][vV][eE][rR]')
-        for line in excludeLines:
+        for line in self.excludeLines:
             self.cov.exclude(line)
             
         self.cov.start()
 
     def get_modules(self):
-        allModules = set(modules)
+        allModules = set(self.modules)
         if not allModules:
             return
         
@@ -46,44 +73,18 @@ class CoveragePlugin(object):
                     continue
         return morfs
 
-    def stop(self, event):
+    def stopTestRun(self, event):
         self.cov.stop()
         args = dict(
-            ignore_errors=ignoreErrors,
+            ignore_errors=self.ignoreErrors,
         )
         allModules = self.get_modules()
         if allModules:
             args['morfs'] = allModules
         if reportHtml:
-            self.cov.html_report(directory=htmlDirectory, **args)
+            self.cov.html_report(directory=self.htmlDirectory, **args)
         else:
-            self.cov.report(file=textFile, **args)
+            self.cov.report(file=self.textFile, **args)
 
 
-def enable():
-    if coverage is None:
-        raise coverageImportError
-    _plugin = CoveragePlugin()
-    hooks.stopTestRun += _plugin.stop
 
-ourOptions = getConfig('coverage')
-alwaysOn = ourOptions.as_bool('always-on', default=False)
-configFile = ourOptions.get('config', '').strip() or True
-htmlDirectory = ourOptions.get('html-directory', '').strip() or None
-textFile = ourOptions.get('text-file', '').strip() or None
-branch = ourOptions.as_bool('branch', default=None)
-timid = ourOptions.as_bool('timid', default=False)
-cover_pylib = ourOptions.as_bool('cover-pylib', default=False)
-reportHtml = ourOptions.as_bool('report-html', default=True)
-excludeLines = ourOptions.as_list('exclude-lines', default=[])
-ignoreErrors = ourOptions.as_bool('ignore-errors', default=False)
-modules = ourOptions.as_list('modules', default=[])
-
-def initialise():
-    if alwaysOn:
-        enable()
-    else:
-        help_text1 = 'Enable coverage reporting'
-        help_text2 = 'Specify a module or package for coverage reporting'
-        addOption(enable, 'C', 'coverage', help_text1)
-        addOption(modules, None, 'cover-module', help_text2)
