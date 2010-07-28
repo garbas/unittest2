@@ -102,6 +102,7 @@ class TestProgram(object):
             self.module = sys.modules[module]
         else:
             self.module = module
+
         if argv is None:
             argv = sys.argv
 
@@ -117,7 +118,7 @@ class TestProgram(object):
             testLoader = testLoader()
         self.testLoader = testLoader
         self.progName = os.path.basename(argv[0])
-        
+
         self.parseArgs(argv)
         self.runTests()
 
