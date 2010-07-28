@@ -166,6 +166,7 @@ class StopTestEvent(_Event):
         self.failed = False
         self.error = False
         self.skipped = False
+        self.skipReason = None
         self.unexpectedSuccess = False
         self.expectedFailure = False
         if outcome == 'passed':
@@ -176,10 +177,14 @@ class StopTestEvent(_Event):
             self.error = True
         elif outcome == 'skipped':
             self.skipped = True
+            self.skipReason = str(exc_info[1])
         elif outcome == 'unexpectedSuccess':
             self.unexpectedSuccess = True
         elif outcome == 'expectedFailure':
             self.expectedFailure = True
+
+class PluginsLoadedEvent(_Event):
+    loadedPlugins = loadedPlugins
 
 _pluginsEnabled = True
 
@@ -204,9 +209,6 @@ class _EventHook(object):
     def __isub__(self, handler):
         self._handlers.remove(handler)
         return self
-
-class PluginsLoadedEvent(_Event):
-    loadedPlugins = loadedPlugins
 
 
 class hooks(object):
