@@ -15,7 +15,7 @@ def xmlEscape(value):
 class JunitXml(Plugin):
     
     configSection = 'junit-xml'
-    commandLineSwitch = ('J', 'junit-xml', 'Generate junit-xml output report')
+    commandLineSwitch = ('X', 'junit-xml', 'Generate junit-xml output report')
     
     def __init__(self):
         self.path = self.config.as_bool('path', default='junit.xml')

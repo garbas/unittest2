@@ -280,10 +280,10 @@ class TestProgram(object):
                               help='Top level directory of project (defaults to start directory)')
 
         list_options = []
-        extra_options = []
         active_callbacks = []
-        
+
         if not pluginsDisabled:
+            extra_options = []
             if forDiscovery:
                 extra_options = _discoveryOptions
             for opt, longopt, help_text, callback in _options + extra_options:
@@ -303,7 +303,7 @@ class TestProgram(object):
                 else:
                     def enablePlugin(callback=callback):
                         active_callbacks.append(callback)
-                    kwargs['callback'] = enablePlugin
+                    kwargs['callback'] = lambda *_: enablePlugin()
                 option = optparse.make_option(*opts, **kwargs)
                 parser.add_option(option)
                 
