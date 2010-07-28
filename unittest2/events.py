@@ -248,22 +248,27 @@ class Register(type):
 
 class Plugin(object):
     __metaclass__ = Register
-    
+
+    config = None
+    configSection = None
+    commandLineSwitch = None
+    instance = None
+    _registered = False
+
     def __new__(cls, *args, **kw):
         instance = object.__new__(cls)
         pluginInstances.add(instance)
         if cls.instance is None:
             cls.instance = instance
-        
+
         alwaysOn = False
         configSection = getattr(instance, 'configSection', None)
         commandLineSwitch = getattr(instance, 'commandLineSwitch', None)
-        
+
         if configSection is not None:
             instance.config = getConfig(configSection)
             alwaysOn = instance.config.as_bool('always-on', default=False)
-        
-        instance._registered = False
+
         if alwaysOn:
             instance.register()
         else:
