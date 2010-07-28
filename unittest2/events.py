@@ -263,6 +263,7 @@ class Plugin(object):
             instance.config = getConfig(configSection)
             alwaysOn = instance.config.as_bool('always-on', default=False)
         
+        instance._registered = False
         if alwaysOn:
             instance.register()
         else:
@@ -270,7 +271,6 @@ class Plugin(object):
                 opt, longOpt, help_text = commandLineSwitch
                 addOption(instance.register, opt, longOpt, help_text)
 
-        instance._registered = False
         return instance
     
     def register(self):
