@@ -262,7 +262,7 @@ class Plugin(object):
             alwaysOn = instance.config.as_bool('always-on', default=False)
         
         if alwaysOn:
-            self.register()
+            instance.register()
         else:
             if commandLineSwitch is not None:
                 opt, longOpt, help_text = commandLineSwitch
