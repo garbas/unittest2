@@ -98,9 +98,8 @@ class TestProgram(object):
                  testLoader=loader.defaultTestLoader, exit=True,
                  verbosity=1, failfast=None, catchbreak=None, buffer=None):
         if isinstance(module, basestring):
-            self.module = __import__(module)
-            for part in module.split('.')[1:]:
-                self.module = getattr(self.module, part)
+            __import__(module)
+            self.module = sys.modules[module]
         else:
             self.module = module
         if argv is None:
