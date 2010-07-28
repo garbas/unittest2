@@ -217,10 +217,15 @@ class TestDiscovery(unittest2.TestCase):
         program = object.__new__(unittest2.TestProgram)
 
         args = []
-        def do_discovery(argv):
+        def do_discovery(_, argv):
             args.extend(argv)
+
         program._do_discovery = do_discovery
         program.parseArgs(['something', 'discover'])
+        self.assertEqual(args, [])
+        
+        program._do_discovery = do_discovery
+        program.parseArgs(['something'])
         self.assertEqual(args, [])
 
         program.parseArgs(['something', 'discover', 'foo', 'bar'])
