@@ -4,6 +4,18 @@ import sys
 
 import unittest2
 
+try:
+    import signal
+except ImportError:
+    signal = None
+
+
+class Options(object):
+    def __init__(self, **kwargs):
+        self.start = '.'
+        self.pattern = None
+        self.top = None
+        self.__dict__.update(kwargs)
 
 class TestDiscovery(unittest2.TestCase):
 
@@ -234,6 +246,7 @@ class TestDiscovery(unittest2.TestCase):
             def discover(self, start_dir, pattern, top_level_dir):
                 self.args.append((start_dir, pattern, top_level_dir))
                 return 'tests'
+
         def makeProgram():
             Loader.args = []
             program = object.__new__(unittest2.TestProgram)
@@ -262,42 +275,39 @@ class TestDiscovery(unittest2.TestCase):
         self.assertEqual(Loader.args, [('fish', None, None)])
 
         program = makeProgram()
-        program._do_discovery(['fish', 'eggs'])
+        options = Options()
+        program._do_discovery(options, ['fish', 'eggs'])
         self.assertEqual(program.test, 'tests')
         self.assertEqual(Loader.args, [('fish', 'eggs', None)])
 
         program = makeProgram()
-        program._do_discovery(['fish', 'eggs', 'ham'])
+        program._do_discovery(options, ['fish', 'eggs', 'ham'])
         self.assertEqual(program.test, 'tests')
         self.assertEqual(Loader.args, [('fish', 'eggs', 'ham')])
 
         program = makeProgram()
-        program._do_discovery(['-s', 'fish'])
+        program._do_discovery(Options(start='fish'), [])
         self.assertEqual(program.test, 'tests')
         self.assertEqual(Loader.args, [('fish', None, None)])
 
         program = makeProgram()
-        program._do_discovery(['-t', 'fish'])
+        program._do_discovery(Options(top='fish'), [])
         self.assertEqual(program.test, 'tests')
         self.assertEqual(Loader.args, [('.', None, 'fish')])
 
         program = makeProgram()
-        program._do_discovery(['-p', 'fish'])
+        program._do_discovery(Options(pattern='fish'), [])
         self.assertEqual(program.test, 'tests')
         self.assertEqual(Loader.args, [('.', 'fish', None)])
         self.assertFalse(program.failfast)
         self.assertFalse(program.catchbreak)
 
-        args = ['-p', 'eggs', '-s', 'fish', '-v', '-f']
-        try:
-            import signal
-        except ImportError:
-            signal = None
-        else:
+        args = ['unittest2', 'discover', '-p', 'eggs', '-s', 'fish', '-v', '-f']
+        if signal is not None:
             args.append('-c')
 
         program = makeProgram()
-        program._do_discovery(args)
+        program.parseArgs(args)
         self.assertEqual(program.test, 'tests')
         self.assertEqual(Loader.args, [('fish', 'eggs', None)])
         self.assertEqual(program.verbosity, 2)
