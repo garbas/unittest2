@@ -69,8 +69,10 @@ Examples:
                                                in MyTestCase
 """
 
-DESCRIPTION = ('[tests] can be a list of any number of test modules, classes '
-               'and test methods.')
+DESCRIPTION = (
+    '[tests] can be a list of any number of test modules, classes '
+    'and test methods. The discover subcommand starts test discovery.'
+)
 
 class _ImperviousOptionParser(optparse.OptionParser):
     def error(self, msg):
@@ -143,12 +145,13 @@ class TestProgram(object):
             forDiscovery = True
 
         options, args = self._parseArgs(argv[1:], forDiscovery=forDiscovery)
-        if not args and self.module is None and self.defaultTest is None:
+        if (not forDiscovery and not args and self.module is None and 
+            self.defaultTest is None):
             # launched with no args from script
             options.start = '.'
             options.top = options.pattern = None
-            self._do_discovery(options, args)
-            return
+            forDiscovery =True
+
         if forDiscovery:
             self._do_discovery(options, args)
             return
