@@ -3,9 +3,9 @@ This is a description, and request for feedback, of the unittest plugin system t
 
 .. _unittest2: http://hg.python.org/unittest2
 
-As part of the prototype I have been implementing some example plugins (in unittest2/plugins/) so I can develop the mechanism to real rather than imagined use cases. Jason Pellerin, creator of nose, has been providing me with feedback and has been trying out by porting some of the nose plugins to unittest [#]_. He comments on the system "it looks very flexible and clean". ;-)
+As part of the prototype I have been implementing some example plugins (in unittest2/plugins/) so I can develop the mechanism against real rather than imagined use cases. Jason Pellerin, creator of nose, has been providing me with feedback and has been trying it out by porting some of the nose plugins to unittest [#]_. He comments on the system "it looks very flexible and clean". ;-)
 
-Example plugins already available:
+Example plugins available and included:
 
     * a pep8 and pyflakes checker
     * a debugger plugin that drops you into pdb on test fail / error
@@ -18,9 +18,11 @@ Example plugins already available:
 
 In addition I intend to create a plugin that outputs junit compatible xml from a test run (for integration with tools like the hudson continuous integration server) and a test runner that runs tests in parallel using multiprocessing.
 
+Not all of these will be included in the merge to unittest. Which ones will is still an open question.
+
 I'd like feedback on the proposal, and hopefully approval to port it into unittest after discussion / amendment / completion. In particular I'd like feedback on the basic system, plus which events should be available and what information should be available in them. Note that the system is *not* complete in the prototype. Enough is implemented to get "the general idea" and to formalise the full system. It still needs extensive tests and the extra work in TestProgram makes it abundantly clear that refactoring there is well overdue...
 
-In the details below open questions and todos are notes. I *really* value feedback but will ignore bikeshedding. ;-)
+In the details below open questions and todos are noted. I *really* value feedback (but will ignore bikeshedding. ;-)
 
 .. note::
 
@@ -37,8 +39,8 @@ unittest lacks a standard way of extending it to provide commonly requested func
 Aspects of the plugin system include:
 
 * an events mechanism where handlers can be registered and called during a test run
-* a Plugin class built over the top of this for easy building of plugins
-* a configuration system for specify which plugins should be loaded and configuring individual plugins
+* a Plugin class built over the top of this for easy creation of plugins
+* a configuration system for specifying which plugins should be loaded and for configuring individual plugins
 * command line integration
 * the specific set of events and the information / actions available to them
 
@@ -50,7 +52,7 @@ Rationale
 
 Why a plugin system for unittest?
 
-unittest is the standard library test framework for Python but in recent years has been eclipsed in functionality by frameworks like nose and py.test. Among the reasons for this is that these frameworks are easier to extend with plugin systems that unittest. unittest makes itself particularly difficult to extend by using subclassing as its basic extension mechanism. You subclass and override behaviour in its core classes like the loader, runner and result classes.
+unittest is the standard library test framework for Python but in recent years has been eclipsed in functionality by frameworks like nose and py.test. Among the reasons for this is that these frameworks are easier to extend with plugins than unittest. unittest makes itself particularly difficult to extend by using subclassing as its basic extension mechanism. You subclass and override behaviour in its core classes like the loader, runner and result classes.
 
 This means that where you have more than one "extension" working in the same area it is very hard for them to work together. Whilst various extensions to unittest do exist (e.g. testtools, zope.testrunner etc) they don't tend to work well together. In contrast the plugin system makes creating extensions to unittest much simpler and less likely that extensions will clash with each other.
 
@@ -162,7 +164,7 @@ A simple plugin using this is the 'debugger' plugin that starts ``pdb`` when the
             finally:
                 sys.stdout = original
 
-A plugin that doesn't want to be auto-instantiated (for example a base class used for several plugins) can set ``autoCreate = False`` as a class attribute. (This attribute is only looked for on the class directly and so isn't inherited by sub-classes.) If a plugin is auto-instantiated then the instance will be set as the ``instance`` attribute on the plugin class.
+A plugin that doesn't want to be auto-instantiated (for example a base class used for several plugins) can set ``autoCreate = False`` as a class attribute. (This attribute is only looked for on the class directly and so isn't inherited by subclasses.) If a plugin is auto-instantiated then the instance will be set as the ``instance`` attribute on the plugin class.
 
 ``configSection`` and ``commandLineSwitch`` are described in the `configuration system`_ and `command line integration`_ sections.
 
@@ -216,6 +218,9 @@ The config is a dictionary of ``Section`` objects, where a section is a dictiona
     
     # as_list returns a list with empty lines and comment lines removed
     items = section.as_list('items', default=[])
+
+    # as_bool allows 'true', '1', 'on', 'yes' for True (matched case-insensitively) and
+    # 'false', 'off', '0', 'no', '' for False
     value = section.as_bool('value', default=True)
 
 If a plugin specifies a ``configSection`` as a class attribute then that section will be fetched and set as the ``config`` attribute on instances.
@@ -529,6 +534,10 @@ that unregister can only be called once. This may not be an issue.
 
 Plugin.unregister will fail if any events have already been unhooked. This can
 easily be fixed.
+
+If the merge to unittest in Python 3.2 happens we need to decide which of the
+example plugins will be included in unittest. (They will probably all remain
+in unittest2.)
 
 Custom test outcomes are *not* supported; making interoperating tools or plugins
 in the presence of custom outcomes can be very hard.
