@@ -423,15 +423,137 @@ The ``StartTestRunEvent`` object has the following attributes:
 Currently this event can be handled. This prevents the normal test run from executing, allowing an alternative implementation, but the return value is unused. Handling this event (as with handling any event) prevents other plugins from executing. This means that the it wouldn't be possible to safely combine a distributed test runner with a plugin that filters the suite. Fixing this issue is one of the open issues with the plugin system.
 
 
+startTest
+---------
 
-* ``startTest``
-* ``onTestFail``
-* ``stopTest``
-* ``stopTestRun``
+This event is fired immediately before a test is executed (inside ``TestCase.run(...)``).
+
+The ``StartTestEvent`` object has the following attributes:
+
+* ``test`` - the test to be run
+* ``result`` - the result object
+* ``startTime`` - the time the test starts execution
+
+This event cannot be handled.
+
+
+onTestFail
+----------
+
+This event is fired when a test setUp, a test, a tearDown or a cleanUp fails or errors. It is currently used by the debugger plugin. It is *not* currently called for 'internal' unittest exceptions like ``SkipTest`` or expected failures and unexpected successes.
+
+Attributes on the ``TestFailEvent`` are:
+
+* ``test`` - the test
+* ``result`` - the result
+* ``exc_info`` - the result of ``sys.exc_info()`` after the error / fail
+* ``when`` - one of 'setUp', 'call', 'tearDown', or 'cleanUp'
+
+This event cannot be handled. Should this event be able to suppress raised exceptions? It should also be able to modify the traceback so that bare asserts could be used but still provide useful diagnostic information. Should this event be fired for test skips?
+
+
+stopTest
+--------
+
+This event is fired when a test execution is completed. It includes a great deal of information about the test and could be used to completely replace test reporting, making the test result potentially obsolete. It will be used by the junit-xml plugin to generate the xml reports describing the test run.
+
+If there are errors during a tearDown or clean up functions then this event may be fired several times for a test. For each call the ``stage`` will be different, although there could be several errors during clean up functions.
+
+Attributes on the ``StopTestEvent`` are:
+
+* ``test`` - the test
+* ``result`` - the result
+* ``exc_info`` - the result of ``sys.exc_info()`` after an error / fail or None for success
+* ``stopTime``- time the test stopped, including tear down and clean up functions
+* ``timeTaken`` - total time for test execution from setUp to clean up functions
+* ``stage`` - one of setUp, call, tearDown, cleanUp, or None for success
+* ``outcome`` - one of passed, failed, error, skipped, unexpectedSuccess, expectedFailure
+
+The outcomes all correspond to an attribute that will be set to True or False depending on outcome:
+
+* ``passed``
+* ``failed``
+* ``error``
+* ``skipped``
+* ``unexpectedSuccess``
+* ``expectedFailure``
+
+In addition there is a ``skipReason`` that will be None unless the test was skipped, in which case it will be a string containing the reason.
+
+This event cannot be handled. 
+
+
+stopTestRun
+-----------
+
+This event is fired when the test run completes. It is useful for reporting tools.
+
+The ``StopTestRunEvent`` event objects have the following attributes:
+
+* ``runner`` - the test runner
+* ``result`` - the test result
+* ``stopTime`` - the time the test run completes
+* ``timeTaken`` - total time taken by the test run
+ 
 
 
 Not Yet Implemented
 ===================
+
+Except where noted, everything in this document is already working in the prototype. There are a few open issues and things still to be implemented.
+
+Certain event attributes should be read only (like extraTests, extraNames etc)
+because they should only be extended or modified in place instead of being
+replaced.
+
+Add an epilogue to the optparse help messages.
+
+A messaging API for plugins that respects verbosity.
+
+The ``startTestRun`` event needs an alternative way of replacing the default
+test run machinery without stopping other plugins from executing. It should
+only be possible for *one* plugin to use this.
+
+Should the ``onTestFailEvent`` be able to supress raised exceptions? It should 
+also be able to modify the traceback so that bare asserts could be used but
+still provide useful diagnostic information. Should this event be fired for
+test skips?
+
+Command line options to unittest, like verbosity, should be put into the config
+data structure so that they are accessible to plugins.
+
+TestFailEvent needs to be fired on failures in setUpClass and setUpModule etc
+
+Plugin.register and Plugin.unregister aren't precisely complementary. This means
+that unregister can only be called once. This may not be an issue.
+
+Plugin.unregister will fail if any events have already been unhooked. This can
+easily be fixed.
+
+Custom test outcomes are *not* supported; making interoperating tools or plugins
+in the presence of custom outcomes can be very hard.
+
+Should unittest2 have a different config file from unittest, so they can be
+configured side-by-side? (``unittest2.cfg`` perhaps.) Alternatively the same
+config file could be used with a '[unittest2]' section instead of '[unittest]'.
+
+Should ``StopTestEvent.timeTaken`` (plus startTime / stopTime etc) include the
+time for setUp, tearDown and cleanUps? Should this information be available
+separately perhaps?
+
+The discovery command line interface has changed a lot and the tests need
+reviewing to ensure they still provide full coverage.
+
+Should there be an "excluded-plugins" section in the config files, so projects
+can prevent incompatible plugins from being loaded?
+
+Should multiline values in config files be merged instead of overriding each
+other. (This is effectively what happens for the plugins list.)
+
+Should ``handleFile`` be fired when a test name is specified at the command
+line? (This would be 'tricky' as ``handleFile`` will have to be called for the
+containing module and then the correct name pulled out of the module.)
+
 
 
 Additional Changes

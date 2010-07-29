@@ -44,7 +44,8 @@ only be possible for *one* plugin to use this.
 
 Should the ``onTestFailEvent`` be able to supress raised exceptions? It should 
 also be able to modify the traceback so that bare asserts could be used but
-still provide useful diagnostic information.
+still provide useful diagnostic information. Should this event be fired for
+test skips?
 
 Command line options to unittest, like verbosity, should be put into the config
 data structure so that they are accessible to plugins.
@@ -57,12 +58,16 @@ that unregister can only be called once. This may not be an issue.
 Plugin.unregister will fail if any events have already been unhooked. This can
 easily be fixed.
 
+Custom test outcomes are *not* supported; making interoperating tools or plugins
+in the presence of custom outcomes can be very hard.
+
 Should unittest2 have a different config file from unittest, so they can be
 configured side-by-side? (``unittest2.cfg`` perhaps.) Alternatively the same
 config file could be used with a '[unittest2]' section instead of '[unittest]'.
 
-Should timeTaken (startTime / stopTime etc) include the time for setUp,
-tearDown and cleanUps? Should this information be available separately perhaps?
+Should ``StopTestEvent.timeTaken`` (plus startTime / stopTime etc) include the
+time for setUp, tearDown and cleanUps? Should this information be available
+separately perhaps?
 
 The discovery command line interface has changed a lot and the tests need
 reviewing to ensure they still provide full coverage.
