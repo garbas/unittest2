@@ -34,6 +34,13 @@ class Checker(Plugin):
     def pluginsLoaded(self, event):
         if not pep8 and not pyflakes_check:
             raise AssertionError('checker plugin requires pep8 or pyflakes')
+        if pep8:
+            pep8.process_options(['pep8',
+                PEP8_IGNORE_LIST,
+                '--show-source',
+                '--repeat',
+                'dummy file',
+                ])
 
     def handleFile(self, event):
         path = event.path
@@ -63,7 +70,7 @@ class CheckerTestCase(FunctionTestCase):
     def formatTraceback(self, err):
         exctype, value, tb = err
         if not exctype == self.failureException or self.traceback is None:
-            return CheckerTestCase.formatTraceback(self, err)
+            return FunctionTestCase.formatTraceback(self, err)
         return self.traceback
 
 
@@ -74,7 +81,7 @@ class Pep8CheckerTestCase(CheckerTestCase):
 
 class PyFlakesCheckerTestCase(CheckerTestCase):
     def __init__(self, path):
-        func = lambda: check_file_pep8(path, self)
+        func = lambda: check_file_pyflakes(path, self)
         CheckerTestCase.__init__(self, path, func)
 
 
@@ -98,6 +105,19 @@ def captured(func):
     return ''.join(data), result
 
 
+if pep8:
+    Base = pep8.Checker
+else:
+    Base = object
+
+class Pep8Checker(Base):
+    ignored_errors = 0
+    def report_error(self, line_number, offset, text, check):
+        #XXX: pep8 is a retarded module!
+        if pep8.ignore_code(text[:4]):
+            self.ignored_errors += 1
+        pep8.Checker.report_error(self, line_number, offset, text, check)
+
 # ignore list taken from moin
 # should be a config option
 PEP8_IGNORE_LIST = (
@@ -106,21 +126,7 @@ PEP8_IGNORE_LIST = (
 
     
 def check_file_pep8(path, test):
-    class Pep8Checker(pep8.Checker):
-        ignored_errors = 0
-        def report_error(self, line_number, offset, text, check):
-            #XXX: pep8 is a retarded module!
-            if pep8.ignore_code(text[:4]):
-                self.ignored_errors += 1
-            pep8.Checker.report_error(self, line_number, offset, text, check)
-    
     def checkFile():
-        pep8.process_options(['pep8',
-            PEP8_IGNORE_LIST,
-            '--show-source',
-            '--repeat',
-            'dummy file',
-            ])
         checker = Pep8Checker(path)
         #XXX: bails out on death
         error_count = checker.check_all()
@@ -129,9 +135,9 @@ def check_file_pep8(path, test):
     
     output, result = captured(checkFile)
     if result:
-        msg = 'pyflakes reported %s errors.\n' % (result,)
-        test.traceback = output
-        raise AssertionError(msg)
+        msg = 'pep8 reported %s errors.\n' % (result,)
+        test.traceback = '\n'.join([msg, output])
+        raise test.failureException(msg)
 
 def check_file_pyflakes(path, test):
     def checkFile():
@@ -143,9 +149,9 @@ def check_file_pyflakes(path, test):
         
     output, result = captured(checkFile)
     if result:
-        msg = 'pep8 reported %s errors.' % (result,)
-        test.traceback = output
-        raise AssertionError(msg)
+        msg = 'pyflakes reported %s errors.\n' % (result,)
+        test.traceback = '\n'.join([msg, output])
+        raise test.failureException(msg)
 
 
 def getSuite(path, loader):
