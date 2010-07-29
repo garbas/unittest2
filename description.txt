@@ -42,7 +42,7 @@ Aspects of the plugin system include:
 * command line integration
 * the specific set of events and the information / actions available to them
 
-As the plugin system essentially just adds event calls to key places it has few backwards compatibility issues. Unfortunately existing extensions that override the parts of unittest that call these events will not be compatible with plugins that use them.
+As the plugin system essentially just adds event calls to key places it has few backwards compatibility issues. Unfortunately existing extensions that override the parts of unittest that call these events will not be compatible with plugins that use them. Framework authors who re-implement parts of unittest, for example custom test runners, may want to add calling these events in appropriate places.
 
 
 Rationale
@@ -85,6 +85,12 @@ Handlers are called with an Event object specific to the event. Each event provi
 The name of events, whether any should be added or removed, and what information is available on the event objects are all valid topics for discussion. Specific events and the information available to them is covered in a section below.
 
 An example plugin using events directly is the ``doctestloader`` plugin.
+
+Framework authors who re-implement parts of unittest, for example custom test runners, may want to add calling these events in appropriate places. This is very simple. For example the ``pluginsLoaded`` event is fired with a ``PluginsLoadedEvent`` object that is instantiated without parameters::
+
+    from unittest2.events import hooks, PluginsLoadedEvent
+
+    hooks.pluginsLoaded(PluginsLoadedEvent())
 
 
 Why use event objects and not function parameters?
@@ -156,7 +162,7 @@ A simple plugin using this is the 'debugger' plugin that starts ``pdb`` when the
             finally:
                 sys.stdout = original
 
-A plugin that doesn't want to be auto-instantiated (for example a base class used for several plugins) can set ``autoCreate = False`` as a class attribute. (This attribute is only looked for on the class directly and so isn't inherited by sub-classes.)
+A plugin that doesn't want to be auto-instantiated (for example a base class used for several plugins) can set ``autoCreate = False`` as a class attribute. (This attribute is only looked for on the class directly and so isn't inherited by sub-classes.) If a plugin is auto-instantiated then the instance will be set as the ``instance`` attribute on the plugin class.
 
 ``configSection`` and ``commandLineSwitch`` are described in the `configuration system`_ and `command line integration`_ sections.
 
@@ -182,7 +188,7 @@ To support this system several command line options have been added to the test 
 
 Several config files can be specified using ``--config``. If the user config is being loaded then it will be loaded first (if it exists), followed by the project config (if it exists) *or* any config files specified by ``--config``. ``--config`` can point to specific files, or to a directory containing a ``unittest.cfg``.
 
-Config files loaded later are merged into already loaded ones. Where a *key* is in both the later key overrides the earlier one. Where a section is in both but with different keys they are merged. Multiline keys are also merged.
+Config files loaded later are merged into already loaded ones. Where a *key* is in both the later key overrides the earlier one. Where a section is in both but with different keys they are merged. (The exception to keys overriding is the 'plugins' key in the unittest section - these are combined to create a full list of plugins. Perhaps multiline values in config files could also be merged?)
 
 plugins to be loaded are specified in the ``plugins`` key of the ``unittest`` section::
 
@@ -197,15 +203,168 @@ plugins to be loaded are specified in the ``plugins`` key of the ``unittest`` se
         unittest2.plugins.growl
         unittest2.plugins.filtertests
 
-The plugins are simply module names. They either hook themselves up manually on import or are created by virtue of subclassing ``Plugin``.
+The plugins are simply module names. They either hook themselves up manually on import or are created by virtue of subclassing ``Plugin``. A list of all loaded plugins is available as ``unittest2.events.loadedPlugins`` (a list of strings).
+
+For accessing config values there is a ``getConfig(sectionName=None)`` function. By default it returns the whole config data-structure but it an also return individual sections by name. If the section doesn't exist an empty section will be returned. The config data-structure is not read-only but there is no mechanism for persisting changes.
+
+The config is a dictionary of ``Section`` objects, where a section is a dictionary subclass with some convenience methods for accessing values::
+
+    section = getConfig(sectionName)
+    
+    integer = section.as_int('foo', default=3)
+    number = section.as_float('bar', default=0.0)
+    
+    # as_list returns a list with empty lines and comment lines removed
+    items = section.as_list('items', default=[])
+    value = section.as_bool('value', default=True)
+
+If a plugin specifies a ``configSection`` as a class attribute then that section will be fetched and set as the ``config`` attribute on instances.
+
+By convention plugins should use the 'always-on' key in their config section to specify that the plugin should be switched on by default. If 'always-on' exists and is set to 'True' then the ``register()`` method will be called on the plugin to hook up all events. If you don't want a plugin to be auto-registered you should fetch the config section yourself rather than using ``configSection``.
+
+If the plugin is configured to be 'always-on', and is auto-registered, then it doesn't need a command line switch to turn it on (although it may add other command line switches or options) and ``commandLineSwitch`` will be ignored.
+
+
+Command Line Interface
+======================
+
+Plugins may add command line options, either switches with a callback function or options that take values and will be added to a list. There are two functions that do this: ``unittest2.events.addOption`` and ``unittest2.events.addDiscoveryOption``. Some of the events are only applicable to test discovery (``matchPath`` is the only one currently I think), options that use these events should use ``addDiscoveryOption`` which will only be used if test discovery is invoked.
+
+Both functions have the same signature::
+
+    addDiscoveryOption(callback, opt=None, longOpt=None, help=None)
+    
+    addOption(plugin.method, 'X', '--extreme', 'Run tests in extreme mode')
+
+* ``callback`` is a callback function (taking no arguments) to be invoked if the option is on *or* a list indicating that this is an option that takes arguments, values passed in at the command line will be added to the list
+* ``opt`` is a short option for the command (or None) not including the leading '-'
+* ``longopt`` a long option for the command (or None) not including the leading '--'
+* ``help`` is optional help text for the option, to be displayed by ``unit2 -h``
+
+Lowercase short options are reserved for use by unittest2 internally. Plugins may only add uppercase short options.
+
+If a plugin needs a simple command line switch (on/off) then it can set the ``commandLineSwitch`` class attribute to a tuple of ``(opt, longOpt, help)``. The ``register()`` method will be used as the callback function, automatically hooking the plugin up to events if it is switched on.
+
+
+The Events
+==========
+
+This section details the events implemented so far, the order they are called in, what attributes are available on the event objects, whether the event is 'handleable' (and what that means for the event), plus the intended use case for the event.
+
+Events in rough order are:
+
+* ``pluginsLoaded``
+* ``handleFile``
+* ``matchPath``
+* ``loadTestsFromNames``
+* ``loadTestsFromName``
+* ``loadTestsFromModule``
+* ``loadTestsFromTestCase``
+* ``getTestCaseNames``
+* ``runnerCreated``
+* ``startTestRun``
+* ``startTest``
+* ``onTestFail``
+* ``stopTest``
+* ``stopTestRun``
+
+
+pluginsLoaded
+-------------
+
+This event is useful for plugin initialisation. It is fired after all plugins have been loaded, the config file has been read and command line options processed.
+
+The ``PluginsLoadedEvent``  has one attribute: ``loadedPlugins`` which is a list of strings referring to all plugin modules that have been loaded.
+
+
+handleFile
+----------
+
+This event is fired when a file is looked at in test discovery or a *filename* is passed at the command line. It can be used for loading tests from non-Python files, like doctests from text files, or adding tests for a file like pep8 and pyflakes checks.
+
+A ``HandleFileEvent`` object has the following attributes:
+
+* ``extraTests`` - a list, extend this with tests to *add* tests that will be loaded from this file without preventing the default test loading
+* ``name`` - the name of the file
+* ``path`` - the full path of the file being looked at
+* ``loader`` - the ``TestLoader`` in use
+* ``pattern`` - the pattern being used to match files, or None if not called during test discovery
+* ``top_level_directory`` - the top level directory of the project tests are being loaded from, or the current working directory if not called during test discovery
+
+This event *can* be handled. If it is handled then the handler should return a test suite or None. Returning None means no tests will be loaded from this file. If any plugin has created any ``extraTests`` then these will be used even if a handler handles the event and returns None.
+
+If this event is not handled then it will be matched against the pattern (test discovery only) and either be rejected or go through for standard test loading.
+
+
+matchPath
+---------
+
+``matchPath`` is called to determine if a file should be loaded as a test module. This event only fires during test discovery.
+
+``matchPath`` is only fired if the filename can be converted to a valid python module name, this is because tests are loaded by importing. If you want to load tests from files whose paths don't translate to valid python identifiers then you should use ``handleFile`` instead.
+
+A ``MatchPathEvent`` has the following attributes:
+
+* ``path`` - full path to the file
+* ``name`` - filename only
+* ``pattern`` - pattern being used for discovery
+
+This event *can* be handled. If it is handled then the handler should return True or False to indicate whether or not test loading should be attempted from this file. If this event is not handled then the pattern supplied to test discovery will be used as a glob pattern to match the filename.
+
+
+loadTestsFromNames
+------------------
+
+This event is fired when ``TestLoader.loadTestsFromNames`` is called.
+
+Attributes on the ``LoadFromNamesEvent`` object are:
+
+* ``loader`` - the test loader
+* ``names`` - a list of the names being loaded
+* ``module`` - the module passed to ``loader.loadTestsFromNames(...)`` 
+* ``extraTests`` - a list of extra tests to be added to the suites loaded from the names
+
+This event can be handled. If it is handled then the handler should return a list of suites or None. Returning None means no tests will be loaded from these names. If any plugin has created any ``extraTests`` then these will be used even if a handler handles the event and returns None.
+
+If this event is not handled then ``loader.loadTestFromName`` will be called for each name to build up the list of suites.
+
+
+loadTestsFromName
+-----------------
+
+This event is fired when ``TestLoader.loadTestsFromName`` is called.
+
+Attributes on the ``LoadFromNameEvent`` object are:
+
+* ``loader`` - the test loader
+* ``name`` - the name being loaded
+* ``module`` - the module passed to ``loader.loadTestsFromName(...)`` 
+* ``extraTests`` - a suite of extra tests to be added to the suite loaded from the name
+
+This event can be handled. If it is handled then the handler should return a TestSuite or None. Returning None means no tests will be loaded from this name. If any plugin has created any ``extraTests`` then these will be used even if a handler handles the event and returns None.
+
+If the event is not handled then each name will be resolved and tests loaded from it, which may mean calling ``loader.loadTestsFromModule`` or ``loader.loadTestsFromTestCase``.
+
+
+* ``loadTestsFromModule``
+* ``loadTestsFromTestCase``
+* ``getTestCaseNames``
+* ``runnerCreated``
+* ``startTestRun``
+* ``startTest``
+* ``onTestFail``
+* ``stopTest``
+* ``stopTestRun``
+
+
+Not Yet Implemented
+===================
 
 
 Additional Changes
-===================
+==================
 
-Alongside and in support of the plugin system a few changes have been made to unittest(2). These either have no, or very minor, backwards compatibility issues.
-
-Changes so far are:
+Alongside, and in support of, the plugin system a few changes have been made to unittest2. These either have no, or very minor, backwards compatibility issues. Changes so far are:
 
 TestLoader has a new attribute ``DEFAULT_PATTERN``. This is so that the
 regex matching plugin can change the default pattern used for test discovery
@@ -230,6 +389,10 @@ and failures are represented. Useful for test items that don't represent Python
 tests, for example the pep8 / pyflakes checker and theoretical javascript
 test runners such as exist for py.test and nose.
 
+If you specify test names (modules, classes etc) at the command line they will
+be loaded individually using ``loader.loadTestsFromName`` instead of
+collectively with ``loader.loadTestsFromNames``. This enables individual names
+to be checked to see if they refer to filenames.
 
 
 References

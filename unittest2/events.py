@@ -216,9 +216,9 @@ class _EventHook(object):
 
 class hooks(object):
     pluginsLoaded = _EventHook()
+    handleFile = _EventHook()
     
     # discovery only
-    handleFile = _EventHook()
     matchPath = _EventHook()
 
     loadTestsFromModule = _EventHook()
@@ -378,7 +378,7 @@ def loadPlugins(pluginsDisabled=False, noUserConfig=False,
     allPlugins = loadConfig(noUserConfig, configLocations)
     
     if not pluginsDisabled:
-        for plugin in allPlugins:
+        for plugin in set(allPlugins):
             loadPlugin(plugin)
 
 

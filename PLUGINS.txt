@@ -22,6 +22,11 @@ has a new formatTraceback method (delegating to util.formatTraceback). TestCase
 instances can implement formatTraceback to control how the traceback for errors
 and failures are represented.
 
+If you specify test names (modules, classes etc) at the command line they will
+be loaded individually using ``loader.loadTestsFromName`` instead of
+collectively with ``loader.loadTestsFromNames``. This enables individual names
+to be checked to see if they refer to filenames.
+
 
 TODO:
 
@@ -54,3 +59,7 @@ can prevent incompatible plugins from being loaded?
 
 Should multiline values in config files be merged instead of overriding each
 other. (This is effectively what happens for the plugins list.)
+
+Should ``handleFile`` be fired when a test name is specified at the command
+line? (This would be 'tricky' as ``handleFile`` will have to be called for the
+containing module and then the correct name pulled out of the module.)

@@ -81,7 +81,7 @@ class TestLoader(unittest.TestLoader):
         event = LoadFromTestCaseEvent(self, testCaseClass)
         result = hooks.loadTestsFromTestCase(event)
         if event.handled:
-            loaded_suite = result
+            loaded_suite = result or self.suiteClass()
         else:
             testCaseNames = self.getTestCaseNames(testCaseClass)
             if not testCaseNames and hasattr(testCaseClass, 'runTest'):
@@ -96,7 +96,7 @@ class TestLoader(unittest.TestLoader):
         event = LoadFromModuleEvent(self, module)
         result = hooks.loadTestsFromModule(event)
         if event.handled:
-            tests = result
+            tests = result or self.suiteClass()
         else:
             tests = []
             for name in dir(module):
@@ -128,7 +128,7 @@ class TestLoader(unittest.TestLoader):
         event = LoadFromNameEvent(self, name, module)
         result = hooks.loadTestsFromName(event)
         if event.handled:
-            suite =  result
+            suite =  result or self.suiteClass()
         else:
             suite = self._loadTestsFromName(name, module)
         if event.extraTests:
@@ -167,7 +167,7 @@ class TestLoader(unittest.TestLoader):
         event = LoadFromNamesEvent(self, names, module)
         result = hooks.loadTestsFromNames(event)
         if event.handled:
-            suites =  result
+            suites =  result or []
         else:
             suites = [self.loadTestsFromName(name, module) for name in names]
         if event.extraTests:
@@ -180,7 +180,7 @@ class TestLoader(unittest.TestLoader):
         event = GetTestCaseNamesEvent(self, testCaseClass)
         result = hooks.getTestCaseNames(event)
         if event.handled:
-            return results
+            return result or []
         prefix = event.testMethodPrefix or self.testMethodPrefix 
         excluded = set(event.excludedNames)
         def isTestMethod(attrname, testCaseClass=testCaseClass,
@@ -296,7 +296,8 @@ class TestLoader(unittest.TestLoader):
                     yield self.suiteClass(event.extraTests)
                 
                 if event.handled:
-                    yield result
+                    if result:
+                        yield result
                     continue
                 
                 if not VALID_MODULE_NAME.match(path):
