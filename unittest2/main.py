@@ -98,6 +98,13 @@ class _ImperviousOptionParser(optparse.OptionParser):
             pass
 
 
+class _Callback(object):
+    def __init__(self, callback):
+        self.callback = callback
+    def __call__(self, *_):
+        self.callback()
+
+
 class TestProgram(object):
     """A command-line program that runs a set of tests; this is primarily
        for making test modules conveniently executable.
@@ -176,9 +183,6 @@ class TestProgram(object):
             self.testNames = None
         elif len(args) > 0:
             self.testNames = args
-            if __name__ == '__main__':
-                # to support python -m unittest ...
-                self.module = None
         else:
             self.testNames = (self.defaultTest,)
         
@@ -233,22 +237,28 @@ class TestProgram(object):
                           action='store_true')
         parser.add_option('--no-plugins', dest='pluginsDisabled', default=False,
                           action='store_true')
-        
+
+        if TestProgram.pluginsLoaded:
+            # only needed because we call several times during tests
+            return False
+
         # we catch any optparse errors here as they will be
         # reraised on the second pass through
         try:
             options, _ = parser.parse_args(argv)
         except optparse.OptionError:
-            return False
+            pluginsDisabled = False
+            noUserConfig = False
+            configLocations = []
+        else:
+            pluginsDisabled = options.pluginsDisabled
+            noUserConfig = options.noUserConfig
+            configLocations = options.configLocations
 
-        if not TestProgram.pluginsLoaded:
-            # only needs to be conditional because we call several times during
-            # tests
-            loadPlugins(options.pluginsDisabled, options.noUserConfig, 
-                        options.configLocations)
-            TestProgram.pluginsLoaded = True
-        
-        return options.pluginsDisabled
+        loadPlugins(pluginsDisabled, noUserConfig, configLocations)
+        TestProgram.pluginsLoaded = True
+        return pluginsDisabled
+
 
     def _parseArgs(self, argv, forDiscovery):
         pluginsDisabled = self._getConfigOptions(argv)
@@ -296,11 +306,6 @@ class TestProgram(object):
                               help='Top level directory of project (defaults to start directory)')
 
         list_options = []
-        class _Closure(object):
-            def __init__(self, callback):
-                self.callback = callback
-            def __call__(self, *_):
-                self.callback()
 
         if not pluginsDisabled:
             extra_options = []
@@ -321,10 +326,7 @@ class TestProgram(object):
                     kwargs['dest'] = longopt
                     list_options.append((longopt, callback))
                 else:
-                    def enablePlugin(callback=callback):
-                        active_callbacks.append(callback)
-                    
-                    kwargs['callback'] = _Closure(callback)
+                    kwargs['callback'] = _Callback(callback)
                 option = optparse.make_option(*opts, **kwargs)
                 parser.add_option(option)
 
