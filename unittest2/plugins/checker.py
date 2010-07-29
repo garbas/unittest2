@@ -95,13 +95,17 @@ class Stdout(object):
         self.data.append('\n')
 
 def captured(func):
-    original = sys.stdout
+    original_stdout = sys.stdout
+    original_stderr = sys.stderr
+    
     sys.stdout = Stdout()
+    sys.stderr = Stdout()
     try:
         result = func()
     finally:
-        data = sys.stdout.data
-        sys.stdout = original
+        data = sys.stdout.data + sys.stderr.data
+        sys.stdout = original_stdout
+        sys.stderr = sys.stderr
     return ''.join(data), result
 
 
@@ -143,9 +147,11 @@ def check_file_pyflakes(path, test):
     def checkFile():
         handle = open(path)
         try:
-            return pyflakes_check(handle.read(), path)
+            # ensure file is newline terminated
+            data = handle.read() + '\n'
         finally:
             handle.close()
+        return pyflakes_check(data, path)
         
     output, result = captured(checkFile)
     if result:
