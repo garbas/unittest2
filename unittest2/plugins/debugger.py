@@ -1,4 +1,4 @@
-from unittest2.events import Plugin, addOption, getConfig
+from unittest2.events import Plugin
 
 import pdb
 import sys
