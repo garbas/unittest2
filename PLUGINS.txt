@@ -12,6 +12,7 @@ unit2 runs test discovery if invoked without any arguments.
 unit2 can execute tests in filenames as well as module names - so long as the
 module pointed to by the filename is importable from the current directory.
 
+FunctionTestCase.id() returns 'module.funcname' instead of just funcname.
 
 
 TODO:

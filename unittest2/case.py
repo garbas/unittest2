@@ -1105,7 +1105,8 @@ class FunctionTestCase(TestCase):
         self._testFunc()
 
     def id(self):
-        return self._testFunc.__name__
+        func = self._testFunc
+        return '%s.%s' % (func.__module__, func.__name__)
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
