@@ -383,10 +383,7 @@ def loadPlugins(pluginsDisabled, noUserConfig, configLocations):
 
 def loadPlugin(plugin):
     __import__(plugin)
-    mod = sys.modules[plugin]
-    initialise = getattr(mod, 'initialise', None)
-    if initialise is not None:
-        initialise()
+    sys.modules[plugin]
     loadedPlugins.append(plugin)
 
 
