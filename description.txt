@@ -346,11 +346,84 @@ This event can be handled. If it is handled then the handler should return a Tes
 If the event is not handled then each name will be resolved and tests loaded from it, which may mean calling ``loader.loadTestsFromModule`` or ``loader.loadTestsFromTestCase``.
 
 
-* ``loadTestsFromModule``
-* ``loadTestsFromTestCase``
-* ``getTestCaseNames``
-* ``runnerCreated``
-* ``startTestRun``
+
+loadTestsFromModule
+-------------------
+
+This event is fired when ``TestLoader.loadTestsFromModule`` is called. It can be used to customise the loading of tests from a module, for example loading tests from functions as well as from TestCase classes.
+
+Attributes on the ``LoadFromModuleEvent`` object are:
+
+* ``loader`` - the test loader
+* ``module`` - the module object tests 
+* ``extraTests`` - a suite of extra tests to be added to the suite loaded from the module
+
+This event can be handled. If it is handled then the handler should return a TestSuite or None. Returning None means no tests will be loaded from this module. If any plugin has created any ``extraTests`` then these will be used even if a handler handles the event and returns None.
+
+If the event is not handled then ``loader.loadTestsFromTestCase`` will be called for every TestCase in the module.
+
+Event if the event is handled, if the module defines a ``load_tests`` function then it *will* be called for the module. This removes the responsibility for implementing the ``load_tests`` protocol from plugin authors.
+
+
+loadTestsFromTestCase
+---------------------
+
+This event is fired when ``TestLoader.loadTestsFromTestCase`` is called. It could be used to customise the loading of tests from a TestCase, for example loading tests with an alternative prefix or created generative / parameterized tests.
+
+Attributes on the ``LoadFromTestCaseEvent`` object are:
+
+* ``loader`` - the test loader
+* ``testCase`` - the test case class being loaded
+* ``extraTests`` - a suite of extra tests to be added to the suite loaded from the TestCase
+
+This event can be handled. If it is handled then the handler should return a TestSuite or None. Returning None means no tests will be loaded from this module. If any plugin has created any ``extraTests`` then these will be used even if a handler handles the event and returns None
+
+If the event is not handled then ``loader.getTestCaseNames`` will be called to get method names from the test case and a suite will be created by instantiating the TestCase class with each name it returns.
+
+
+getTestCaseNames
+----------------
+
+This event is fired when ``TestLoader.getTestCaseNames`` is called. It could be used to customise the method names used to load tests from a TestCase, for example loading tests with an alternative prefix from the default or filtering for specific names.
+
+Attributes on the ``GetTestCaseNamesEvent`` object are:
+
+* ``loader`` - the test loader
+* ``testCase`` - the test case class that tests are being loaded from
+* ``testMethodPrefix`` - set to None, modify this attribute to *change* the prefix being used for this class
+* ``extraNames`` - a list of extra names to use for this test case as well as the default ones
+* ``excludedNames`` - a list of names to exclude from loading from this class
+
+This event can be handled. If it is handled it should return a list of strings. Note that if this event returns an empty list (or None which will be replaced with an empty list then ``loadTestsFromTestCase`` will still check to see if the TestCase has a ``runTest`` method.
+
+Even if the event is handled ``extraNames`` will still be added to the list, however *excludedNames`` won't be removed as they are filtered out by the default implementation which looks for all attributes that are methods (or callable) whose name begins with ``loader.testMethodPrefix`` (or ``event.testMethodPrefix`` if that is set) and aren't in the list of excluded names (converted to a set first for efficient lookup).
+
+The list of names will also be sorted using ``loader.sortTestMethodsUsing``.
+
+
+runnerCreated
+-------------
+
+This event is fired when the ``TextTestRunner`` is instantiated. It can be used to customize the test runner, for example replace the stream and result class, without needing to write a custom test harness. This should allow the default test runner script (``unit2`` or ``python -m untitest``) to be suitable for a greater range of projects. Projects that want to use custom test reporting should be able to do it through a plugin rather than having to rebuild the runner and result machinery, which also requires writing custom test collection too.
+
+The ``RunnerCreatedEvent`` object only has one attribute; ``runner`` which is the runner instance.
+
+
+startTestRun
+------------
+
+This event is fired when the test run is started. This is used, for example, by the growl notifier that displays a growl notification when a test run begins. It can also be used for filtering tests after they have all been loaded or for taking over the test run machinery altogether, for distributed testing for example.
+
+The ``StartTestRunEvent`` object has the following attributes:
+
+* ``test`` - the full suite of all tests to be run (may be modified in place)
+* ``result`` - the result object
+* ``startTime`` - the time the test run started
+
+Currently this event can be handled. This prevents the normal test run from executing, allowing an alternative implementation, but the return value is unused. Handling this event (as with handling any event) prevents other plugins from executing. This means that the it wouldn't be possible to safely combine a distributed test runner with a plugin that filters the suite. Fixing this issue is one of the open issues with the plugin system.
+
+
+
 * ``startTest``
 * ``onTestFail``
 * ``stopTest``

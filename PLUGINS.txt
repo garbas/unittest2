@@ -31,28 +31,41 @@ to be checked to see if they refer to filenames.
 TODO:
 
 Certain event attributes should be read only (like extraTests, extraNames etc)
-
-Plugin.register and Plugin.unregister aren't precisely complementary.
-
-Plugin.unregister will fail if any events have already been unhooked.
+because they should only be extended or modified in place instead of being
+replaced.
 
 Add an epilogue to the optparse help messages.
 
-The discovery command line interface has changed a lot and the tests need
-reviewing to ensure they still provide full coverage.
+A messaging API for plugins that respects verbosity.
 
-Messaging API that respects verbosity
+The ``startTestRun`` event needs an alternative way of replacing the default
+test run machinery without stopping other plugins from executing. It should
+only be possible for *one* plugin to use this.
 
-Allow options, like verbosity, to be specified in the config file (and then
-read by plugins)
+Should the ``onTestFailEvent`` be able to supress raised exceptions? It should 
+also be able to modify the traceback so that bare asserts could be used but
+still provide useful diagnostic information.
 
-TestFailEvent needed in setUpClass and setUpModule etc
+Command line options to unittest, like verbosity, should be put into the config
+data structure so that they are accessible to plugins.
+
+TestFailEvent needs to be fired on failures in setUpClass and setUpModule etc
+
+Plugin.register and Plugin.unregister aren't precisely complementary. This means
+that unregister can only be called once. This may not be an issue.
+
+Plugin.unregister will fail if any events have already been unhooked. This can
+easily be fixed.
 
 Should unittest2 have a different config file from unittest, so they can be
-configured side-by-side? (``unittest2.cfg`` perhaps)
+configured side-by-side? (``unittest2.cfg`` perhaps.) Alternatively the same
+config file could be used with a '[unittest2]' section instead of '[unittest]'.
 
 Should timeTaken (startTime / stopTime etc) include the time for setUp,
 tearDown and cleanUps? Should this information be available separately perhaps?
+
+The discovery command line interface has changed a lot and the tests need
+reviewing to ensure they still provide full coverage.
 
 Should there be an "excluded-plugins" section in the config files, so projects
 can prevent incompatible plugins from being loaded?
