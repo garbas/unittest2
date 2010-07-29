@@ -1059,6 +1059,12 @@ test case
 
         # This shouldn't blow up
         deepcopy(test)
+    
+    def testFunctionTestCaseId(self):
+        def foo():
+            pass
+        test = unittest2.FunctionTestCase(foo)
+        self.assertEqual(test.id(), '%s.foo' % (__name__,))
 
 
 if __name__ == "__main__":
