@@ -225,6 +225,8 @@ class TestProgram(object):
                             # better error message here perhaps?
                             raise e
                         tests.append(test)
+                else:
+                    tests.append(test)
                         
             self.test = self.testLoader.suiteClass(tests)
 
