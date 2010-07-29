@@ -197,10 +197,13 @@ class _EventHook(object):
     def __call__(self, event):
         if not _pluginsEnabled:
             return
-        for handler in self._handlers:
+        # list(...) needed because handlers can remove themselves inside this
+        # loop - mutating self._handlers
+        for handler in list(self._handlers):
             result = handler(event)
             if event.handled:
                 return result
+            continue
     
     def __iadd__(self, handler):
         self._handlers.insert(0, handler)
@@ -217,7 +220,7 @@ class hooks(object):
     # discovery only
     handleFile = _EventHook()
     matchPath = _EventHook()
-    
+
     loadTestsFromModule = _EventHook()
     loadTestsFromTestCase = _EventHook()
     loadTestsFromName = _EventHook()
@@ -226,7 +229,7 @@ class hooks(object):
     onTestFail = _EventHook()
     startTestRun = _EventHook()
     stopTestRun = _EventHook()
-    
+
     startTest = _EventHook()
     stopTest = _EventHook()
     runnerCreated = _EventHook()

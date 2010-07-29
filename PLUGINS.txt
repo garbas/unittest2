@@ -16,6 +16,10 @@ module pointed to by the filename is importable from the current directory.
 
 TODO:
 
+Certain event attributes should be read only (like extraTests, extraNames etc)
+
+Plugin.register and Plugin.unregister aren't precisely complementary.
+
 Add an epilogue to the optparse help messages.
 
 The discovery command line interface has changed a lot and the tests need
