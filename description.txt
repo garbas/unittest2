@@ -1,0 +1,239 @@
+
+This is a description, and request for feedback, of the unittest plugin system that I am currently prototyping in the plugins branch of unittest2_. My goal is to merge the plugin system back into unittest itself in Python 3.2.
+
+.. _unittest2: http://hg.python.org/unittest2
+
+As part of the prototype I have been implementing some example plugins (in unittest2/plugins/) so I can develop the mechanism to real rather than imagined use cases. Jason Pellerin, creator of nose, has been providing me with feedback and has been trying out by porting some of the nose plugins to unittest [#]_. He comments on the system "it looks very flexible and clean". ;-)
+
+Example plugins already available:
+
+    * a pep8 and pyflakes checker
+    * a debugger plugin that drops you into pdb on test fail / error
+    * a doctest loader (looks for doctests in all text files in the project)
+    * use a regex for matching files in test discovery instead of a glob
+    * growl notifications on test run start and stop
+    * filter individual *test methods* using a regex
+    * load test functions from modules as well as TestCases
+    * integration with the coverage module for coverage reporting
+
+In addition I intend to create a plugin that outputs junit compatible xml from a test run (for integration with tools like the hudson continuous integration server) and a test runner that runs tests in parallel using multiprocessing.
+
+I'd like feedback on the proposal, and hopefully approval to port it into unittest after discussion / amendment / completion. In particular I'd like feedback on the basic system, plus which events should be available and what information should be available in them. Note that the system is *not* complete in the prototype. Enough is implemented to get "the general idea" and to formalise the full system. It still needs extensive tests and the extra work in TestProgram makes it abundantly clear that refactoring there is well overdue...
+
+In the details below open questions and todos are notes. I *really* value feedback but will ignore bikeshedding. ;-)
+
+.. note::
+
+    Throughout this document I refer to the prototype implementation using names like ``unittest2.events.hooks``. Should this proposal be accepted then the names will live in the unittest package instead of unittest2.
+    
+    The core classes for the event system live in the current implementation in the ``unittest2.events`` namespace.
+
+
+Abstract
+========
+
+unittest lacks a standard way of extending it to provide commonly requested functionality, other than subclassing and overriding (and reimplementing) parts of its behaviour. This document describes a plugin system already partially prototyped in unittest2.
+
+Aspects of the plugin system include:
+
+* an events mechanism where handlers can be registered and called during a test run
+* a Plugin class built over the top of this for easy building of plugins
+* a configuration system for specify which plugins should be loaded and configuring individual plugins
+* command line integration
+* the specific set of events and the information / actions available to them
+
+As the plugin system essentially just adds event calls to key places it has few backwards compatibility issues. Unfortunately existing extensions that override the parts of unittest that call these events will not be compatible with plugins that use them.
+
+
+Rationale
+=========
+
+Why a plugin system for unittest?
+
+unittest is the standard library test framework for Python but in recent years has been eclipsed in functionality by frameworks like nose and py.test. Among the reasons for this is that these frameworks are easier to extend with plugin systems that unittest. unittest makes itself particularly difficult to extend by using subclassing as its basic extension mechanism. You subclass and override behaviour in its core classes like the loader, runner and result classes.
+
+This means that where you have more than one "extension" working in the same area it is very hard for them to work together. Whilst various extensions to unittest do exist (e.g. testtools, zope.testrunner etc) they don't tend to work well together. In contrast the plugin system makes creating extensions to unittest much simpler and less likely that extensions will clash with each other.
+
+nose itself exists as a large system built over the top of unittest. Extending unittest in this way was very painful for the creators of nose, and every release of Python breaks nose in some way due to changes in unittest. One of the goals of the extension mechanism is to allow nose2 to be a much thinner set of plugins over unittest(2) that is much simpler to maintain [#]_. The early indications are that the proposed system is a good fit for this goal.
+
+
+Low Level Mechanism
+====================
+
+The basic mechanism is having events fired at various points during a test run. Plugins can register event handler functions that will be called with an event object. Multiple functions may be registered to handle an event and event handlers can also be removed.
+
+Over the top of this is a ``Plugin`` class that simplifies building plugins on top of this mechanism. This is described in a separate section.
+
+The events live on the ``unittest2.events.hooks`` class. Handlers are added using ``+=`` and removed using ``-=``, a syntax borrowed from the .NET system.
+
+For example adding a handler for the ``startTestRun`` event::
+
+    from unittest2.events import hooks
+    
+    def startTestRun(event):
+        print 'test run started at %s' % event.startTime
+    
+    hooks.startTestRun += startTestRun
+
+Handlers are called with an Event object specific to the event. Each event provides different information on its event objects as attributes. For example the attributes available on ``StartTestRunEvent`` objects are:
+
+* ``suite`` - the test suite for the full test run
+* ``runner`` - the test runner
+* ``result`` - the test result
+* ``startTime``
+
+The name of events, whether any should be added or removed, and what information is available on the event objects are all valid topics for discussion. Specific events and the information available to them is covered in a section below.
+
+An example plugin using events directly is the ``doctestloader`` plugin.
+
+
+Why use event objects and not function parameters?
+--------------------------------------------------
+
+There are several reasons to use event objects instead of function parameters. The *disadvantage* of this is that the information available to an event is not obvious from the signature of a handler. There are several compelling advantages however:
+
+* the signature of all handler functions is identical and therefore easy to remember
+
+* backwards compatibility - new attributes can be added to event objects (and parameters deprecated) without breaking existing plugins. Changing the way a function is called (unless all handlers have a ``**kw`` signature) is much harder.
+
+* several of the events have a lot of information available. This would make the signature of handlers huge. With an event object handlers only need to be aware of attributes they are interested in and ignore information they aren't interested in ("only pay for what you eat").
+
+* some of the attributes are mutable - the event object is shared between all handlers, this would be less obvious if function parameters were used
+
+* calling multiple handlers and still returning a value (see the handled pattern below)
+
+
+The handled pattern
+--------------------
+
+Several events can be used to *override* the default behaviour. For example the 'matchregexp' plugin uses the ``matchPath`` event to replace the default way of matching files for loading as tests during test discovery. The handler signals that it is handling this event, and the default implementation should not be run, by setting ``event.handled = True``::
+
+    def matchRegexp(event):
+        pattern = event.pattern
+        name = event.name
+        event.handled = True
+        path = event.path
+        if matchFullPath:
+            return re.match(pattern, path)
+        return re.match(pattern, name)
+
+Where the default implementation returns a value, for example creating a test suite, or in the case of ``matchPath`` deciding if a path matches a file that should be loaded as a test, the handler can return a result.
+
+If an event sets handled on an event then no more handlers will be called for that event. Which events can be handled, and which not, is discussed in the events section.
+
+
+The Plugin Class
+================
+
+A sometimes-more-convenient way of creating plugins is to subclass the ``unittest2.events.Plugin`` class. By default subclassing ``Plugin`` will auto-instantiate the plugin and store the instance in a list of loaded plugins.
+
+Each plugin has a ``register()`` method that auto-hooks up all methods whose names correspond to events. Plugin classes may also provide ``configSection`` and ``commandLineSwitch`` class attributes which simplifies enabling the plugin through the command line and making available a section from the configuration file(s).
+
+A simple plugin using this is the 'debugger' plugin that starts ``pdb`` when the ``onTestFail`` event fires::
+
+    from unittest2.events import Plugin
+
+    import pdb
+    import sys
+
+    class Debugger(Plugin):
+
+        configSection = 'debugger'
+        commandLineSwitch = ('D', 'debugger', 'Enter pdb on test fail or error')
+    
+        def __init__(self):
+            self.errorsOnly = self.config.as_bool('errors-only', default=False)
+
+        def onTestFail(self, event):
+            value, tb = event.exc_info[1:]
+            test = event.test
+            if self.errorsOnly and isinstance(value, test.failureException):
+                return
+            original = sys.stdout
+            sys.stdout = sys.__stdout__
+            try:
+                pdb.post_mortem(tb)
+            finally:
+                sys.stdout = original
+
+A plugin that doesn't want to be auto-instantiated (for example a base class used for several plugins) can set ``autoCreate = False`` as a class attribute. (This attribute is only looked for on the class directly and so isn't inherited by sub-classes.)
+
+``configSection`` and ``commandLineSwitch`` are described in the `configuration system`_ and `command line integration`_ sections.
+
+Plugin instances also have an ``unregister`` method that unhooks all events. It doesn't exactly correspond to the ``register`` method (it undoes some of the work done when a plugin is instantiated) and so can only be called once.
+
+Plugins to be loaded are specified in configuration files. For frameworks not using the unittest test runner and configuration system APIs for loading plugins are available in the form of the ``loadPlugins`` function (which uses the configuration system to load plugins) and ``loadPlugin`` which loads an individual plugin by module name. Loading plugins just means importing the module containing the plugin.
+
+
+
+Configuration system
+====================
+
+By default the unittest2 test runner (triggered by the unit2 script or for unittest ``python -m unittest``) loads two configuration files to determine which plugins to load.
+
+A user configuration file, ~/unittest.cfg (alternative name and location would be possible), can specify plugins that will always be loaded. A per-project configuration file, unittest.cfg which should be located in the current directory when unit2 is launched, can specify plugins for individual projects.
+
+To support this system several command line options have been added to the test runner::
+
+  --config=CONFIGLOCATIONS
+                        Specify local config file location
+  --no-user-config      Don't use user config file
+  --no-plugins          Disable all plugins
+
+Several config files can be specified using ``--config``. If the user config is being loaded then it will be loaded first (if it exists), followed by the project config (if it exists) *or* any config files specified by ``--config``. ``--config`` can point to specific files, or to a directory containing a ``unittest.cfg``.
+
+Config files loaded later are merged into already loaded ones. Where a *key* is in both the later key overrides the earlier one. Where a section is in both but with different keys they are merged. Multiline keys are also merged.
+
+plugins to be loaded are specified in the ``plugins`` key of the ``unittest`` section::
+
+    [unittest]
+    plugins = 
+        unittest2.plugins.checker
+        unittest2.plugins.doctestloader
+        unittest2.plugins.matchregexp
+        unittest2.plugins.moduleloading
+        unittest2.plugins.debugger
+        unittest2.plugins.testcoverage
+        unittest2.plugins.growl
+        unittest2.plugins.filtertests
+
+The plugins are simply module names. They either hook themselves up manually on import or are created by virtue of subclassing ``Plugin``.
+
+
+Additional Changes
+===================
+
+Alongside and in support of the plugin system a few changes have been made to unittest(2). These either have no, or very minor, backwards compatibility issues.
+
+Changes so far are:
+
+TestLoader has a new attribute ``DEFAULT_PATTERN``. This is so that the
+regex matching plugin can change the default pattern used for test discovery
+when no pattern is explicitly provided.
+
+Command line parsing is all done by optparse, removing the use of getopt. This
+makes the help messages more consistent but makes the usage messages less
+useful in some situations. This can be fixed with the use of the optparse
+epilogue.
+
+unit2 (the default test runner) runs test discovery if invoked without any arguments.
+
+unit2 can execute tests in filenames as well as module names - so long as the
+module pointed to by the filename is importable from the current directory.
+
+FunctionTestCase.id() returns 'module.funcname' instead of just funcname.
+
+Added util.formatTraceback, the default way of formatting tracebacks. TestCase
+has a new formatTraceback method (delegating to util.formatTraceback). TestCase
+instances can implement formatTraceback to control how the traceback for errors
+and failures are represented. Useful for test items that don't represent Python
+tests, for example the pep8 / pyflakes checker and theoretical javascript
+test runners such as exist for py.test and nose.
+
+
+
+References
+==========
+
+.. [#] See http://bitbucket.org/jpellerin/unittest2/src/tip/unittest2/plugins/attrib.py and http://bitbucket.org/jpellerin/unittest2/src/tip/unittest2/plugins/errormaster.py
+.. [#] http://lists.idyll.org/pipermail/testing-in-python/2010-March/002799.html

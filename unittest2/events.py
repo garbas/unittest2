@@ -373,7 +373,8 @@ class Section(dict):
 
 
     
-def loadPlugins(pluginsDisabled, noUserConfig, configLocations):
+def loadPlugins(pluginsDisabled=False, noUserConfig=False, 
+                configLocations=None):
     allPlugins = loadConfig(noUserConfig, configLocations)
     
     if not pluginsDisabled:
@@ -387,7 +388,7 @@ def loadPlugin(plugin):
     loadedPlugins.append(plugin)
 
 
-def loadConfig(noUserConfig, configLocations):
+def loadConfig(noUserConfig=False, configLocations=None):
     global _config
     
     configs = []
@@ -415,8 +416,8 @@ def loadConfig(noUserConfig, configLocations):
             configs.append((plugins, parser))
                     
 
-    plugins = set(sum([plugins for plugins, parser in configs], []))
-    parsers = [parser for plugins, parser in configs]
+    plugins = set(sum([plugin for plugin, parser in configs], []))
+    parsers = [parser for plugin, parser in configs]
     _config = combineConfigs(parsers)
     return plugins
 
@@ -427,6 +428,7 @@ def combineConfigs(parsers):
         for section in parser.sections():
             items = dict(parser.items(section))
             options.setdefault(section, Section(section)).update(items)
+
     return options
 
 
