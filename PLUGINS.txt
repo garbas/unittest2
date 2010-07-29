@@ -2,6 +2,9 @@ This file tracks changes made in the plugins branch. It was started after the
 work was well under way, so the early changes aren't exhaustive.
 
 
+TestLoader has a new attribute ``DEFAULT_PATTERN``. This is so that the
+regex matching plugin can change the default pattern used for test discovery
+when no pattern is explicitly provided.
 
 Command line parsing is all done by optparse, removing the use of getopt. This
 makes the help messages more consistent but makes the usage messages less
@@ -37,4 +40,3 @@ allow options, like verbosity, to be specified in the config file
 
 TestFailEvent in setUpClass and setUpModule etc
 
-FunctionTestCase should have a unique id() - not just function name.
