@@ -29,14 +29,23 @@ Certain event attributes should be read only (like extraTests, extraNames etc)
 
 Plugin.register and Plugin.unregister aren't precisely complementary.
 
+Plugin.unregister will fail if any events have already been unhooked.
+
 Add an epilogue to the optparse help messages.
 
 The discovery command line interface has changed a lot and the tests need
 reviewing to ensure they still provide full coverage.
 
-messaging API that respects verbosity
+Messaging API that respects verbosity
 
-allow options, like verbosity, to be specified in the config file
+Allow options, like verbosity, to be specified in the config file (and then
+read by plugins)
 
-TestFailEvent in setUpClass and setUpModule etc
+TestFailEvent needed in setUpClass and setUpModule etc
+
+Should unittest2 have a different config file from unittest, so they can be
+configured side-by-side? (``unittest2.cfg`` perhaps)
+
+Should timeTaken (startTime / stopTime etc) include the time for setUp,
+tearDown and cleanUps? Should this information be available separately perhaps?
 
