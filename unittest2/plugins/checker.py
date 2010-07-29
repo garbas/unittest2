@@ -32,9 +32,13 @@ class Checker(Plugin):
     commandLineSwitch = (None, 'checker', help_text)
     
     def pluginsLoaded(self, event):
+        self.pep8 = pep8 and self.config.as_bool('pep8', default=False)
+        self.pyflakes = pyflakes_check and self.config.as_bool('pyflakes',
+                                                               default=False)
+                                                 
         if not pep8 and not pyflakes_check:
             raise AssertionError('checker plugin requires pep8 or pyflakes')
-        if pep8:
+        if self.pep8:
             pep8.process_options(['pep8',
                 PEP8_IGNORE_LIST,
                 '--show-source',
@@ -48,7 +52,7 @@ class Checker(Plugin):
         if not path.lower().endswith('.py'):
             return
         
-        suite = getSuite(path, loader)
+        suite = getSuite(path, loader, self.pep8, self.pyflakes)
         event.extraTests.append(suite)
 
 
@@ -160,12 +164,12 @@ def check_file_pyflakes(path, test):
         raise test.failureException(msg)
 
 
-def getSuite(path, loader):
+def getSuite(path, loader, usePep8, usePyflakes):
     tests = []
-    if pep8:
+    if usePep8:
         test = Pep8CheckerTestCase(path)
         tests.append(test)
-    if pyflakes_check:
+    if usePyflakes:
         test = PyFlakesCheckerTestCase(path)
         tests.append(test)
     
