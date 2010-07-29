@@ -31,7 +31,7 @@ class Checker(Plugin):
     configSection = 'checker'
     commandLineSwitch = (None, 'checker', help_text)
     
-    def initialise(self):
+    def pluginsLoaded(self, event):
         if not pep8 and not pyflakes_check:
             raise AssertionError('checker plugin requires pep8 or pyflakes')
 
@@ -46,9 +46,11 @@ class Checker(Plugin):
 
 
 class CheckerTestCase(FunctionTestCase):
+    traceback = None
+
     def __init__(self, path, func):
-        FunctionTestCase.__init__(self, func)
         self.path = path
+        FunctionTestCase.__init__(self, func)
 
     def __repr__(self):
         return "%s(%r)" % (self.__class__.__name__, self.path)
@@ -58,11 +60,23 @@ class CheckerTestCase(FunctionTestCase):
 
     __str__ = __repr__
 
+    def formatTraceback(self, err):
+        exctype, value, tb = err
+        if not exctype == self.failureException or self.traceback is None:
+            return CheckerTestCase.formatTraceback(self, err)
+        return self.traceback
+
+
 class Pep8CheckerTestCase(CheckerTestCase):
-    pass
+    def __init__(self, path):
+        func = lambda: check_file_pep8(path, self)
+        CheckerTestCase.__init__(self, path, func)
 
 class PyFlakesCheckerTestCase(CheckerTestCase):
-    pass
+    def __init__(self, path):
+        func = lambda: check_file_pep8(path, self)
+        CheckerTestCase.__init__(self, path, func)
+
 
 class Stdout(object):
     def __init__(self):
@@ -91,10 +105,7 @@ PEP8_IGNORE_LIST = (
 )
 
     
-def check_file_pep8(path):
-    if not pep8:
-        return
-    
+def check_file_pep8(path, test):
     class Pep8Checker(pep8.Checker):
         ignored_errors = 0
         def report_error(self, line_number, offset, text, check):
@@ -118,10 +129,11 @@ def check_file_pep8(path):
     
     output, result = captured(checkFile)
     if result:
-        msg = 'pyflakes reported %s errors.\n\n%s' % (result, output)
+        msg = 'pyflakes reported %s errors.\n' % (result,)
+        test.traceback = output
         raise AssertionError(msg)
 
-def check_file_pyflakes(path):
+def check_file_pyflakes(path, test):
     def checkFile():
         handle = open(path)
         try:
@@ -131,16 +143,19 @@ def check_file_pyflakes(path):
         
     output, result = captured(checkFile)
     if result:
-        msg = 'pep8 reported %s errors.\n\n%s' % (result, output)
+        msg = 'pep8 reported %s errors.' % (result,)
+        test.traceback = output
         raise AssertionError(msg)
 
 
 def getSuite(path, loader):
     tests = []
     if pep8:
-        tests.append(Pep8CheckerTestCase(path, lambda: check_file_pep8(path)))
+        test = Pep8CheckerTestCase(path)
+        tests.append(test)
     if pyflakes_check:
-        tests.append(PyFlakesCheckerTestCase(path, lambda: check_file_pyflakes(path)))
+        test = PyFlakesCheckerTestCase(path)
+        tests.append(test)
     
     return loader.suiteClass(tests)
 
