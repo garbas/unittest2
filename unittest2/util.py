@@ -4,6 +4,7 @@ __unittest = True
 
 import os
 import sys
+import traceback
 
 _MAX_LENGTH = 80
 def safe_repr(obj, short=False):
@@ -129,3 +130,29 @@ def getSource(path):
     if ext.lower() in ('.pyc', '.pyo', '.py'):
         return '.'.join((base, 'py'))
     return path
+
+
+def formatTraceback(test, err):
+    """Converts a sys.exc_info()-style tuple of values into a string."""
+    exctype, value, tb = err
+    # Skip test runner traceback levels
+    while tb and _is_relevant_tb_level(tb):
+        tb = tb.tb_next
+    if exctype is test.failureException:
+        # Skip assert*() traceback levels
+        length = _count_relevant_tb_levels(tb)
+        msgLines = traceback.format_exception(exctype, value, tb, length)
+    else:
+        msgLines = traceback.format_exception(exctype, value, tb)
+    
+    return ''.join(msgLines)
+
+def _is_relevant_tb_level(tb):
+    return '__unittest' in tb.tb_frame.f_globals
+
+def _count_relevant_tb_levels(tb):
+    length = 0
+    while tb and not _is_relevant_tb_level(tb):
+        length += 1
+        tb = tb.tb_next
+    return length

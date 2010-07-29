@@ -11,7 +11,7 @@ import warnings
 from unittest2 import result
 from unittest2.util import (
     safe_repr, safe_str, strclass,
-    unorderable_list_difference
+    unorderable_list_difference, formatTraceback
 )
 
 from unittest2.compatibility import wraps
@@ -279,6 +279,15 @@ class TestCase(unittest.TestCase):
         """
         doc = self._testMethodDoc
         return doc and doc.split("\n")[0].strip() or None
+    
+    def formatTraceback(self, err):
+        """Used to format the traceback on test fail or error.
+
+        ``err`` is the output of ``sys.exc_info()`` for the failure.
+        
+        ``formatTraceback`` returns a string.
+        """
+        return formatTraceback(self, err)
 
 
     def id(self):
