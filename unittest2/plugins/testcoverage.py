@@ -30,6 +30,7 @@ class CoveragePlugin(Plugin):
         self.excludeLines = self.config.as_list('exclude-lines', default=[])
         self.ignoreErrors = self.config.as_bool('ignore-errors', default=False)
         self.modules = self.config.as_list('modules', default=[])
+        self.annotate  = self.config.as_bool('annotate', default=False)
         
         addOption(self.modules, None, 'cover-module', help_text2)
     
@@ -84,7 +85,15 @@ class CoveragePlugin(Plugin):
         if self.reportHtml:
             self.cov.html_report(directory=self.htmlDirectory, **args)
         else:
-            self.cov.report(file=self.textFile, **args)
-
+            handle = None
+            if self.textFile:
+                handle = open(self.textFile, 'w')
+            self.cov.report(file=handle, **args)
+            
+            directory = None
+            if self.textFile is not None:
+                directory= os.path.dirname(self.textFile)
+            if self.annotate:
+                self.cov.annotate(morfs=allModules, directory=directory)
 
 
