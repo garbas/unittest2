@@ -180,17 +180,18 @@ class TestLoader(unittest.TestLoader):
         event = GetTestCaseNamesEvent(self, testCaseClass)
         result = hooks.getTestCaseNames(event)
         if event.handled:
-            return result or []
-        prefix = event.testMethodPrefix or self.testMethodPrefix 
-        excluded = set(event.excludedNames)
-        def isTestMethod(attrname, testCaseClass=testCaseClass,
-                             prefix=prefix, excluded=excluded):
-            return (
-                attrname.startswith(prefix) and 
-                hasattr(getattr(testCaseClass, attrname), '__call__') and
-                attrname not in excluded
-            )
-        testFnNames = filter(isTestMethod, dir(testCaseClass))
+            testFnNames = result or []
+        else:
+            prefix = event.testMethodPrefix or self.testMethodPrefix 
+            excluded = set(event.excludedNames)
+            def isTestMethod(attrname, testCaseClass=testCaseClass,
+                                 prefix=prefix, excluded=excluded):
+                return (
+                    attrname.startswith(prefix) and 
+                    hasattr(getattr(testCaseClass, attrname), '__call__') and
+                    attrname not in excluded
+                )
+            testFnNames = filter(isTestMethod, dir(testCaseClass))
         if event.extraNames:
             testFnNames.extend(event.extraNames)
         if self.sortTestMethodsUsing:
