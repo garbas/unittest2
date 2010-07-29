@@ -354,7 +354,7 @@ class TestProgram(object):
 
         hooks.pluginsLoaded(PluginsLoadedEvent())
         return options, args
-        
+
     def _do_discovery(self, options, args):
         if len(args) > 3:
             self.usageExit()
