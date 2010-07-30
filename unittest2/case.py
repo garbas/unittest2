@@ -341,11 +341,12 @@ class TestCase(unittest.TestCase):
             # Note: we don't call the startTestRun event here
 
         self._resultForDoCleanups = result
-        result.startTest(self)
-        
+
         self._startTime = startTime = time.time()
         event = StartTestEvent(self, result, startTime)
         hooks.startTest(event)
+
+        result.startTest(self)
         
         testMethod = getattr(self, self._testMethodName)
         
