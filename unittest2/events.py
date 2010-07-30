@@ -226,13 +226,14 @@ class hooks(object):
     loadTestsFromName = _EventHook()
     loadTestsFromNames = _EventHook()
     getTestCaseNames = _EventHook()
-    onTestFail = _EventHook()
-    startTestRun = _EventHook()
-    stopTestRun = _EventHook()
 
-    startTest = _EventHook()
-    stopTest = _EventHook()
     runnerCreated = _EventHook()
+
+    startTestRun = _EventHook()
+    startTest = _EventHook()
+    onTestFail = _EventHook()
+    stopTest = _EventHook()
+    stopTestRun = _EventHook()
 
 
 class Register(type):
