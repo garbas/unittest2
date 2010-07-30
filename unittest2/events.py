@@ -122,7 +122,6 @@ class TestFailEvent(_Event):
         
         # 'setUp', 'call', 'tearDown', 'cleanUp'
         self.when = when
-        
 
 class StartTestRunEvent(_Event):
     def __init__(self, runner, suite, result, startTime):
