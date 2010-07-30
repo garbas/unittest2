@@ -314,6 +314,8 @@ A ``MatchPathEvent`` has the following attributes:
 * ``name`` - filename only
 * ``pattern`` - pattern being used for discovery
 
+If a plugin changes ``event.name`` then the new name is what will be used to load the tests.
+
 This event *can* be handled. If it is handled then the handler should return True or False to indicate whether or not test loading should be attempted from this file. If this event is not handled then the pattern supplied to test discovery will be used as a glob pattern to match the filename.
 
 
@@ -331,7 +333,7 @@ Attributes on the ``LoadFromNamesEvent`` object are:
 
 This event can be handled. If it is handled then the handler should return a list of suites or None. Returning None means no tests will be loaded from these names. If any plugin has created any ``extraTests`` then these will be used even if a handler handles the event and returns None.
 
-If this event is not handled then ``loader.loadTestFromName`` will be called for each name to build up the list of suites.
+If this event is not handled then ``loader.loadTestFromName`` will be called for each name to build up the list of suites. ``event.names`` will be used to load the tests, so this event may modify the names list in place.
 
 
 loadTestsFromName
