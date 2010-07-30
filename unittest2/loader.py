@@ -130,7 +130,7 @@ class TestLoader(unittest.TestLoader):
         if event.handled:
             suite =  result or self.suiteClass()
         else:
-            suite = self._loadTestsFromName(name, module)
+            suite = self._loadTestsFromName(event.name, module)
         if event.extraTests:
             suite.addTests(event.extraTests)
         return suite
@@ -169,7 +169,7 @@ class TestLoader(unittest.TestLoader):
         if event.handled:
             suites =  result or []
         else:
-            suites = [self.loadTestsFromName(name, module) for name in names]
+            suites = [self.loadTestsFromName(name, module) for name in event.names]
         if event.extraTests:
             suites.extend(event.extraTests)
         return self.suiteClass(suites)
