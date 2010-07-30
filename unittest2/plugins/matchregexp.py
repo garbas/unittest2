@@ -5,13 +5,10 @@ import re
 
 
 def matchRegexp(event):
-    pattern = event.pattern
-    name = event.name
     event.handled = True
-    path = event.path
     if matchFullPath:
-        return re.match(pattern, path)
-    return re.match(pattern, name)
+        return re.match(event.pattern, event.path)
+    return re.match(event.pattern, event.name)
 
 
 def enable():
