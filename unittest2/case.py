@@ -16,8 +16,8 @@ from unittest2.util import (
 
 from unittest2.compatibility import wraps
 from unittest2.events import (
-    hooks, TestFailEvent, StartTestEvent,
-    StopTestEvent, AfterSetUpEvent
+    hooks, TestFailEvent, StartTestEvent, StopTestEvent,
+    AfterSetUpEvent, BeforeTearDownEvent
 )
 
 __unittest = True
@@ -378,12 +378,21 @@ class TestCase(unittest.TestCase):
                 self.withTestFailEvent(self.setUp, result, 'setUp')
             except SkipTest, e:
                 self._addSkip(result, str(e))
-                doStop('skipped', sys.exc_info(), 'setUp')
+                exc_info = sys.exc_info()
+                event = AfterSetUpEvent(self, result, exc_info)
+                hooks.afterSetUp(event)
+                doStop('skipped', exc_info, 'setUp')
             except Exception:
                 exc_info = sys.exc_info()
+                event = AfterSetUpEvent(self, result, exc_info)
+                hooks.afterSetUp(event)
                 doStop('error', exc_info, 'setUp')
                 result.addError(self, exc_info)
             else:
+                exc_info = sys.exc_info()
+                event = AfterSetUpEvent(self, result, exc_info)
+                hooks.afterSetUp(event)
+    
                 try:
                     self.withTestFailEvent(testMethod, result, 'call')
                 except self.failureException:
@@ -419,6 +428,9 @@ class TestCase(unittest.TestCase):
                     result.addError(self, exc_info)
                 else:
                     success = True
+
+                event = BeforeTearDownEvent(self, result, success)
+                hooks.beforeTearDown(event)
 
                 try:
                     self.withTestFailEvent(self.tearDown, result, 'tearDown')
