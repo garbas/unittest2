@@ -42,6 +42,7 @@ CFG_NAME = 'unittest.cfg'
 pluginInstances = set()
 
 DEFAULT = object()
+RETURN_DEFAULT = object()
 TRUE = set(('1', 'true', 'on', 'yes'))
 FALSE = set(('0', 'false', 'off', 'no', ''))
 
@@ -345,26 +346,6 @@ class Plugin(object):
             cls.instance = None
 
 
-def with_default(allowEmpty=False):
-    def decorator(func):
-        @wraps(func)
-        def inner(self, item, default=DEFAULT):
-            self.item = item
-            try:
-                value = self[item].strip()
-            except KeyError:
-                if default is not DEFAULT:
-                    return default
-                raise
-            if not allowEmpty and not value:
-                if default is not DEFAULT:
-                    return default
-                raise ValueError(item)
-            return func(self, value)
-        return inner
-    return decorator
-
-
 class Section(dict):
     def __new__(cls, name, items=()):
         return dict.__new__(cls, items)
@@ -375,38 +356,63 @@ class Section(dict):
     def __repr__(self):
         return 'Section(%r, %r)' % (self.name, self.items())
 
-    @with_default(allowEmpty=True)
-    def as_bool(self, value):
-        return self._as_bool(value)
+    def _get_value(self, item, default, allowEmpty):
+        try:
+            value = self[item].strip()
+        except KeyError:
+            if default is not DEFAULT:
+                return RETURN_DEFAULT
+            raise
+        if not allowEmpty and not value:
+            if default is not DEFAULT:
+                return RETURN_DEFAULT
+            raise ValueError(item)
+        return value
+        
+    def as_bool(self, item, default=DEFAULT):
+        value = self._get_value(item, default, True)
+        if value is RETURN_DEFAULT:
+            return default
+        return self._as_bool(value, item)
 
-    @with_default(allowEmpty=True)
-    def as_tri(self, value):
+    def as_tri(self, item, default=DEFAULT):
+        value = self._get_value(item, default, True)
+        if value is RETURN_DEFAULT:
+            return default
         if not value:
             return None
-        return self._as_bool(value)
+        return self._as_bool(value, item)
 
-    def _as_bool(self, value):
+    def _as_bool(self, value, item):
         if value.lower() in TRUE:
             return True
         if value.lower() in FALSE:
             return False
         raise ConfigParserError('Config file value %s : %s : %s not recognised'
-                                ' as a boolean' % (self.name, self.item, value))
+                                ' as a boolean' % (self.name, item, value))
 
-    @with_default(allowEmpty=False)
-    def as_int(self, value):
+    def as_int(self, item, default=DEFAULT):
+        value = self._get_value(item, default, False)
+        if value is RETURN_DEFAULT:
+            return default
         return int(value)
 
-    @with_default(allowEmpty=False)
-    def as_float(self, value):
+    def as_float(self, item, default=DEFAULT):
+        value = self._get_value(item, default, False)
+        if value is DEFAULT:
+            return default
         return float(value)
 
-    @with_default(allowEmpty=True)
-    def as_str(self, value):
+    def as_str(self, item, default=DEFAULT):
+        value = self._get_value(item, default, True)
+        if value is DEFAULT:
+            return default
         return value
 
-    @with_default(allowEmpty=True)
-    def as_list(self, value):
+    def as_list(self, item, default=DEFAULT):
+        value = self._get_value(item, default, True)
+        if value is DEFAULT:
+            return default
         return [line.strip() for line in value.splitlines()
                  if line.strip() and not line.strip().startswith('#')]
 
