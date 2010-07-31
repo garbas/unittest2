@@ -273,6 +273,8 @@ Events in rough order are:
 * ``stopTest``
 * ``stopTestRun``
 
+Event objects all have a `message` method for writing to the default output stream whilst honouring the verbosity of the test runner. See `New messaging API that honours verbosity`_.
+
 
 pluginsLoaded
 -------------
@@ -506,16 +508,22 @@ The ``StopTestRunEvent`` event objects have the following attributes:
 New messaging API that honours verbosity
 ========================================
 
-There is a new messaging API for 
+There is a new messaging API for writing messages to the 'output stream' whilst honouring the verbosity the runner was started with.
 
-If you are using the default runner (the unit2 script or a ``TextTestRunner``) then you only need to care about the message function. Instead of writing to the output stream directly you can just call::
+The easiest way of using this API is through the `message` method on event objects. This has the signature::
+
+    event.message(msg, verbosity=(1, 2))
+
+The second argument is the verbosity, which can either be a single value or a tuple of values. The message is only written to the stream if the verbosity (or one of the verbosities) *matches* the verbosity the runner was created with. `message` uses the 'default runner'. If a runner hasn't been created then the messages are queued until one is created. When a ``TextTestRunner`` is instantiated it is set as the default runner and all queued messages are output.
+
+The default verbosity is (1, 2). If this function is called without an explicit verbosity it will be output for verbosities of both 1 and 2.
+
+If you are using the default runner (the unit2 script or a ``TextTestRunner``) then this functionality is also available from a ``message`` function::
 
     from unittest2 import message
     
     message('short message', 0)
     message('longer one', (1, 2))
-
-The second argument is the verbosity, which can either be a single value or a tuple of values. The message is only written to the stream if the verbosity (or one of the verbosities) *matches* the verbosity the runner was created with. `message` uses the 'default runner'. If a runner hasn't been created then the messages are queued until one is created. When a ``TextTestRunner`` is instantiated it is set as the default runner and all queued messages are output.
 
 This is supported under the hood by a new ``message(msg, verbosity)`` method on the ``TextTestRunner`` and a ``setRunner`` function for setting the default runner to be used by the messaging API.
 
@@ -586,7 +594,7 @@ Additional Changes
 
 Alongside, and in support of, the plugin system a few changes have been made to unittest2. These either have no, or very minor, backwards compatibility issues. Changes so far are:
 
-TextTestRunner has a new method ``message(message, verbosity)``. The message is output to the runner stream if the verbosity *matches* the verbosity of the runner. In addition unittest2 has two new functions exported, both from the `unittest2.runner` module: ``message`` and ``setRunner``.
+TextTestRunner has a new method ``message(message, verbosity=(1, 2))``. The message is output to the runner stream if the verbosity *matches* the verbosity of the runner. In addition unittest2 has two new functions exported, both from the `unittest2.runner` module: ``message`` and ``setRunner``. `event.message` delegates to the `message` function.
 
 TestLoader has a new attribute ``DEFAULT_PATTERN``. This is so that the
 regex matching plugin can change the default pattern used for test discovery
