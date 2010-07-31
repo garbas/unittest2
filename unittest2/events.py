@@ -322,7 +322,11 @@ class Plugin(object):
     def unregister(self):
         self._registered = False
         cls = self.__class__
-        pluginInstances.remove(self)
+        try:
+            pluginInstances.remove(self)
+        except KeyError:
+            pass
+
         hook_points = set(dir(hooks))
         for entry in dir(self):
             if entry.startswith('_'):
