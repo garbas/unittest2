@@ -29,7 +29,8 @@ SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 __all__ = ['TestResult', 'TestCase', 'TestSuite',
            'TextTestRunner', 'TestLoader', 'FunctionTestCase', 'main',
            'defaultTestLoader', 'SkipTest', 'skip', 'skipIf', 'skipUnless',
-           'expectedFailure', 'TextTestResult', '__version__', 'collector']
+           'expectedFailure', 'TextTestResult', '__version__', 'collector',
+           'setRunner', 'message']
 
 __version__ = '0.6.0 alpha (plugins branch)'
 
@@ -51,7 +52,7 @@ from unittest2.loader import (
 from unittest2.main import TestProgram, main_
 main = TestProgram
 
-from unittest2.runner import TextTestRunner, TextTestResult
+from unittest2.runner import TextTestRunner, TextTestResult, setRunner, message
 
 try:
     from unittest2.signals import (
