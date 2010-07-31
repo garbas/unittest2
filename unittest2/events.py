@@ -161,7 +161,7 @@ class AfterSetUpEvent(_Event):
         self.time = time
 
 class BeforeTearDownEvent(_Event):
-    def __init__(self, test, result, success):
+    def __init__(self, test, result, success, time):
         _Event.__init__(self)
         self.test = test
         self.result = result
