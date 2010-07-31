@@ -269,6 +269,7 @@ Events in rough order are:
 * ``runnerCreated``
 * ``startTestRun``
 * ``startTest``
+* ``afterSetUp``
 * ``onTestFail``
 * ``stopTest``
 * ``stopTestRun``

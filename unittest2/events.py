@@ -119,11 +119,12 @@ class RunnerCreatedEvent(_Event):
         self.runner = runner
 
 class TestFailEvent(_Event):
-    def __init__(self, test, result, exc_info, when):
+    def __init__(self, test, result, exc_info, when, internal):
         _Event.__init__(self)
         self.test = test
         self.result = result
         self.exc_info = exc_info
+        self.internal = internal
         
         # 'setUp', 'call', 'tearDown', 'cleanUp'
         self.when = when
@@ -150,6 +151,13 @@ class StartTestEvent(_Event):
         self.test = test
         self.result = result
         self.startTime = startTime
+
+class AfterSetUpEvent(_Event):
+    def __init__(self, test, result, exc_info):
+        _Event.__init__(self)
+        self.test = test
+        self.result = result
+        self.exc_info = exc_info
 
 class StopTestEvent(_Event):
     def __init__(self, test, result, stopTime, timeTaken, 
@@ -235,6 +243,7 @@ class hooks(object):
 
     startTestRun = _EventHook()
     startTest = _EventHook()
+    afterSetUp = _EventHook()
     onTestFail = _EventHook()
     stopTest = _EventHook()
     stopTestRun = _EventHook()

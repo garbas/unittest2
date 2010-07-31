@@ -14,6 +14,10 @@ class Debugger(Plugin):
         
 
     def onTestFail(self, event):
+        if event.internal:
+            # skipped tests, unexpected successes, expected failures
+            return
+        
         value, tb = event.exc_info[1:]
         test = event.test
         if self.errorsOnly and isinstance(value, test.failureException):
