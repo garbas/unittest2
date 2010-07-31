@@ -386,10 +386,9 @@ class Section(dict):
         return self._as_bool(value)
 
     def _as_bool(self, value):
-        value = value.lower()
-        if value in TRUE:
+        if value.lower() in TRUE:
             return True
-        if value in FALSE:
+        if value.lower() in FALSE:
             return False
         raise ConfigParserError('Config file value %s : %s : %s not recognised'
                                 ' as a boolean' % (self.name, self.item, value))
@@ -401,18 +400,17 @@ class Section(dict):
     @with_default(allowEmpty=False)
     def as_float(self, value):
         return float(value)
-    
+
     @with_default(allowEmpty=True)
     def as_str(self, value):
         return value
-    
+
     @with_default(allowEmpty=True)
     def as_list(self, value):
         return [line.strip() for line in value.splitlines()
                  if line.strip() and not line.strip().startswith('#')]
 
 
-    
 def loadPlugins(pluginsDisabled=False, noUserConfig=False, 
                 configLocations=None):
     allPlugins = loadConfig(noUserConfig, configLocations)
