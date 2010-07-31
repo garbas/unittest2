@@ -168,7 +168,7 @@ A plugin that doesn't want to be auto-instantiated (for example a base class use
 
 ``configSection`` and ``commandLineSwitch`` are described in the `configuration system`_ and `command line integration`_ sections.
 
-Plugin instances also have an ``unregister`` method that unhooks all events. It doesn't exactly correspond to the ``register`` method (it undoes some of the work done when a plugin is instantiated) and so can only be called once.
+Plugin instances also have an ``unregister`` method that unhooks all the events that were hooked up by ``register``.
 
 Plugins to be loaded are specified in configuration files. For frameworks not using the unittest test runner and configuration system APIs for loading plugins are available in the form of the ``loadPlugins`` function (which uses the configuration system to load plugins) and ``loadPlugin`` which loads an individual plugin by module name. Loading plugins just means importing the module containing the plugin.
 
@@ -582,12 +582,6 @@ data structure so that they are accessible to plugins.
 
 TestFailEvent needs to be fired on failures in setUpClass and setUpModule etc
 
-Plugin.register and Plugin.unregister aren't precisely complementary. This means
-that unregister can only be called once. This may not be an issue.
-
-Plugin.unregister will fail if any events have already been unhooked. This can
-easily be fixed.
-
 If the merge to unittest in Python 3.2 happens we need to decide which of the
 example plugins will be included in unittest. (They will probably all remain
 in unittest2.)
@@ -600,8 +594,9 @@ configured side-by-side? (``unittest2.cfg`` perhaps.) Alternatively the same
 config file could be used with a '[unittest2]' section instead of '[unittest]'.
 
 Should ``StopTestEvent.timeTaken`` (plus startTime / stopTime etc) include the
-time for setUp, tearDown and cleanUps? Should this information be available
-separately perhaps? (afterSetUp and beforeTearDown could have these times)
+time for setUp, tearDown and cleanUps? (afterSetUp and beforeTearDown have the
+times the setUp completes and the time the test completes - should these times
+also be in StopTest?)
 
 StopTest can be called several times if there are several failures during a
 single test (e.g. in the test *and* the tearDown and cleanUp functions).
