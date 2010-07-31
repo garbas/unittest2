@@ -270,6 +270,7 @@ Events in rough order are:
 * ``startTestRun``
 * ``startTest``
 * ``afterSetUp``
+* ``beforeTearDown``
 * ``onTestFail``
 * ``stopTest``
 * ``stopTestRun``
@@ -447,10 +448,24 @@ The ``StartTestEvent`` object has the following attributes:
 This event cannot be handled.
 
 
+afterSetUp
+----------
+
+This event is fired after a *test* setUp runs. (Not class or module level setups.)
+
+
+
+
+beforeTearDown
+-------------- 
+
+
+
+
 onTestFail
 ----------
 
-This event is fired when a test setUp, a test, a tearDown or a cleanUp fails or errors. It is currently used by the debugger plugin. It is *not* currently called for 'internal' unittest exceptions like ``SkipTest`` or expected failures and unexpected successes.
+This event is fired when a test setUp, a test, a tearDown or a cleanUp fails or errors. It is currently used by the debugger plugin. It *is* currently called for 'internal' unittest exceptions like ``SkipTest`` or expected failures and unexpected successes, so if your plugin doesn't want to handle these it should check the ``internal`` attribute on the event.
 
 Attributes on the ``TestFailEvent`` are:
 
@@ -458,8 +473,9 @@ Attributes on the ``TestFailEvent`` are:
 * ``result`` - the result
 * ``exc_info`` - the result of ``sys.exc_info()`` after the error / fail
 * ``when`` - one of 'setUp', 'call', 'tearDown', or 'cleanUp'
+* ``internal`` - True if the exception is one internal to unittest, like skipped tests, unexpected successes or expected failures
 
-This event cannot be handled. Should this event be able to suppress raised exceptions? It should also be able to modify the traceback so that bare asserts could be used but still provide useful diagnostic information. Should this event be fired for test skips?
+This event cannot be handled. If this event sets ``exc_info`` to None then the exception is suppressed and the test becomes a pass. After this event is completed ``event.exc_info`` is reraised - so the event can *modify* the exception by modifying ``exc_info``.
 
 
 stopTest
@@ -544,11 +560,6 @@ The ``startTestRun`` event needs an alternative way of replacing the default
 test run machinery without stopping other plugins from executing. It should
 only be possible for *one* plugin to use this.
 
-Should the ``onTestFailEvent`` be able to supress raised exceptions? It should 
-also be able to modify the traceback so that bare asserts could be used but
-still provide useful diagnostic information. Should this event be fired for
-test skips?
-
 Command line options to unittest, like verbosity, should be put into the config
 data structure so that they are accessible to plugins.
 
@@ -588,6 +599,9 @@ Should ``handleFile`` be fired when a test name is specified at the command
 line? (This would be 'tricky' as ``handleFile`` will have to be called for the
 containing module and then the correct name pulled out of the module.)
 
+A plugin that adds a "user plugin directory" and automatically activates
+(imports) all plugins located there. New plugins can be added just by dropping
+them in the directory (zero config).
 
 
 Additional Changes

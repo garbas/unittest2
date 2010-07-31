@@ -159,6 +159,13 @@ class AfterSetUpEvent(_Event):
         self.result = result
         self.exc_info = exc_info
 
+class BeforeTearDownEvent(_Event):
+    def __init__(self, test, result, success):
+        _Event.__init__(self)
+        self.test = test
+        self.result = result
+        self.success = success
+
 class StopTestEvent(_Event):
     def __init__(self, test, result, stopTime, timeTaken, 
                     outcome, exc_info=None, stage=None):
@@ -245,6 +252,7 @@ class hooks(object):
     startTest = _EventHook()
     afterSetUp = _EventHook()
     onTestFail = _EventHook()
+    beforeTearDown = _EventHook()
     stopTest = _EventHook()
     stopTestRun = _EventHook()
 
