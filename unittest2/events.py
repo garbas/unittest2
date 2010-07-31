@@ -1,8 +1,11 @@
 import os
 import sys
 
+from unittest2.compatibility import wraps
+
 from ConfigParser import SafeConfigParser
 from ConfigParser import Error as ConfigParserError
+
 
 __all__ = (
     # events
@@ -342,6 +345,26 @@ class Plugin(object):
             cls.instance = None
 
 
+def with_default(allowEmpty=False):
+    def decorator(func):
+        @wraps(func)
+        def inner(self, item, default=DEFAULT):
+            self.item = item
+            try:
+                value = self[item].strip()
+            except KeyError:
+                if default is not DEFAULT:
+                    return default
+                raise
+            if not allowEmpty and not value:
+                if default is not DEFAULT:
+                    return default
+                raise ValueError(item)
+            return func(self, value)
+        return inner
+    return decorator
+
+
 class Section(dict):
     def __new__(cls, name, items=()):
         return dict.__new__(cls, items)
@@ -349,56 +372,43 @@ class Section(dict):
     def __init__(self, name, items=()):
         self.name = name
 
-    def as_bool(self, item, default=DEFAULT):
-        try:
-            value = self[item].lower().strip()
-        except KeyError:
-            if default is not DEFAULT:
-                return default
-            raise
+    def __repr__(self):
+        return 'Section(%r, %r)' % (self.name, self.items())
+
+    @with_default(allowEmpty=True)
+    def as_bool(self, value):
+        return self._as_bool(value)
+
+    @with_default(allowEmpty=True)
+    def as_tri(self, value):
+        if not value:
+            return None
+        return self._as_bool(value)
+
+    def _as_bool(self, value):
+        value = value.lower()
         if value in TRUE:
             return True
         if value in FALSE:
             return False
-        raise ConfigParserError('Config file value %s:%s:%s not recognised'
-                                 ' as a boolean' % (self.name, item, value))
+        raise ConfigParserError('Config file value %s : %s : %s not recognised'
+                                ' as a boolean' % (self.name, self.item, value))
 
-    def __repr__(self):
-        return 'Section(%r, %r)' % (self.name, self.items())
+    @with_default(allowEmpty=False)
+    def as_int(self, value):
+        return int(value)
+
+    @with_default(allowEmpty=False)
+    def as_float(self, value):
+        return float(value)
     
-    def as_int(self, item, default=DEFAULT):
-        try:
-            return int(self[item].strip())
-        except KeyError:
-            if default is not DEFAULT:
-                return default
-            raise
+    @with_default(allowEmpty=True)
+    def as_str(self, value):
+        return value
     
-    def as_str(self, item, default=DEFAULT):
-        try:
-            # to strip or not to strip here?
-            return self[item]
-        except KeyError:
-            if default is not DEFAULT:
-                return default
-            raise
-    
-    def as_float(self, item, default=DEFAULT):
-        try:
-            return float(self[item].strip())
-        except KeyError:
-            if default is not DEFAULT:
-                return default
-            raise
-    
-    def as_list(self, item, default=DEFAULT):
-        try:
-            entry = self[item]
-        except KeyError:
-            if default is not DEFAULT:
-                return default
-            raise
-        return [line.strip() for line in entry.splitlines()
+    @with_default(allowEmpty=True)
+    def as_list(self, value):
+        return [line.strip() for line in value.splitlines()
                  if line.strip() and not line.strip().startswith('#')]
 
 
