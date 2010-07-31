@@ -153,11 +153,12 @@ class StartTestEvent(_Event):
         self.startTime = startTime
 
 class AfterSetUpEvent(_Event):
-    def __init__(self, test, result, exc_info):
+    def __init__(self, test, result, exc_info, time):
         _Event.__init__(self)
         self.test = test
         self.result = result
         self.exc_info = exc_info
+        self.time = time
 
 class BeforeTearDownEvent(_Event):
     def __init__(self, test, result, success):
@@ -165,6 +166,7 @@ class BeforeTearDownEvent(_Event):
         self.test = test
         self.result = result
         self.success = success
+        self.time = time
 
 class StopTestEvent(_Event):
     def __init__(self, test, result, stopTime, timeTaken, 
@@ -279,6 +281,7 @@ class Plugin(object):
     commandLineSwitch = None
     instance = None
     _registered = False
+    autoCreate = False
 
     def __new__(cls, *args, **kw):
         instance = object.__new__(cls)
@@ -326,12 +329,13 @@ class Plugin(object):
                 continue
             if entry in hook_points:
                 point = getattr(hooks, entry)
-                point -= getattr(self, entry)
+                try:
+                    point -= getattr(self, entry)
+                except ValueError:
+                    # event has already been unhooked
+                    pass
         if cls.instance is self:
             cls.instance = None
-    
-    instance = None
-    autoCreate = False
 
 
 class Section(dict):

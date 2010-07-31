@@ -374,24 +374,25 @@ class TestCase(unittest.TestCase):
             return
         try:
             success = False
+
+            def fireAfterSetUp():
+                exc_info = sys.exc_info()
+                event = AfterSetUpEvent(self, result, exc_info, time.time())
+                hooks.afterSetUp(event)
+                return exc_info
+
             try:
                 self.withTestFailEvent(self.setUp, result, 'setUp')
             except SkipTest, e:
                 self._addSkip(result, str(e))
-                exc_info = sys.exc_info()
-                event = AfterSetUpEvent(self, result, exc_info)
-                hooks.afterSetUp(event)
+                exc_info = fireAfterSetUp()
                 doStop('skipped', exc_info, 'setUp')
             except Exception:
-                exc_info = sys.exc_info()
-                event = AfterSetUpEvent(self, result, exc_info)
-                hooks.afterSetUp(event)
+                exc_info = fireAfterSetUp()
                 doStop('error', exc_info, 'setUp')
                 result.addError(self, exc_info)
             else:
-                exc_info = sys.exc_info()
-                event = AfterSetUpEvent(self, result, exc_info)
-                hooks.afterSetUp(event)
+                fireAfterSetUp()
     
                 try:
                     self.withTestFailEvent(testMethod, result, 'call')
@@ -429,7 +430,7 @@ class TestCase(unittest.TestCase):
                 else:
                     success = True
 
-                event = BeforeTearDownEvent(self, result, success)
+                event = BeforeTearDownEvent(self, result, success, time.time())
                 hooks.beforeTearDown(event)
 
                 try:
