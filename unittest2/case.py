@@ -17,7 +17,7 @@ from unittest2.util import (
 from unittest2.compatibility import wraps
 from unittest2.events import (
     hooks, TestFailEvent, StartTestEvent,
-    StopTestEvent
+    StopTestEvent, AfterSetUpEvent
 )
 
 __unittest = True
@@ -325,11 +325,14 @@ class TestCase(unittest.TestCase):
         try:
             func()
         except Exception, e:
-            if not isinstance(e, (SkipTest, _ExpectedFailure, _UnexpectedSuccess)):
-                info = sys.exc_info()
-                event = TestFailEvent(self, result, info, 'call')
-                hooks.onTestFail(event)
-            raise
+            info = sys.exc_info()
+            internal = isinstance(e, (SkipTest, _ExpectedFailure, _UnexpectedSuccess))
+            event = TestFailEvent(self, result, info, when, internal)
+            hooks.onTestFail(event)
+            info = event.exc_info
+            if info is None:
+                return
+            raise info[0], info[1], info[2]
 
     def run(self, result=None):
         orig_result = result
