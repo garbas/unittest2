@@ -18,6 +18,59 @@ except ImportError:
     
 __unittest = True
 
+_messages = []
+_runner = None
+def setRunner(runner):
+    """
+    Set the default TestRunner used by the `message` function. Set the runner
+    to None to queue messages or to allow the default TestRunner to be freed.
+
+    If there are any messages queued then they will be output on the runner by
+    calling its `message` method.
+
+    If the default runner is None instantiating a `TextTestRunner` will set the
+    default runner.
+    """
+    global _runner
+    _runner = runner
+
+    if runner is None:
+        return
+    
+    for message, verbosity in _messages:
+        runner.message(message, verbosity)
+
+def message(message, verbosity):
+    """
+    Output a `message` to the stream set on the default TestRunner. 
+
+    `verbosity` should be 0, 1 or 2. The `message` will only be output if it
+    *matches* the verbosity set on the runner. If you wish the message to be
+    output for several verbosity settings you may pass in a tuple of
+    verbosities.
+
+    For example this call outputs the message for verbosities of 1 *and* 2::
+
+        message('Important message', (1, 2))
+
+    `message` will be output verbatim; newlines are not added.
+
+    If no runner has been created, the messages are queued until one is created
+    or set with `setRunner`.
+    """
+    try:
+        iter(verbosity)
+    except TypeError:
+        pass
+    else:
+        for verb in verbosity:
+            message(message, verb)
+        return
+    if _runner is None:
+        _messages.append((message, verbosity))
+    else:
+        _runner.message(message, verbosity)
+
 
 class _WritelnDecorator(object):
     """Used to decorate file-like objects with a handy 'writeln' method"""
@@ -152,6 +205,27 @@ class TextTestRunner(unittest.TextTestRunner):
         event = RunnerCreatedEvent(self)
         hooks.runnerCreated(event)
         
+        if _runner is None:
+            setRunner(self)
+
+    def message(self, message, verbosity):
+        """
+        Output a `message` to the stream if the `verbosity` *matches* the
+        verbosity of the runner.
+        
+        `verbosity` can be a single value or a tuple of values. If `verbosity`
+        is a tuple of values then the message will be written to the stream
+        if any of the values match the runner verbosity.
+        """
+        try:
+            iter(verbosity)
+        except TypeError:
+            verbosity = (verbosity,)
+        
+        for verb in verbosity:
+            if verb == self.verbosity:
+                self.stream.write(message)
+                break
 
     def _makeResult(self):
         return self.resultclass(self.stream, self.descriptions, self.verbosity)

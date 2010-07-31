@@ -503,6 +503,22 @@ The ``StopTestRunEvent`` event objects have the following attributes:
 * ``timeTaken`` - total time taken by the test run
  
 
+New messaging API that honours verbosity
+========================================
+
+There is a new messaging API for 
+
+If you are using the default runner (the unit2 script or a ``TextTestRunner``) then you only need to care about the message function. Instead of writing to the output stream directly you can just call::
+
+    from unittest2 import message
+    
+    message('short message', 0)
+    message('longer one', (1, 2))
+
+The second argument is the verbosity, which can either be a single value or a tuple of values. The message is only written to the stream if the verbosity (or one of the verbosities) *matches* the verbosity the runner was created with. `message` uses the 'default runner'. If a runner hasn't been created then the messages are queued until one is created. When a ``TextTestRunner`` is instantiated it is set as the default runner and all queued messages are output.
+
+This is supported under the hood by a new ``message(msg, verbosity)`` method on the ``TextTestRunner`` and a ``setRunner`` function for setting the default runner to be used by the messaging API.
+
 
 Not Yet Implemented
 ===================
@@ -514,8 +530,6 @@ because they should only be extended or modified in place instead of being
 replaced.
 
 Add an epilogue to the optparse help messages.
-
-A messaging API for plugins that respects verbosity.
 
 The ``startTestRun`` event needs an alternative way of replacing the default
 test run machinery without stopping other plugins from executing. It should
@@ -571,6 +585,8 @@ Additional Changes
 ==================
 
 Alongside, and in support of, the plugin system a few changes have been made to unittest2. These either have no, or very minor, backwards compatibility issues. Changes so far are:
+
+TextTestRunner has a new method ``message(message, verbosity)``. The message is output to the runner stream if the verbosity *matches* the verbosity of the runner. In addition unittest2 has two new functions exported, both from the `unittest2.runner` module: ``message`` and ``setRunner``.
 
 TestLoader has a new attribute ``DEFAULT_PATTERN``. This is so that the
 regex matching plugin can change the default pattern used for test discovery
