@@ -48,11 +48,11 @@ class _Event(object):
     def __init__(self):
         self.handled = False
     
-    def message(self, message, verbosity=(1, 2)):
+    def message(self, msg, verbosity=(1, 2)):
         if self._message is None:
             from unittest2.runner import message
-            _Event.message = message
-        self.message(message, verbosity)
+            _Event._message = staticmethod(message)
+        self._message(msg, verbosity)
 
 class HandleFileEvent(_Event):
     def __init__(self, loader, name, path, pattern,
