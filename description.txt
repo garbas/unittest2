@@ -453,12 +453,29 @@ afterSetUp
 
 This event is fired after a *test* setUp runs. (Not class or module level setups.)
 
+The ``AfterSetUpEvent`` object has the following attributes:
 
+* ``test`` - the test to be run
+* ``result`` - the result object
+* ``exc_info`` - failure information from the setUp or None
+* ``time`` - time the setUp completed
+
+This event cannot be handled.
 
 
 beforeTearDown
 -------------- 
 
+This event is fired after a test has run but before the tearDown is executed. 
+
+The ``BeforeTearDownEvent`` object has the following attributes:
+
+* ``test`` - the test to be run
+* ``result`` - the result object
+* ``success`` - True or False indicating if the test passed or not.
+* ``time`` - time the test completed
+
+This event cannot be handled.
 
 
 
@@ -584,7 +601,12 @@ config file could be used with a '[unittest2]' section instead of '[unittest]'.
 
 Should ``StopTestEvent.timeTaken`` (plus startTime / stopTime etc) include the
 time for setUp, tearDown and cleanUps? Should this information be available
-separately perhaps?
+separately perhaps? (afterSetUp and beforeTearDown could have these times)
+
+StopTest can be called several times if there are several failures during a
+single test (e.g. in the test *and* the tearDown and cleanUp functions).
+Should it instead be called once with a MetaEvent that collects all the
+errors.
 
 The discovery command line interface has changed a lot and the tests need
 reviewing to ensure they still provide full coverage.
