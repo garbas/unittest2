@@ -222,6 +222,10 @@ The config is a dictionary of ``Section`` objects, where a section is a dictiona
     # as_bool allows 'true', '1', 'on', 'yes' for True (matched case-insensitively) and
     # 'false', 'off', '0', 'no', '' for False
     value = section.as_bool('value', default=True)
+    
+    # as_tri is the same as as_bool but returns None rather than False if the
+    # key is present but the value is empty
+    value = section.as_tri('value', default=None)
 
 If a plugin specifies a ``configSection`` as a class attribute then that section will be fetched and set as the ``config`` attribute on instances.
 
