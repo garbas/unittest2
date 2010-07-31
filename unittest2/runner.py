@@ -40,7 +40,7 @@ def setRunner(runner):
     for message, verbosity in _messages:
         runner.message(message, verbosity)
 
-def message(message, verbosity):
+def message(message, verbosity=(1, 2)):
     """
     Output a `message` to the stream set on the default TestRunner. 
 
@@ -52,6 +52,9 @@ def message(message, verbosity):
     For example this call outputs the message for verbosities of 1 *and* 2::
 
         message('Important message', (1, 2))
+
+    The default verbosity is (1, 2). If this function is called without
+    an explicit verbosity it will be output for verbosities of both 1 and 2.
 
     `message` will be output verbatim; newlines are not added.
 
@@ -66,6 +69,7 @@ def message(message, verbosity):
         for verb in verbosity:
             message(message, verb)
         return
+
     if _runner is None:
         _messages.append((message, verbosity))
     else:
@@ -208,7 +212,7 @@ class TextTestRunner(unittest.TextTestRunner):
         if _runner is None:
             setRunner(self)
 
-    def message(self, message, verbosity):
+    def message(self, message, verbosity=(1, 2)):
         """
         Output a `message` to the stream if the `verbosity` *matches* the
         verbosity of the runner.
@@ -216,6 +220,10 @@ class TextTestRunner(unittest.TextTestRunner):
         `verbosity` can be a single value or a tuple of values. If `verbosity`
         is a tuple of values then the message will be written to the stream
         if any of the values match the runner verbosity.
+
+        
+        The default verbosity is (1, 2). If this method is called without an
+        explicit verbosity it will be output for verbosities of both 1 and 2.
         """
         try:
             iter(verbosity)

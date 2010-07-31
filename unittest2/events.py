@@ -4,7 +4,6 @@ import sys
 from ConfigParser import SafeConfigParser
 from ConfigParser import Error as ConfigParserError
 
-
 __all__ = (
     # events
     'PluginsLoadedEvent',
@@ -45,9 +44,15 @@ FALSE = set(('0', 'false', 'off', 'no', ''))
 
 
 class _Event(object):
+    _message = None
     def __init__(self):
         self.handled = False
-
+    
+    def message(self, message, verbosity=(1, 2)):
+        if self._message is None:
+            from unittest2.runner import message
+            _Event.message = message
+        self.message(message, verbosity)
 
 class HandleFileEvent(_Event):
     def __init__(self, loader, name, path, pattern,
