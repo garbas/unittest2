@@ -8,7 +8,7 @@ Code liberally "borrowed" from NoseGrowl:
     
 This plugin is licensed under GNU LGPL (inherited from nosegrowl).
 """
-from unittest2.events import Plugin, addOption, getConfig
+from unittest2.events import Plugin
 
 import warnings
 # py-Growl uses md5

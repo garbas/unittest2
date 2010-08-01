@@ -6,7 +6,6 @@ By: Ronny Pfannschmidt
 """
 from unittest2 import FunctionTestCase
 from unittest2.events import Plugin
-from unittest2.util import getSource
 
 import sys
 
@@ -109,7 +108,7 @@ def captured(func):
     finally:
         data = sys.stdout.data + sys.stderr.data
         sys.stdout = original_stdout
-        sys.stderr = sys.stderr
+        sys.stderr = original_stderr
     return ''.join(data), result
 
 

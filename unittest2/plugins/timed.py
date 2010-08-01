@@ -1,6 +1,5 @@
 from unittest2.events import Plugin
 
-import time
 
 help_text = 'Output time taken for each test (verbose only)'
 

@@ -1,4 +1,4 @@
-from unittest2.events import Plugin, addOption, getConfig
+from unittest2.events import Plugin, addOption
 from unittest2.util import getSource
 
 import os
