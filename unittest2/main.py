@@ -113,7 +113,7 @@ class TestProgram(object):
     
     # defaults for testing
     failfast = catchbreak = buffer = progName = module = defaultTest = None
-    pluginsLoaded = False
+    pluginsLoaded = verbosity = None
 
     def __init__(self, module='__main__', defaultTest=None,
                  argv=None, testRunner=None,
@@ -287,15 +287,15 @@ class TestProgram(object):
                           action='store_true', help="Disable all plugins")
         
         if self.failfast != False:
-            parser.add_option('-f', '--failfast', dest='failfast', default=False,
+            parser.add_option('-f', '--failfast', dest='failfast', default=None,
                               help='Stop on first fail or error', 
                               action='store_true')
         if self.catchbreak != False and installHandler is not None:
-            parser.add_option('-c', '--catch', dest='catchbreak', default=False,
+            parser.add_option('-c', '--catch', dest='catchbreak', default=None,
                               help='Catch ctrl-C and display results so far', 
                               action='store_true')
         if self.buffer != False:
-            parser.add_option('-b', '--buffer', dest='buffer', default=False,
+            parser.add_option('-b', '--buffer', dest='buffer', default=None,
                               help='Buffer stdout and stderr during tests', 
                               action='store_true')
 
@@ -338,19 +338,31 @@ class TestProgram(object):
             values = getattr(options, attr) or []
             _list.extend(values)
 
-        # only set options from the parsing here
-        # if they weren't set explicitly in the constructor
-        if self.failfast is None:
-            self.failfast = options.failfast
-        if self.catchbreak is None and installHandler is not None:
-            self.catchbreak = options.catchbreak
-        if self.buffer is None:
-            self.buffer = options.buffer
-        
-        
         config = getConfig('unittest')
-        self.verbosity = config.as_int('verbosity', 1)
-        
+        if self.verbosity is None:
+            self.verbosity = config.as_int('verbosity', 1)
+        config['discover'] = forDiscovery
+
+        if self.buffer is not None:
+            options.buffer = self.buffer
+        if self.failfast is not None:
+            options.failfast = self.failfast
+        if installHandler is None:
+            options.catchbreak = False
+        elif self.catchbreak is not None:
+            options.catchbreak = self.catchbreak
+
+        if options.buffer is None:
+            options.buffer = config.as_bool('buffer', default=False)
+        if options.failfast is None:
+            options.failfast = config.as_bool('failfast', default=False)
+        if options.catchbreak is None:
+            options.catchbreak = config.as_bool('catch', default=False)
+
+        self.failfast = options.failfast
+        self.buffer = options.buffer
+        self.catchbreak = options.catchbreak
+
         if options.verbose:
             self.verbosity = 2
         if options.quiet:

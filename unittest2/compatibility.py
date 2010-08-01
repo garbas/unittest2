@@ -58,7 +58,10 @@ def _relpath_posix(path, start=os.path.curdir):
         return os.path.curdir
     return os.path.join(*rel_list)
 
-if os.path is sys.modules.get('ntpath'):
-    relpath = _relpath_nt
-else:
-    relpath = _relpath_posix
+try:
+    from os.path import relpath
+except ImportError:
+    if os.path is sys.modules.get('ntpath'):
+        relpath = _relpath_nt
+    else:
+        relpath = _relpath_posix

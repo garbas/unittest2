@@ -7,7 +7,6 @@ from StringIO import StringIO
 
 from unittest2 import util
 from unittest2.compatibility import wraps
-from unittest2.compatibility import wraps
 
 __unittest = True
 
