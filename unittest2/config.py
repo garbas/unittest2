@@ -7,8 +7,8 @@ CFG_NAME = 'unittest.cfg'
 
 DEFAULT = object()
 RETURN_DEFAULT = object()
-TRUE = set(('1', 'true', 'on', 'yes'))
-FALSE = set(('0', 'false', 'off', 'no', ''))
+TRUE = set((True, '1', 'true', 'on', 'yes'))
+FALSE = set((False, '0', 'false', 'off', 'no', ''))
 
 _config = None
 
@@ -93,12 +93,14 @@ class Section(dict):
 
     def _get_value(self, item, default, allowEmpty):
         try:
-            value = self[item].strip()
+            value = self[item]
         except KeyError:
             if default is not DEFAULT:
                 return RETURN_DEFAULT
             raise
-        if not allowEmpty and not value:
+        if isinstance(value, basestring):
+            value = value.strip()
+        if not allowEmpty and value == '':
             if default is not DEFAULT:
                 return RETURN_DEFAULT
             raise ValueError(item)
