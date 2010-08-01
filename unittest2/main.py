@@ -11,6 +11,7 @@ try:
 except ImportError:
     installHandler = None
 
+from unittest2.config import getConfig
 from unittest2.events import (
     loadPlugins, PluginsLoadedEvent,
     hooks, HandleFileEvent
@@ -345,11 +346,23 @@ class TestProgram(object):
             self.catchbreak = options.catchbreak
         if self.buffer is None:
             self.buffer = options.buffer
-            
+        
+        
+        config = getConfig('unittest')
+        self.verbosity = config.as_int('verbosity', 1)
+        
         if options.verbose:
             self.verbosity = 2
         if options.quiet:
             self.verbosity = 0
+        if options.quiet and options.verbose:
+            # could raise an exception here I suppose
+            self.verbosity = 1
+
+        config['verbosity'] = self.verbosity
+        config['buffer'] = self.buffer
+        config['catch'] = self.catchbreak
+        config['failfast'] = self.failfast
 
         hooks.pluginsLoaded(PluginsLoadedEvent())
         return options, args
