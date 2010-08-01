@@ -1,5 +1,6 @@
 import unittest2
-from unittest2.events import hooks, addDiscoveryOption, getConfig
+from unittest2.config import getConfig
+from unittest2.events import hooks, addDiscoveryOption
 
 import re
 

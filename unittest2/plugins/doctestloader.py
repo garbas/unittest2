@@ -1,4 +1,5 @@
-from unittest2.events import hooks, getConfig, addOption
+from unittest2.config import getConfig
+from unittest2.events import hooks, addOption
 
 import doctest
 

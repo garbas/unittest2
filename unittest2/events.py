@@ -1,10 +1,6 @@
-import os
 import sys
 
-from unittest2.compatibility import wraps
-
-from ConfigParser import SafeConfigParser
-from ConfigParser import Error as ConfigParserError
+from unittest2.config import loadConfig, getConfig
 
 
 __all__ = (
@@ -25,26 +21,17 @@ __all__ = (
     # for plugins
     'hooks',
     'addOption',
-    'getConfig',
     'Plugin',
     'pluginInstances',
     # API for test frameworks
     'loadedPlugins',
     'loadPlugins',
     'loadPlugin',
-    'loadConfig',
 )
 
 
-_config = None
 loadedPlugins = []
-CFG_NAME = 'unittest.cfg'
 pluginInstances = set()
-
-DEFAULT = object()
-RETURN_DEFAULT = object()
-TRUE = set(('1', 'true', 'on', 'yes'))
-FALSE = set(('0', 'false', 'off', 'no', ''))
 
 
 class _Event(object):
@@ -275,7 +262,7 @@ class Register(type):
         if autoCreate:
             cls()
         return cls
-        
+
 
 class Plugin(object):
     __metaclass__ = Register
@@ -346,77 +333,6 @@ class Plugin(object):
             cls.instance = None
 
 
-class Section(dict):
-    def __new__(cls, name, items=()):
-        return dict.__new__(cls, items)
-
-    def __init__(self, name, items=()):
-        self.name = name
-
-    def __repr__(self):
-        return 'Section(%r, %r)' % (self.name, self.items())
-
-    def _get_value(self, item, default, allowEmpty):
-        try:
-            value = self[item].strip()
-        except KeyError:
-            if default is not DEFAULT:
-                return RETURN_DEFAULT
-            raise
-        if not allowEmpty and not value:
-            if default is not DEFAULT:
-                return RETURN_DEFAULT
-            raise ValueError(item)
-        return value
-        
-    def as_bool(self, item, default=DEFAULT):
-        value = self._get_value(item, default, True)
-        if value is RETURN_DEFAULT:
-            return default
-        return self._as_bool(value, item)
-
-    def as_tri(self, item, default=DEFAULT):
-        value = self._get_value(item, default, True)
-        if value is RETURN_DEFAULT:
-            return default
-        if not value:
-            return None
-        return self._as_bool(value, item)
-
-    def _as_bool(self, value, item):
-        if value.lower() in TRUE:
-            return True
-        if value.lower() in FALSE:
-            return False
-        raise ConfigParserError('Config file value %s : %s : %s not recognised'
-                                ' as a boolean' % (self.name, item, value))
-
-    def as_int(self, item, default=DEFAULT):
-        value = self._get_value(item, default, False)
-        if value is RETURN_DEFAULT:
-            return default
-        return int(value)
-
-    def as_float(self, item, default=DEFAULT):
-        value = self._get_value(item, default, False)
-        if value is DEFAULT:
-            return default
-        return float(value)
-
-    def as_str(self, item, default=DEFAULT):
-        value = self._get_value(item, default, True)
-        if value is DEFAULT:
-            return default
-        return value
-
-    def as_list(self, item, default=DEFAULT):
-        value = self._get_value(item, default, True)
-        if value is DEFAULT:
-            return default
-        return [line.strip() for line in value.splitlines()
-                 if line.strip() and not line.strip().startswith('#')]
-
-
 def loadPlugins(pluginsDisabled=False, noUserConfig=False, 
                 configLocations=None):
     allPlugins = loadConfig(noUserConfig, configLocations)
@@ -430,63 +346,6 @@ def loadPlugin(plugin):
     __import__(plugin)
     sys.modules[plugin]
     loadedPlugins.append(plugin)
-
-
-def loadConfig(noUserConfig=False, configLocations=None):
-    global _config
-    
-    configs = []
-    if not noUserConfig:
-        cfgPath = os.path.join(os.path.expanduser('~'), CFG_NAME)
-        userPlugins, userParser = loadPluginsConfigFile(cfgPath)
-        configs.append((userPlugins, userParser))
-    
-    
-    if not configLocations:
-        cfgPath = os.path.join(os.getcwd(), CFG_NAME)
-        localPlugins, localParser = loadPluginsConfigFile(cfgPath)
-        configs.append((localPlugins, localParser))
-    else:
-        for entry in configLocations:
-            path = entry
-            if not os.path.isfile(path):
-                path = os.path.join(path, CFG_NAME)
-                if not os.path.isfile(path):
-                    # exception type?
-                    raise Exception('Config file location %r could not be found'
-                                    % entry)
-            
-            plugins, parser = loadPluginsConfigFile(path)
-            configs.append((plugins, parser))
-                    
-
-    plugins = set(sum([plugin for plugin, parser in configs], []))
-    parsers = [parser for plugin, parser in configs]
-    _config = combineConfigs(parsers)
-    return plugins
-
-
-def combineConfigs(parsers):
-    options = {}
-    for parser in parsers:
-        for section in parser.sections():
-            items = dict(parser.items(section))
-            options.setdefault(section, Section(section)).update(items)
-
-    return options
-
-
-def loadPluginsConfigFile(path):
-    parser = SafeConfigParser()
-    parser.read(path)
-    plugins = []
-    try:
-        plugins = [line for line in 
-                   parser.get('unittest', 'plugins').splitlines()
-                   if line.strip() and not line.strip().startswith('#')]
-        return plugins, parser
-    except ConfigParserError:
-        return plugins, parser
 
 
 def addOption(callback, opt=None, longOpt=None, help=None):
@@ -508,10 +367,4 @@ def addDiscoveryOption(callback, opt=None, longOpt=None, help=None):
     # delayed import to avoid circular imports
     from unittest2.main import _discoveryOptions
     _addOption(callback, opt, longOpt, help, optionList=_discoveryOptions)
-    
-    
-def getConfig(section=None):
-    # warning! mutable
-    if section is None:
-        return _config
-    return _config.get(section, Section(section))
+

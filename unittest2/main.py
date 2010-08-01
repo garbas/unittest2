@@ -11,10 +11,9 @@ try:
 except ImportError:
     installHandler = None
 
-from unittest2 import events
 from unittest2.events import (
     loadPlugins, PluginsLoadedEvent,
-    hooks, HandleFileEvent, loadConfig
+    hooks, HandleFileEvent
 )
 
 __unittest = True
