@@ -91,7 +91,7 @@ class Section(dict):
     def __repr__(self):
         return 'Section(%r, %r)' % (self.name, self.items())
 
-    def _get_value(self, item, default, allowEmpty):
+    def _get_value(self, item, default, allowEmpty, lower=False):
         try:
             value = self[item]
         except KeyError:
@@ -100,20 +100,23 @@ class Section(dict):
             raise
         if isinstance(value, basestring):
             value = value.strip()
+            if lower:
+                value = value.lower()
+
         if not allowEmpty and value == '':
             if default is not DEFAULT:
                 return RETURN_DEFAULT
             raise ValueError(item)
         return value
-        
+
     def as_bool(self, item, default=DEFAULT):
-        value = self._get_value(item, default, True)
+        value = self._get_value(item, default, allowEmpty=True, lower=True)
         if value is RETURN_DEFAULT:
             return default
         return self._as_bool(value, item)
 
     def as_tri(self, item, default=DEFAULT):
-        value = self._get_value(item, default, True)
+        value = self._get_value(item, default, allowEmpty=True)
         if value is RETURN_DEFAULT:
             return default
         if not value:
@@ -121,33 +124,33 @@ class Section(dict):
         return self._as_bool(value, item)
 
     def _as_bool(self, value, item):
-        if value.lower() in TRUE:
+        if value in TRUE:
             return True
-        if value.lower() in FALSE:
+        if value in FALSE:
             return False
         raise ConfigParserError('Config file value %s : %s : %s not recognised'
                                 ' as a boolean' % (self.name, item, value))
 
     def as_int(self, item, default=DEFAULT):
-        value = self._get_value(item, default, False)
+        value = self._get_value(item, default, allowEmpty=False)
         if value is RETURN_DEFAULT:
             return default
         return int(value)
 
     def as_float(self, item, default=DEFAULT):
-        value = self._get_value(item, default, False)
+        value = self._get_value(item, default, allowEmpty=False)
         if value is DEFAULT:
             return default
         return float(value)
 
     def as_str(self, item, default=DEFAULT):
-        value = self._get_value(item, default, True)
+        value = self._get_value(item, default, allowEmpty=True)
         if value is DEFAULT:
             return default
         return value
 
     def as_list(self, item, default=DEFAULT):
-        value = self._get_value(item, default, True)
+        value = self._get_value(item, default, allowEmpty=True)
         if value is DEFAULT:
             return default
         return [line.strip() for line in value.splitlines()

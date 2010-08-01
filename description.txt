@@ -255,7 +255,7 @@ Lowercase short options are reserved for use by unittest2 internally. Plugins ma
 
 If a plugin needs a simple command line switch (on/off) then it can set the ``commandLineSwitch`` class attribute to a tuple of ``(opt, longOpt, help)``. The ``register()`` method will be used as the callback function, automatically hooking the plugin up to events if it is switched on.
 
-Command line options to the unittest test runner, like verbosity, catch, buffer and failfast, can be set in the ``[unittest]`` section of the config file(s). Values set in the config file will act as a default that can be overridden at the command line. The *actual* value, after handling the command line options, is set back in the config data structure so that plugins can access the current values.
+Command line options to the unittest test runner, like verbosity, catch, buffer and failfast, can be set in the ``[unittest]`` section of the config file(s). Values set in the config file will act as a default that can be overridden at the command line. The *actual* value, after handling the command line options, is set back in the config data structure so that plugins can access the current values. In addition the key 'discover' in the unittest section will be set to True or False indicating whether or not test discovery has been invoked.
 
 
 The Events

@@ -10,17 +10,13 @@ import unittest
 from fnmatch import fnmatch
 
 from unittest2 import case, suite
+from unittest2.compatibility import relpath
 from unittest2.events import (
     hooks, HandleFileEvent, MatchPathEvent, LoadFromModuleEvent,
     LoadFromNameEvent, LoadFromNamesEvent, LoadFromTestCaseEvent,
     GetTestCaseNamesEvent
 )
 from unittest2.util import getObjectFromName
-
-try:
-    from os.path import relpath
-except ImportError:
-    from unittest2.compatibility import relpath
 
 __unittest = True
 

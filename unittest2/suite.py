@@ -32,7 +32,7 @@ class BaseTestSuite(unittest.TestSuite):
         return iter(self._tests)
 
     def countTestCases(self):
-        return sum(case.countTestCases() for case in self)
+        return sum(test.countTestCases() for test in self)
 
     def addTest(self, test):
         # sanity checks

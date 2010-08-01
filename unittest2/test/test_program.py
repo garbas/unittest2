@@ -7,6 +7,9 @@ hasInstallHandler = hasattr(unittest2, 'installHandler')
 
 class Test_TestProgram(unittest2.TestCase):
 
+    def setUp(self):
+        unittest2.config._config = {}
+
     # Horrible white box test
     def testNoExit(self):
         result = object()
