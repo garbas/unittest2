@@ -586,17 +586,6 @@ only be possible for *one* plugin to use this.
 
 TestFailEvent needs to be fired on failures in setUpClass and setUpModule etc
 
-If the merge to unittest in Python 3.2 happens we need to decide which of the
-example plugins will be included in unittest. (They will probably all remain
-in unittest2.)
-
-Custom test outcomes are *not* supported; making interoperating tools or plugins
-in the presence of custom outcomes can be very hard.
-
-Should unittest2 have a different config file from unittest, so they can be
-configured side-by-side? (``unittest2.cfg`` perhaps.) Alternatively the same
-config file could be used with a '[unittest2]' section instead of '[unittest]'.
-
 Should ``StopTestEvent.timeTaken`` (plus startTime / stopTime etc) include the
 time for setUp, tearDown and cleanUps? (afterSetUp and beforeTearDown have the
 times the setUp completes and the time the test completes - should these times
@@ -606,9 +595,6 @@ StopTest can be called several times if there are several failures during a
 single test (e.g. in the test *and* the tearDown and cleanUp functions).
 Should it instead be called once with a MetaEvent that collects all the
 errors.
-
-The discovery command line interface has changed a lot and the tests need
-reviewing to ensure they still provide full coverage.
 
 Should there be an "excluded-plugins" section in the config files, so projects
 can prevent incompatible plugins from being loaded?
@@ -623,6 +609,20 @@ containing module and then the correct name pulled out of the module.)
 A plugin that adds a "user plugin directory" and automatically activates
 (imports) all plugins located there. New plugins can be added just by dropping
 them in the directory (zero config).
+
+If the merge to unittest in Python 3.2 happens we need to decide which of the
+example plugins will be included in unittest. (They will probably all remain
+in unittest2.)
+
+Custom test outcomes are *not* supported; making interoperating tools or plugins
+in the presence of custom outcomes can be very hard.
+
+Should unittest2 have a different config file from unittest, so they can be
+configured side-by-side? (``unittest2.cfg`` perhaps.) Alternatively the same
+config file could be used with a '[unittest2]' section instead of '[unittest]'.
+
+The discovery command line interface has changed a lot and the tests need
+reviewing to ensure they still provide full coverage.
 
 
 Additional Changes
