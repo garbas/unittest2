@@ -20,6 +20,9 @@ __unittest = True
 
 _messages = []
 _runner = None
+
+VERBOSITIES = { 'quiet': 0, 'normal': 1, 'verbose': 2}
+
 def setRunner(runner):
     """
     Set the default TestRunner used by the `message` function. Set the runner
@@ -62,15 +65,20 @@ def message(msg, verbosity=(1, 2)):
     If no runner has been created, the messages are queued until one is created
     or set with `setRunner`.
     """
-    try:
-        iter(verbosity)
-    except TypeError:
-        pass
+    if not isinstance(verbosity, basestring):
+        # allow support for arbitrary channels later
+        try:
+            iter(verbosity)
+        except TypeError:
+            pass
+        else:
+            for verb in verbosity:
+                message(msg, verb)
+            return
     else:
-        for verb in verbosity:
-            message(msg, verb)
-        return
-
+        if verbosity.lower() in VERBOSITIES:
+            verbosity = VERBOSITIES[verbosity]
+    
     if _runner is None:
         _messages.append((msg, verbosity))
     else:
@@ -201,6 +209,10 @@ class TextTestRunner(unittest.TextTestRunner):
         self.stream = _WritelnDecorator(stream)
         
         self.descriptions = descriptions
+        if isinstance(verbosity, basestring):
+            # allow string verbosities not in the dictionary
+            # for backwards compatibility
+            verbosity = VERBOSITIES.get(verbosity.lower(), verbosity)
         self.verbosity = verbosity
         self.failfast = failfast
         self.buffer = buffer
@@ -226,12 +238,17 @@ class TextTestRunner(unittest.TextTestRunner):
         The default verbosity is (1, 2). If this method is called without an
         explicit verbosity it will be output for verbosities of both 1 and 2.
         """
-        try:
-            iter(verbosity)
-        except TypeError:
+        if not isinstance(verbosity, basestring):
+            try:
+                iter(verbosity)
+            except TypeError:
+                verbosity = (verbosity,)
+        else:
             verbosity = (verbosity,)
         
         for verb in verbosity:
+            if isinstance(verb, basestring):
+                verb = VERBOSITIES[verb.lower()]
             if verb == self.verbosity:
                 self.stream.write(msg)
                 break
