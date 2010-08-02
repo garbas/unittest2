@@ -173,6 +173,8 @@ Plugin instances also have an ``unregister`` method that unhooks all the events 
 
 Plugins to be loaded are specified in configuration files. For frameworks not using the unittest test runner and configuration system APIs for loading plugins are available in the form of the ``loadPlugins`` function (which uses the configuration system to load plugins) and ``loadPlugin`` which loads an individual plugin by module name. Loading plugins just means importing the module containing the plugin.
 
+Once plugins are loaded through ``loadPlugins`` the auto-registration feature is switched off and imported plugins will no longer be instantiated. This prevents plugins contained within a project accidentally being re-registered during test discovery.
+
 
 
 Configuration system
