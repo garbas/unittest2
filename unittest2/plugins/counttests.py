@@ -2,7 +2,7 @@ from unittest2 import Plugin
 
 help_text = "display a progress indicator of tests (verbose only)"
 class CountTests(Plugin):
-    
+
     configSection = 'count'
     commandLineSwitch = (None, 'count', help_text)
 
@@ -40,7 +40,6 @@ class CountTests(Plugin):
         the_set = getattr(self, event.outcome)
         the_set.add(test_id)
         self.seen[test_id] = the_set
-        
 
     def getMsg(self):
         values = []
@@ -49,7 +48,7 @@ class CountTests(Plugin):
                              ('x', 'expectedFailure'), ('p', 'passed'),
                              ('u', 'unexpectedSuccess')]:
             number = len(getattr(self, attr))
-            if not number:
+            if not number and attr != 'passed':
                 continue
             values.append(frag % (number, letter))
         msg = '[%s/%s] ' % ('/'.join(values), self.totalTests)
