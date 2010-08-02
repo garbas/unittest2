@@ -354,7 +354,7 @@ class TestProgram(object):
                     self.verbosity = runner.VERBOSITIES[config['verbosity']]
                 else:
                     raise
-                        
+
         config['discover'] = forDiscovery
 
         if self.buffer is not None:
