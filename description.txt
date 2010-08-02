@@ -27,9 +27,9 @@ In the details below open questions and todos are noted. I *really* value feedba
 
 .. note::
 
-    Throughout this document I refer to the prototype implementation using names like ``unittest2.events.hooks``. Should this proposal be accepted then the names will live in the unittest package instead of unittest2.
+    Throughout this document I refer to the prototype implementation using names like ``unittest2.Plugin``. Should this proposal be accepted then the names will live in the unittest package instead of unittest2.
     
-    The core classes for the event system live in the current implementation in the ``unittest2.events`` namespace.
+    Most of the plugin related classes and objects live in the ``unittest2.events`` and ``unittest2.config`` namespaces. The names used by plugins are exported at the top level and the internal organisation is an implementation detail. The *exception* to this are the ``hooks`` class and the event objects themselves, which won't normally be used by plugin authors (by name) but are lower level objects used internally that *may* be needed by framework creators (who need to fire events themselves when overriding unittest functionality). The events live in ``unittest2.events`` and can be imported from there.
 
 
 Abstract
@@ -134,13 +134,13 @@ If an event sets handled on an event then no more handlers will be called for th
 The Plugin Class
 ================
 
-A sometimes-more-convenient way of creating plugins is to subclass the ``unittest2.events.Plugin`` class. By default subclassing ``Plugin`` will auto-instantiate the plugin and store the instance in a list of loaded plugins.
+A sometimes-more-convenient way of creating plugins is to subclass the ``unittest2.Plugin`` class. By default subclassing ``Plugin`` will auto-instantiate the plugin and store the instance in a list of loaded plugins.
 
 Each plugin has a ``register()`` method that auto-hooks up all methods whose names correspond to events. Plugin classes may also provide ``configSection`` and ``commandLineSwitch`` class attributes which simplifies enabling the plugin through the command line and making available a section from the configuration file(s).
 
 A simple plugin using this is the 'debugger' plugin that starts ``pdb`` when the ``onTestFail`` event fires::
 
-    from unittest2.events import Plugin
+    from unittest2 import Plugin
 
     import pdb
     import sys
@@ -206,7 +206,7 @@ plugins to be loaded are specified in the ``plugins`` key of the ``unittest`` se
         unittest2.plugins.growl
         unittest2.plugins.filtertests
 
-The plugins are simply module names. They either hook themselves up manually on import or are created by virtue of subclassing ``Plugin``. A list of all loaded plugins is available as ``unittest2.events.loadedPlugins`` (a list of strings).
+The plugins are simply module names. They either hook themselves up manually on import or are created by virtue of subclassing ``Plugin``. A list of all loaded plugins is available as ``unittest2.loadedPlugins`` (a list of strings).
 
 For accessing config values there is a ``getConfig(sectionName=None)`` function. By default it returns the whole config data-structure but it an also return individual sections by name. If the section doesn't exist an empty section will be returned. The config data-structure is not read-only but there is no mechanism for persisting changes.
 
@@ -238,7 +238,7 @@ If the plugin is configured to be 'always-on', and is auto-registered, then it d
 Command Line Interface
 ======================
 
-Plugins may add command line options, either switches with a callback function or options that take values and will be added to a list. There are two functions that do this: ``unittest2.events.addOption`` and ``unittest2.events.addDiscoveryOption``. Some of the events are only applicable to test discovery (``matchPath`` is the only one currently I think), options that use these events should use ``addDiscoveryOption`` which will only be used if test discovery is invoked.
+Plugins may add command line options, either switches with a callback function or options that take values and will be added to a list. There are two functions that do this: ``unittest2.addOption`` and ``unittest2.addDiscoveryOption``. Some of the events are only applicable to test discovery (``matchPath`` is the only one currently I think), options that use these events should use ``addDiscoveryOption`` which will only be used if test discovery is invoked.
 
 Both functions have the same signature::
 

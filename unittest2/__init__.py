@@ -26,11 +26,13 @@ AND THERE IS NO OBLIGATION WHATSOEVER TO PROVIDE MAINTENANCE,
 SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 """
 
-__all__ = ['TestResult', 'TestCase', 'TestSuite',
-           'TextTestRunner', 'TestLoader', 'FunctionTestCase', 'main',
-           'defaultTestLoader', 'SkipTest', 'skip', 'skipIf', 'skipUnless',
-           'expectedFailure', 'TextTestResult', '__version__', 'collector',
-           'setRunner', 'message']
+__all__ = [
+    'TestResult', 'TestCase', 'TestSuite', 'TextTestRunner', 'TestLoader',
+    'FunctionTestCase', 'main', 'defaultTestLoader', 'SkipTest', 'skip', 
+    'skipIf', 'skipUnless', 'expectedFailure', 'TextTestResult', '__version__',
+    'collector', 'setRunner', 'message', 'Plugin', 'loadedPlugins', 'addOption',
+    'addDiscoveryOption', 'loadConfig', 'getConfig'
+]
 
 __version__ = '0.6.0 alpha (plugins branch)'
 
@@ -54,6 +56,7 @@ main = TestProgram
 
 from unittest2.runner import TextTestRunner, TextTestResult, setRunner, message
 
+
 try:
     from unittest2.signals import (
         installHandler, registerResult, removeResult, removeHandler
@@ -64,6 +67,14 @@ except ImportError:
 else:
     __all__.extend(['installHandler', 'registerResult', 'removeResult', 
                     'removeHandler'])
+
+
+from unittest2.events import (
+    Plugin, loadedPlugins, addOption, addDiscoveryOption
+)
+
+from unittest2.config import loadConfig, getConfig
+
 
 # deprecated
 _TextTestResult = TextTestResult
