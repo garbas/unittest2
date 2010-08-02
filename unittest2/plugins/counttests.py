@@ -20,7 +20,13 @@ class CountTests(Plugin):
         self.enhanced = self.config.as_bool('enhanced', False)
 
     def startTestRun(self, event):
-        self.totalTests = event.suite.countTestCases()
+        try:
+            self.totalTests = event.suite.countTestCases()
+        except AttributeError:
+            # workaround a unittest2 test that checks you can pass a function
+            # to a TestRunner - which is dumb but should work for backwards
+            # compatibility reasons
+            self.totalTests = 1
     
     def startTest(self, event):
         self.current += 1
