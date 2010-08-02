@@ -16,6 +16,7 @@ Example plugins available and included:
     * load test functions from modules as well as TestCases
     * integration with the coverage module for coverage reporting
     * display the time of individual tests in verbose reports
+    * display a progress indicator as tests are run ([39/430] format) in verbose reports
 
 In addition I intend to create a plugin that outputs junit compatible xml from a test run (for integration with tools like the hudson continuous integration server) and a test runner that runs tests in parallel using multiprocessing.
 
