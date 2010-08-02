@@ -261,6 +261,7 @@ For verbosity the two command line options are ``-s`` and ``-v``. ``-s`` will se
 
 If a command line option is passed then this will be set. *However* the option was set (whether by an explicit parameter to main, through a default, through a config file or through a command line parameter) then the value used will be set in the 'unittest' section of the config structure.
 
+In the configuration files, and also in the main function and TextTestRunner constructor, verbosity may be specified using the strings 'quiet', 'normal' and 'verbose'. These correspond to levels 0, 1 and 2.
 
 
 Command Line Interface
@@ -594,6 +595,8 @@ If you are using the default runner (the unit2 script or a ``TextTestRunner``) t
 
 This is supported under the hood by a new ``message(msg, verbosity)`` method on the ``TextTestRunner`` and a ``setRunner`` function for setting the default runner to be used by the messaging API.
 
+As well as the integers 0, 1, and 2 the strings 'quiet', 'normal' and 'verbose' may be used as verbosity levels.
+
 
 Not Yet Implemented
 ===================
@@ -641,6 +644,9 @@ Certain event attributes should be read only (like extraTests, extraNames etc)
 because they should only be extended or modified in place instead of being
 replaced.
 
+Arbitrary channels for messaging instead of "log levels"? Could be initially
+prototyped in a 'logchannels' plugin.
+
 Add an epilogue to the optparse help messages.
 
 How do we provide paramterized / generative tests?
@@ -679,6 +685,8 @@ Command line parsing is all done by optparse, removing the use of getopt. This
 makes the help messages more consistent but makes the usage messages less
 useful in some situations. This can be fixed with the use of the optparse
 epilogue.
+
+The verbosity argument to the main function and the TextTestRunner can be passed in as strings ('quiet', 'normal' or 'verbose', which correspond to 0, 1, and 2) instead of just integers.
 
 unit2 (the default test runner) runs test discovery if invoked without any arguments.
 
