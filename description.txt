@@ -655,8 +655,8 @@ If the merge to unittest in Python 3.2 happens we need to decide which of the
 example plugins will be included in unittest. (They will probably all remain
 in unittest2.)
 
-Custom test outcomes are *not* supported; making interoperating tools or plugins
-in the presence of custom outcomes can be very hard.
+The global runner that is used by event.message is a little ugly. Alternatives
+for handling messages sent before any runner is created?
 
 A plugins subcommand (or separate script) could be provided to manage and
 configure plugins. This should use pep 376 for plugin discovery if it is
