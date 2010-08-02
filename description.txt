@@ -600,17 +600,15 @@ Not Yet Implemented
 
 Except where noted, everything in this document is already working in the prototype. There are a few open issues and things still to be implemented.
 
-Certain event attributes should be read only (like extraTests, extraNames etc)
-because they should only be extended or modified in place instead of being
-replaced.
-
-Add an epilogue to the optparse help messages.
-
 The ``startTestRun`` event needs an alternative way of replacing the default
 test run machinery without stopping other plugins from executing. It should
 only be possible for *one* plugin to use this.
 
 TestFailEvent needs to be fired on failures in setUpClass and setUpModule etc
+
+Test reporting is hard to customize. At the moment a plugin can modify the way
+tests are reported by silencing the test result and taking over test reporting
+completely. This doesn't work well for more than one plugin.
 
 Should ``StopTestEvent.timeTaken`` (plus startTime / stopTime etc) include the
 time for setUp, tearDown and cleanUps? (afterSetUp and beforeTearDown have the
@@ -635,6 +633,14 @@ containing module and then the correct name pulled out of the module.)
 A plugin that adds a "user plugin directory" and automatically activates
 (imports) all plugins located there. New plugins can be added just by dropping
 them in the directory (zero config).
+
+Certain event attributes should be read only (like extraTests, extraNames etc)
+because they should only be extended or modified in place instead of being
+replaced.
+
+Add an epilogue to the optparse help messages.
+
+How do we provide paramterized / generative tests?
 
 If the merge to unittest in Python 3.2 happens we need to decide which of the
 example plugins will be included in unittest. (They will probably all remain
