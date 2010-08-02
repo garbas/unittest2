@@ -251,6 +251,8 @@ class hooks(object):
 
 
 class Register(type):
+    autoRegister = True
+    
     def __new__(meta, name, bases, contents):
         autoCreate = contents.get('autoCreate')
         if autoCreate is not None:
@@ -259,7 +261,7 @@ class Register(type):
             autoCreate = True
         cls = type.__new__(meta, name, bases, contents)
         
-        if autoCreate:
+        if meta.autoRegister and autoCreate:
             cls()
         return cls
 
@@ -340,6 +342,10 @@ def loadPlugins(pluginsDisabled=False, noUserConfig=False,
     if not pluginsDisabled:
         for plugin in set(allPlugins):
             loadPlugin(plugin)
+    
+    # switch off autoregistration after plugins are loaded
+    Register.autoRegister = False
+    
 
 
 def loadPlugin(plugin):
