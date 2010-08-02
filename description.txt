@@ -634,6 +634,9 @@ A plugin that adds a "user plugin directory" and automatically activates
 (imports) all plugins located there. New plugins can be added just by dropping
 them in the directory (zero config).
 
+The location of the user config file is not settled, and will probably need
+to be platform specific. See: http://bugs.python.org/issue7175
+
 Certain event attributes should be read only (like extraTests, extraNames etc)
 because they should only be extended or modified in place instead of being
 replaced.
@@ -648,6 +651,10 @@ in unittest2.)
 
 Custom test outcomes are *not* supported; making interoperating tools or plugins
 in the presence of custom outcomes can be very hard.
+
+A plugins subcommand (or separate script) could be provided to manage and
+configure plugins. This should use pep 376 for plugin discovery if it is
+available (distutils2 installed or python 3.2 in use).
 
 Should unittest2 have a different config file from unittest, so they can be
 configured side-by-side? (``unittest2.cfg`` perhaps.) Alternatively the same
