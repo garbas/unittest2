@@ -95,5 +95,3 @@ class CoveragePlugin(Plugin):
                 directory= os.path.dirname(self.textFile)
             if self.annotate:
                 self.cov.annotate(morfs=allModules, directory=directory)
-
-

@@ -173,6 +173,3 @@ def getSuite(path, loader, usePep8, usePyflakes):
         tests.append(test)
     
     return loader.suiteClass(tests)
-
-
-
