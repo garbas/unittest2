@@ -17,6 +17,7 @@ Example plugins available and included:
     * integration with the coverage module for coverage reporting
     * display the time of individual tests in verbose reports
     * display a progress indicator as tests are run ([39/430] format) in verbose reports
+    * allow arbitrary channels for messaging instead of just the three verbosity levels
 
 In addition I intend to create a plugin that outputs junit compatible xml from a test run (for integration with tools like the hudson continuous integration server) and a test runner that runs tests in parallel using multiprocessing.
 
@@ -119,13 +120,10 @@ The handled pattern
 Several events can be used to *override* the default behaviour. For example the 'matchregexp' plugin uses the ``matchPath`` event to replace the default way of matching files for loading as tests during test discovery. The handler signals that it is handling this event, and the default implementation should not be run, by setting ``event.handled = True``::
 
     def matchRegexp(event):
-        pattern = event.pattern
-        name = event.name
         event.handled = True
-        path = event.path
         if matchFullPath:
-            return re.match(pattern, path)
-        return re.match(pattern, name)
+            return re.match(event.pattern, event.path)
+        return re.match(event.pattern, event.name)
 
 Where the default implementation returns a value, for example creating a test suite, or in the case of ``matchPath`` deciding if a path matches a file that should be loaded as a test, the handler can return a result.
 
@@ -205,9 +203,6 @@ plugins to be loaded are specified in the ``plugins`` key of the ``unittest`` se
         unittest2.plugins.matchregexp
         unittest2.plugins.moduleloading
         unittest2.plugins.debugger
-        unittest2.plugins.testcoverage
-        unittest2.plugins.growl
-        unittest2.plugins.filtertests
 
 The plugins are simply module names. They either hook themselves up manually on import or are created by virtue of subclassing ``Plugin``. A list of all loaded plugins is available as ``unittest2.loadedPlugins`` (a list of strings).
 
@@ -311,6 +306,7 @@ Events in rough order are:
 * ``onTestFail``
 * ``stopTest``
 * ``stopTestRun``
+* ``message``
 
 Event objects all have a `message` method for writing to the default output stream whilst honouring the verbosity of the test runner. See `New messaging API that honours verbosity`_.
 
@@ -574,7 +570,24 @@ The ``StopTestRunEvent`` event objects have the following attributes:
 * ``result`` - the test result
 * ``stopTime`` - the time the test run completes
 * ``timeTaken`` - total time taken by the test run
- 
+
+
+message
+-------
+
+This event is fired when a test runner receives a message to send. It is useful for customising output sent by plugins using the messaging API.
+
+The ``MessageEvent`` event objects have the following attributes:
+
+* ``runner`` - the test runner
+* ``stream`` - the output stream
+* ``message`` - the message to be output
+* ``verbosity`` - a tuple of verbosities (even if there is only one), integers or strings - but 'quiet', 'normal' and 'verbose' will already have been converted into their integer equivalents
+
+If the message is handled then what happens next depends on the return value of the handler function. If the handler returns True the message will be written immediately. If the handler returns False the message will be discarded.
+
+Handler functions may modify ``event.message`` and ``event.verbosity`` and the modified values will be used.
+
 
 New messaging API that honours verbosity
 ========================================
@@ -599,6 +612,8 @@ If you are using the default runner (the unit2 script or a ``TextTestRunner``) t
 This is supported under the hood by a new ``message(msg, verbosity)`` method on the ``TextTestRunner`` and a ``setRunner`` function for setting the default runner to be used by the messaging API.
 
 As well as the integers 0, 1, and 2 the strings 'quiet', 'normal' and 'verbose' may be used as verbosity levels.
+
+There is an experimental plugin, ``unittest2.plugins.logchannels`` that enables plugins to use custom channels as verbosity levels. If this is active and a message is output with a channel string that isn't 'quiet', 'normal' or 'verbose' then the message will only be output if the verbosity matches an active channel. Channels are enabled at the command line with ``--channel=NAME``.
 
 
 Not Yet Implemented
@@ -646,9 +661,6 @@ to be platform specific. See: http://bugs.python.org/issue7175
 Certain event attributes should be read only (like extraTests, extraNames etc)
 because they should only be extended or modified in place instead of being
 replaced.
-
-Arbitrary channels for messaging instead of "log levels"? Could be initially
-prototyped in a 'logchannels' plugin.
 
 Add an epilogue to the optparse help messages.
 

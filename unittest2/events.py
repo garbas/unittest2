@@ -45,6 +45,14 @@ class _Event(object):
             _Event._message = staticmethod(message)
         self._message(msg, verbosity)
 
+class MessageEvent(_Event):
+    def __init__(self, runner, stream, message, verbosity):
+        _Event.__init__(self)
+        self.runner = runner
+        self.message = message
+        self.verbosity = verbosity
+        self.stream = stream
+    
 class HandleFileEvent(_Event):
     def __init__(self, loader, name, path, pattern,
                     top_level_directory):
@@ -248,6 +256,7 @@ class hooks(object):
     beforeTearDown = _EventHook()
     stopTest = _EventHook()
     stopTestRun = _EventHook()
+    message = _EventHook()
 
 
 class Register(type):

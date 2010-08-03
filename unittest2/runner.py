@@ -7,7 +7,7 @@ import unittest
 from unittest2 import result
 from unittest2.events import (
     hooks, StartTestRunEvent, StopTestRunEvent,
-    RunnerCreatedEvent
+    RunnerCreatedEvent, MessageEvent
 )
 
 try:
@@ -245,10 +245,26 @@ class TextTestRunner(unittest.TextTestRunner):
                 verbosity = (verbosity,)
         else:
             verbosity = (verbosity,)
-        
+
+        def makeInt(verb):
+            if isinstance(verb, basestring):
+                return VERBOSITIES.get(verb.lower(), verb)
+            return verb
+        verbosity = tuple(makeInt(verb) for verb in verbosity)
+        event = MessageEvent(self, self.stream, msg, verbosity)
+        result = hooks.message(event)
+        if event.handled:
+            if result:
+                self.stream.write(msg)
+            return
+
+        msg = event.message
+        verbosity = event.verbosity
         for verb in verbosity:
             if isinstance(verb, basestring):
-                verb = VERBOSITIES[verb.lower()]
+                # don't raise a KeyError here on unrecognised verbosities
+                # as non-matched channels will be passed through here
+                verb = VERBOSITIES.get(verb, verb)
             if verb == self.verbosity:
                 self.stream.write(msg)
                 break
