@@ -51,8 +51,8 @@ class CountTests(Plugin):
         values = []
         frag = '%s%s'
         for letter, attr in [('s', 'skipped'), ('f', 'failed'), ('e', 'error'),
-                             ('x', 'expectedFailure'), ('p', 'passed'),
-                             ('u', 'unexpectedSuccess')]:
+                             ('u', 'unexpectedSuccess'),
+                             ('x', 'expectedFailure'), ('p', 'passed')]:
             number = len(getattr(self, attr))
             if not number and attr != 'passed':
                 continue
