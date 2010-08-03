@@ -575,7 +575,7 @@ The ``StopTestRunEvent`` event objects have the following attributes:
 message
 -------
 
-This event is fired when a test runner receives a message to send. It is useful for customising output sent by plugins using the messaging API.
+This event is fired when a test runner receives a message to send.
 
 The ``MessageEvent`` event objects have the following attributes:
 
@@ -583,6 +583,8 @@ The ``MessageEvent`` event objects have the following attributes:
 * ``stream`` - the output stream
 * ``message`` - the message to be output
 * ``verbosity`` - a tuple of verbosities (even if there is only one), integers or strings - but 'quiet', 'normal' and 'verbose' will already have been converted into their integer equivalents
+
+All messages sent by the ``TextTestResult`` and ``TextTestRunner`` go through this API, so you can use it for customising output of a test run - for example logging to a file.
 
 If the message is handled then what happens next depends on the return value of the handler function. If the handler returns True the message will be written immediately. If the handler returns False the message will be discarded.
 
