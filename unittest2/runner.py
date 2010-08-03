@@ -305,11 +305,12 @@ class TextTestRunner(unittest.TextTestRunner):
             hooks.stopTestRun(event)
 
         if hasattr(result, 'separator2'):
-            self.stream.writeln(result.separator2)
+            self.message(result.separator2, (0, 1, 2))
+            self.message('\n')
         run = result.testsRun
-        self.stream.writeln("Ran %d test%s in %.3fs" %
+        msg = ("Ran %d test%s in %.3fs\n\n" %
                             (run, run != 1 and "s" or "", timeTaken))
-        self.stream.writeln()
+        self.message(msg, (0, 1, 2))
         
         expectedFails = unexpectedSuccesses = skipped = 0
         try:
@@ -321,14 +322,14 @@ class TextTestRunner(unittest.TextTestRunner):
             pass
         infos = []
         if not result.wasSuccessful():
-            self.stream.write("FAILED")
+            self.message("FAILED", (0, 1, 2))
             failed, errored = map(len, (result.failures, result.errors))
             if failed:
                 infos.append("failures=%d" % failed)
             if errored:
                 infos.append("errors=%d" % errored)
         else:
-            self.stream.write("OK")
+            self.message("OK", (0, 1, 2))
         if skipped:
             infos.append("skipped=%d" % skipped)
         if expectedFails:
@@ -336,7 +337,7 @@ class TextTestRunner(unittest.TextTestRunner):
         if unexpectedSuccesses:
             infos.append("unexpected successes=%d" % unexpectedSuccesses)
         if infos:
-            self.stream.writeln(" (%s)" % (", ".join(infos),))
-        else:
-            self.stream.write("\n")
+            self.message(" (%s)" % (", ".join(infos),), (0, 1, 2))
+
+        self.message("\n")
         return result
