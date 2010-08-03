@@ -87,18 +87,24 @@ def message(msg, verbosity=(1, 2)):
 
 class _WritelnDecorator(object):
     """Used to decorate file-like objects with a handy 'writeln' method"""
-    def __init__(self,stream):
+    def __init__(self, stream, runner=None):
         self.stream = stream
+        self.runner = runner
 
     def __getattr__(self, attr):
         if attr in ('stream', '__getstate__'):
             raise AttributeError(attr)
         return getattr(self.stream,attr)
-
+    
     def writeln(self, arg=None):
+        if self.runner:
+            arg = arg or ''
+            self.runner.message(arg + '\n', (0, 1, 2))
+            return
+
         if arg:
-            self.write(arg)
-        self.write('\n') # text-mode streams translate to \r\n if needed
+            self.stream.write(arg)
+        self.stream.write('\n') # text-mode streams translate to \r\n if needed
 
 
 class TextTestResult(result.TestResult):
@@ -206,7 +212,7 @@ class TextTestRunner(unittest.TextTestRunner):
 
     def __init__(self, stream=sys.stderr, descriptions=True, verbosity=1,
                     failfast=False, buffer=False, resultclass=None):
-        self.stream = _WritelnDecorator(stream)
+        self.stream = _WritelnDecorator(stream, self)
         
         self.descriptions = descriptions
         if isinstance(verbosity, basestring):
@@ -256,6 +262,7 @@ class TextTestRunner(unittest.TextTestRunner):
         if event.handled:
             if result:
                 self.stream.write(msg)
+                self.stream.flush()
             return
 
         msg = event.message
@@ -267,6 +274,7 @@ class TextTestRunner(unittest.TextTestRunner):
                 verb = VERBOSITIES.get(verb, verb)
             if verb == self.verbosity:
                 self.stream.write(msg)
+                self.stream.flush()
                 break
 
     def _makeResult(self):
