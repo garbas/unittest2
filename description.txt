@@ -206,6 +206,8 @@ plugins to be loaded are specified in the ``plugins`` key of the ``unittest`` se
 
 The plugins are simply module names. They either hook themselves up manually on import or are created by virtue of subclassing ``Plugin``. A list of all loaded plugins is available as ``unittest2.loadedPlugins`` (a list of strings).
 
+Individual plugins may be prevented from loading by listing them in the 'excluded-plugins' key of either the user or project config files. This allows projects to disable plugins they know to be incompatible with their tests.
+
 For accessing config values there is a ``getConfig(sectionName=None)`` function. By default it returns the whole config data-structure but it an also return individual sections by name. If the section doesn't exist an empty section will be returned. The config data-structure is not read-only but there is no mechanism for persisting changes.
 
 The config is a dictionary of ``Section`` objects, where a section is a dictionary subclass with some convenience methods for accessing values::
@@ -704,6 +706,8 @@ useful in some situations. This can be fixed with the use of the optparse
 epilogue.
 
 The verbosity argument to the main function and the TextTestRunner can be passed in as strings ('quiet', 'normal' or 'verbose', which correspond to 0, 1, and 2) instead of just integers.
+
+Output by the TextTestRunner and the TextTestResult goes through the 'message' event. To support this the ``_WritelnDecorator`` takes an optional 'runner' argument in the constructor. If the 'runner' argument is used then all calls to ``writeln`` are sent on to the ``runner.message`` method. Direct calls to ``stream.write`` are not intercepted.
 
 unit2 (the default test runner) runs test discovery if invoked without any arguments.
 
