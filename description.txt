@@ -648,6 +648,15 @@ errors.
 Should there be an "excluded-plugins" section in the config files, so projects
 can prevent incompatible plugins from being loaded?
 
+The junit-xml plugin needs access to stdout / stderr for the test. This is
+only currently available if the test is run with buffering on.
+
+Unrelated to plugins, but expectedFailure decorator should probably
+optionally allow a reason like skips do.
+
+If TestCase.run is called without a result object then it calls
+result.startTest. Should it also fire the startTestRun and stopTestRun events?
+
 Should multiline values in config files be merged instead of overriding each
 other. (This is effectively what happens for the plugins list.)
 
