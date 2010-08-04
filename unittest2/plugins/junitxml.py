@@ -11,9 +11,6 @@ from xml.etree import ElementTree as ET
 
 from unittest2.events import Plugin, addOption
 
-def xmlEscape(value):
-    return value
-
 class JunitXml(Plugin):
 
     configSection = 'junit-xml'
