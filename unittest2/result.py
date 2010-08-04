@@ -52,6 +52,7 @@ class TestResult(unittest.TestResult):
         self._original_stdout = sys.stdout
         self._original_stderr = sys.stderr
         self._mirrorOutput = False
+        self.reports = []
     
     def startTest(self, test):
         "Called when the given test is about to be run"
@@ -69,6 +70,28 @@ class TestResult(unittest.TestResult):
 
         See startTest for a method called before each test.
         """
+    
+    @failfast
+    def addReport(self, report):
+        self.reports.append(report)
+
+        test = report.test
+        err = report.exc_info
+        reason = report.skipReason
+
+        if report.passed:
+            # call directly on this class instead?
+            self.addSuccess(test)
+        elif report.failed:
+            self.addFailure(test, err)
+        elif report.error:
+            self.addError(test, err)
+        elif report.skipped:
+            self.addSkip(test, reason)
+        elif report.unexpectedSuccess:
+            self.addUnexpectedSuccess(test)
+        elif report.expectedFailure:
+            self.addExpectedFailure(test, err)
 
     def stopTest(self, test):
         """Called when the given test has been run"""

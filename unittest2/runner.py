@@ -96,6 +96,12 @@ class _WritelnDecorator(object):
             raise AttributeError(attr)
         return getattr(self.stream,attr)
     
+    def write(self, arg):
+        if self.runner:
+            self.runner.message(arg, (0, 1, 2))
+        else:
+            self.stream.write(arg)
+
     def writeln(self, arg=None):
         if self.runner:
             arg = arg or ''
@@ -128,6 +134,14 @@ class TextTestResult(result.TestResult):
             return '\n'.join((str(test), doc_first_line))
         else:
             return str(test)
+    
+    def addReport(self, report):
+        super(TextTestResult, self).addReport(report)
+        if self.showAll:
+            self.stream.writeln(report.longResult)
+        elif self.dots:
+            self.stream.write(report.shortResult)
+            self.stream.flush()
 
     def startTest(self, test):
         super(TextTestResult, self).startTest(test)
@@ -136,64 +150,34 @@ class TextTestResult(result.TestResult):
             self.stream.write(" ... ")
             self.stream.flush()
 
-    def addSuccess(self, test):
-        super(TextTestResult, self).addSuccess(test)
-        if self.showAll:
-            self.stream.writeln("ok")
-        elif self.dots:
-            self.stream.write('.')
-            self.stream.flush()
-
-    def addError(self, test, err):
-        super(TextTestResult, self).addError(test, err)
-        if self.showAll:
-            self.stream.writeln("ERROR")
-        elif self.dots:
-            self.stream.write('E')
-            self.stream.flush()
-
-    def addFailure(self, test, err):
-        super(TextTestResult, self).addFailure(test, err)
-        if self.showAll:
-            self.stream.writeln("FAIL")
-        elif self.dots:
-            self.stream.write('F')
-            self.stream.flush()
-
-    def addSkip(self, test, reason):
-        super(TextTestResult, self).addSkip(test, reason)
-        if self.showAll:
-            self.stream.writeln("skipped %r" % (reason,))
-        elif self.dots:
-            self.stream.write("s")
-            self.stream.flush()
-
-    def addExpectedFailure(self, test, err):
-        super(TextTestResult, self).addExpectedFailure(test, err)
-        if self.showAll:
-            self.stream.writeln("expected failure")
-        elif self.dots:
-            self.stream.write("x")
-            self.stream.flush()
-
-    def addUnexpectedSuccess(self, test):
-        super(TextTestResult, self).addUnexpectedSuccess(test)
-        if self.showAll:
-            self.stream.writeln("unexpected success")
-        elif self.dots:
-            self.stream.write("u")
-            self.stream.flush()
-
     def printErrors(self):
         if self.dots or self.showAll:
             self.stream.writeln()
+
+        reportsCategories = {}
+        for report in self.reports:
+            reportList = reportsCategories.setdefault(report.outcome, [])
+            reportList.append((report.description, report.traceback))
+        
+        errors = reportsCategories.pop('passed', [])
+        failures = reportsCategories.pop('failed', [])
+        reportsCategories.pop('skipped', None)
+        reportsCategories.pop('ok', None)
+        reportsCategories.pop('expectedFailures', None)
+        reportsCategories.pop('unexpectedSuccess', None)
+
         self.printErrorList('ERROR', self.errors)
         self.printErrorList('FAIL', self.failures)
+        
+        for flavour, results in reportsCategories.items():
+            self.printErrorList(flavour.upper(), results)
 
     def printErrorList(self, flavour, errors):
-        for test, err in errors:
+        for desc, err in errors:
+            if not isinstance(desc, basestring):
+                desc = self.getDescription(desc)
             self.stream.writeln(self.separator1)
-            self.stream.writeln("%s: %s" % (flavour, self.getDescription(test)))
+            self.stream.writeln("%s: %s" % (flavour, desc))
             self.stream.writeln(self.separator2)
             self.stream.writeln("%s" % err)
 
@@ -244,6 +228,11 @@ class TextTestRunner(unittest.TextTestRunner):
         The default verbosity is (1, 2). If this method is called without an
         explicit verbosity it will be output for verbosities of both 1 and 2.
         """
+        stream = self.stream
+        if hasattr(stream, 'stream'):
+            # for _WritelnDecorator decorated streams
+            stream = stream.stream
+
         if not isinstance(verbosity, basestring):
             try:
                 iter(verbosity)
@@ -273,8 +262,8 @@ class TextTestRunner(unittest.TextTestRunner):
                 # as non-matched channels will be passed through here
                 verb = VERBOSITIES.get(verb, verb)
             if verb == self.verbosity:
-                self.stream.write(msg)
-                self.stream.flush()
+                stream.write(msg)
+                stream.flush()
                 break
 
     def _makeResult(self):
@@ -300,17 +289,17 @@ class TextTestRunner(unittest.TextTestRunner):
             if not event.handled:
                 test(result)
         finally:
+            stopTime = time.time()
+            timeTaken = stopTime - startTime
+
+            event = StopTestRunEvent(self, result, stopTime, timeTaken)
+            hooks.stopTestRun(event)
+
             stopTestRun = getattr(result, 'stopTestRun', None)
             if stopTestRun is not None:
                 stopTestRun()
             else:
                 result.printErrors()
-        
-            stopTime = time.time()
-            timeTaken = stopTime - startTime
-            
-            event = StopTestRunEvent(self, result, stopTime, timeTaken)
-            hooks.stopTestRun(event)
 
         if hasattr(result, 'separator2'):
             self.message(result.separator2, (0, 1, 2))
