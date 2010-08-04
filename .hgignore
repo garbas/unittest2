@@ -1,0 +1,12 @@
+syntax:glob
+*.pyc
+MANIFEST
+dist
+*.wpu
+*$py.class
+unittest2.egg-info/*
+build/*
+.tox/*
+.coverage/*
+htmlcov/*
+junit.xml

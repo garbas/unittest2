@@ -1,0 +1,736 @@
+
+This is a description, and request for feedback, of the unittest plugin system that I am currently prototyping in the plugins branch of unittest2_. My goal is to merge the plugin system back into unittest itself in Python 3.2.
+
+.. _unittest2: http://hg.python.org/unittest2
+
+As part of the prototype I have been implementing some example plugins (in unittest2/plugins/) so I can develop the mechanism against real rather than imagined use cases. Jason Pellerin, creator of nose, has been providing me with feedback and has been trying it out by porting some of the nose plugins to unittest [#]_. He comments on the system "it looks very flexible and clean". ;-)
+
+Example plugins available and included:
+
+    * a pep8 and pyflakes checker
+    * a debugger plugin that drops you into pdb on test fail / error
+    * a doctest loader (looks for doctests in all text files in the project)
+    * use a regex for matching files in test discovery instead of a glob
+    * growl notifications on test run start and stop
+    * filter individual *test methods* using a regex
+    * load test functions from modules as well as TestCases
+    * integration with the coverage module for coverage reporting
+    * display the time of individual tests in verbose reports
+    * display a progress indicator as tests are run ([39/430] format) in verbose reports
+    * allow arbitrary channels for messaging instead of just the three verbosity levels
+
+In addition I intend to create a plugin that outputs junit compatible xml from a test run (for integration with tools like the hudson continuous integration server) and a test runner that runs tests in parallel using multiprocessing.
+
+Not all of these will be included in the merge to unittest. Which ones will is still an open question.
+
+I'd like feedback on the proposal, and hopefully approval to port it into unittest after discussion / amendment / completion. In particular I'd like feedback on the basic system, plus which events should be available and what information should be available in them. Note that the system is *not* complete in the prototype. Enough is implemented to get "the general idea" and to formalise the full system. It still needs extensive tests and the extra work in TestProgram makes it abundantly clear that refactoring there is well overdue...
+
+In the details below open questions and todos are noted. I *really* value feedback (but will ignore bikeshedding. ;-)
+
+.. note::
+
+    Throughout this document I refer to the prototype implementation using names like ``unittest2.Plugin``. Should this proposal be accepted then the names will live in the unittest package instead of unittest2.
+    
+    Most of the plugin related classes and objects live in the ``unittest2.events`` and ``unittest2.config`` namespaces. The names used by plugins are exported at the top level and the internal organisation is an implementation detail. The *exception* to this are the ``hooks`` class and the event objects themselves, which won't normally be used by plugin authors (by name) but are lower level objects used internally that *may* be needed by framework creators (who need to fire events themselves when overriding unittest functionality). The events live in ``unittest2.events`` and can be imported from there.
+
+
+Abstract
+========
+
+unittest lacks a standard way of extending it to provide commonly requested functionality, other than subclassing and overriding (and reimplementing) parts of its behaviour. This document describes a plugin system already partially prototyped in unittest2.
+
+Aspects of the plugin system include:
+
+* an events mechanism where handlers can be registered and called during a test run
+* a Plugin class built over the top of this for easy creation of plugins
+* a configuration system for specifying which plugins should be loaded and for configuring individual plugins
+* command line integration
+* the specific set of events and the information / actions available to them
+
+As the plugin system essentially just adds event calls to key places it has few backwards compatibility issues. Unfortunately existing extensions that override the parts of unittest that call these events will not be compatible with plugins that use them. Framework authors who re-implement parts of unittest, for example custom test runners, may want to add calling these events in appropriate places.
+
+
+Rationale
+=========
+
+Why a plugin system for unittest?
+
+unittest is the standard library test framework for Python but in recent years has been eclipsed in functionality by frameworks like nose and py.test. Among the reasons for this is that these frameworks are easier to extend with plugins than unittest. unittest makes itself particularly difficult to extend by using subclassing as its basic extension mechanism. You subclass and override behaviour in its core classes like the loader, runner and result classes.
+
+This means that where you have more than one "extension" working in the same area it is very hard for them to work together. Whilst various extensions to unittest do exist (e.g. testtools, zope.testrunner etc) they don't tend to work well together. In contrast the plugin system makes creating extensions to unittest much simpler and less likely that extensions will clash with each other.
+
+nose itself exists as a large system built over the top of unittest. Extending unittest in this way was very painful for the creators of nose, and every release of Python breaks nose in some way due to changes in unittest. One of the goals of the extension mechanism is to allow nose2 to be a much thinner set of plugins over unittest(2) that is much simpler to maintain [#]_. The early indications are that the proposed system is a good fit for this goal.
+
+
+Low Level Mechanism
+====================
+
+The basic mechanism is having events fired at various points during a test run. Plugins can register event handler functions that will be called with an event object. Multiple functions may be registered to handle an event and event handlers can also be removed.
+
+Over the top of this is a ``Plugin`` class that simplifies building plugins on top of this mechanism. This is described in a separate section.
+
+The events live on the ``unittest2.events.hooks`` class. Handlers are added using ``+=`` and removed using ``-=``, a syntax borrowed from the .NET system.
+
+For example adding a handler for the ``startTestRun`` event::
+
+    from unittest2.events import hooks
+    
+    def startTestRun(event):
+        print 'test run started at %s' % event.startTime
+    
+    hooks.startTestRun += startTestRun
+
+Handlers are called with an Event object specific to the event. Each event provides different information on its event objects as attributes. For example the attributes available on ``StartTestRunEvent`` objects are:
+
+* ``suite`` - the test suite for the full test run
+* ``runner`` - the test runner
+* ``result`` - the test result
+* ``startTime``
+
+The name of events, whether any should be added or removed, and what information is available on the event objects are all valid topics for discussion. Specific events and the information available to them is covered in a section below.
+
+An example plugin using events directly is the ``doctestloader`` plugin.
+
+Framework authors who re-implement parts of unittest, for example custom test runners, may want to add calling these events in appropriate places. This is very simple. For example the ``pluginsLoaded`` event is fired with a ``PluginsLoadedEvent`` object that is instantiated without parameters::
+
+    from unittest2.events import hooks, PluginsLoadedEvent
+
+    hooks.pluginsLoaded(PluginsLoadedEvent())
+
+
+Why use event objects and not function parameters?
+--------------------------------------------------
+
+There are several reasons to use event objects instead of function parameters. The *disadvantage* of this is that the information available to an event is not obvious from the signature of a handler. There are several compelling advantages however:
+
+* the signature of all handler functions is identical and therefore easy to remember
+
+* backwards compatibility - new attributes can be added to event objects (and parameters deprecated) without breaking existing plugins. Changing the way a function is called (unless all handlers have a ``**kw`` signature) is much harder.
+
+* several of the events have a lot of information available. This would make the signature of handlers huge. With an event object handlers only need to be aware of attributes they are interested in and ignore information they aren't interested in ("only pay for what you eat").
+
+* some of the attributes are mutable - the event object is shared between all handlers, this would be less obvious if function parameters were used
+
+* calling multiple handlers and still returning a value (see the handled pattern below)
+
+
+The handled pattern
+--------------------
+
+Several events can be used to *override* the default behaviour. For example the 'matchregexp' plugin uses the ``matchPath`` event to replace the default way of matching files for loading as tests during test discovery. The handler signals that it is handling this event, and the default implementation should not be run, by setting ``event.handled = True``::
+
+    def matchRegexp(event):
+        event.handled = True
+        if matchFullPath:
+            return re.match(event.pattern, event.path)
+        return re.match(event.pattern, event.name)
+
+Where the default implementation returns a value, for example creating a test suite, or in the case of ``matchPath`` deciding if a path matches a file that should be loaded as a test, the handler can return a result.
+
+If an event sets handled on an event then no more handlers will be called for that event. Which events can be handled, and which not, is discussed in the events section.
+
+
+The Plugin Class
+================
+
+A sometimes-more-convenient way of creating plugins is to subclass the ``unittest2.Plugin`` class. By default subclassing ``Plugin`` will auto-instantiate the plugin and store the instance in a list of loaded plugins.
+
+Each plugin has a ``register()`` method that auto-hooks up all methods whose names correspond to events. Plugin classes may also provide ``configSection`` and ``commandLineSwitch`` class attributes which simplifies enabling the plugin through the command line and making available a section from the configuration file(s).
+
+A simple plugin using this is the 'debugger' plugin that starts ``pdb`` when the ``onTestFail`` event fires::
+
+    from unittest2 import Plugin
+
+    import pdb
+    import sys
+
+    class Debugger(Plugin):
+
+        configSection = 'debugger'
+        commandLineSwitch = ('D', 'debugger', 'Enter pdb on test fail or error')
+    
+        def __init__(self):
+            self.errorsOnly = self.config.as_bool('errors-only', default=False)
+
+        def onTestFail(self, event):
+            value, tb = event.exc_info[1:]
+            test = event.test
+            if self.errorsOnly and isinstance(value, test.failureException):
+                return
+            original = sys.stdout
+            sys.stdout = sys.__stdout__
+            try:
+                pdb.post_mortem(tb)
+            finally:
+                sys.stdout = original
+
+A plugin that doesn't want to be auto-instantiated (for example a base class used for several plugins) can set ``autoCreate = False`` as a class attribute. (This attribute is only looked for on the class directly and so isn't inherited by subclasses.) If a plugin is auto-instantiated then the instance will be set as the ``instance`` attribute on the plugin class.
+
+``configSection`` and ``commandLineSwitch`` are described in the `configuration system`_ and `command line integration`_ sections.
+
+Plugin instances also have an ``unregister`` method that unhooks all the events that were hooked up by ``register``.
+
+Plugins to be loaded are specified in configuration files. For frameworks not using the unittest test runner and configuration system APIs for loading plugins are available in the form of the ``loadPlugins`` function (which uses the configuration system to load plugins) and ``loadPlugin`` which loads an individual plugin by module name. Loading plugins just means importing the module containing the plugin.
+
+Once plugins are loaded through ``loadPlugins`` the auto-registration feature is switched off and imported plugins will no longer be instantiated. This prevents plugins contained within a project accidentally being re-registered during test discovery.
+
+
+
+Configuration system
+====================
+
+By default the unittest2 test runner (triggered by the unit2 script or for unittest ``python -m unittest``) loads two configuration files to determine which plugins to load.
+
+A user configuration file, ~/unittest.cfg (alternative name and location would be possible), can specify plugins that will always be loaded. A per-project configuration file, unittest.cfg which should be located in the current directory when unit2 is launched, can specify plugins for individual projects.
+
+To support this system several command line options have been added to the test runner::
+
+  --config=CONFIGLOCATIONS
+                        Specify local config file location
+  --no-user-config      Don't use user config file
+  --no-plugins          Disable all plugins
+
+Several config files can be specified using ``--config``. If the user config is being loaded then it will be loaded first (if it exists), followed by the project config (if it exists) *or* any config files specified by ``--config``. ``--config`` can point to specific files, or to a directory containing a ``unittest.cfg``.
+
+Config files loaded later are merged into already loaded ones. Where a *key* is in both the later key overrides the earlier one. Where a section is in both but with different keys they are merged. (The exception to keys overriding is the 'plugins' key in the unittest section - these are combined to create a full list of plugins. Perhaps multiline values in config files could also be merged?)
+
+plugins to be loaded are specified in the ``plugins`` key of the ``unittest`` section::
+
+    [unittest]
+    plugins = 
+        unittest2.plugins.checker
+        unittest2.plugins.doctestloader
+        unittest2.plugins.matchregexp
+        unittest2.plugins.moduleloading
+        unittest2.plugins.debugger
+
+The plugins are simply module names. They either hook themselves up manually on import or are created by virtue of subclassing ``Plugin``. A list of all loaded plugins is available as ``unittest2.loadedPlugins`` (a list of strings).
+
+Individual plugins may be prevented from loading by listing them in the 'excluded-plugins' key of either the user or project config files. This allows projects to disable plugins they know to be incompatible with their tests.
+
+For accessing config values there is a ``getConfig(sectionName=None)`` function. By default it returns the whole config data-structure but it an also return individual sections by name. If the section doesn't exist an empty section will be returned. The config data-structure is not read-only but there is no mechanism for persisting changes.
+
+The config is a dictionary of ``Section`` objects, where a section is a dictionary subclass with some convenience methods for accessing values::
+
+    section = getConfig(sectionName)
+    
+    integer = section.as_int('foo', default=3)
+    number = section.as_float('bar', default=0.0)
+    
+    # as_list returns a list with empty lines and comment lines removed
+    items = section.as_list('items', default=[])
+
+    # as_bool allows 'true', '1', 'on', 'yes' for True (matched case-insensitively) and
+    # 'false', 'off', '0', 'no', '' for False
+    value = section.as_bool('value', default=True)
+    
+    # as_tri is the same as as_bool but returns None rather than False if the
+    # key is present but the value is empty
+    value = section.as_tri('value', default=None)
+
+If a plugin specifies a ``configSection`` as a class attribute then that section will be fetched and set as the ``config`` attribute on instances.
+
+Command line options to the unittest test runner, like verbosity, catch, buffer and failfast, can be set in the 'unittest' section of the config file(s). Values set in the config file will act as a default that can be overridden at the command line. The *actual* value, after handling the command line options, is set back in the config data structure so that plugins can access the current values. In addition the key 'discover' in the unittest section will be set to True or False indicating whether or not test discovery has been invoked. (These settings are read-only, modifying them will have no effect other than confusing other plugins.)
+
+You can find out the current verbosity level by doing::
+
+    from unittest2 import getConfig
+
+    main_config = getConfig('unittest2')
+    
+    # no need to supply a default - this key will always exist
+    verbosity = main_config.as_int('verbosity')
+
+By convention plugins should use the 'always-on' key in their config section to specify that the plugin should be switched on by default. If 'always-on' exists and is set to 'True' then the ``register()`` method will be called on the plugin to hook up all events. If you don't want a plugin to be auto-registered you should fetch the config section yourself rather than using ``configSection``.
+
+If the plugin is configured to be 'always-on', and is auto-registered, then it doesn't need a command line switch to turn it on (although it may add other command line switches or options) and ``commandLineSwitch`` will be ignored.
+
+
+Rules about option precedence
+-----------------------------
+
+The rules about how options are set are (hopefully) logical but slightly fiddly. It goes (something) like this.
+
+These rules apply to the verbosity, catchbreak, failfast and buffer options. For verbosity the default is 1, for the other options the default is False.
+
+If the option is specified in a call to the ``main(...)`` function then this trumps everything. If buffer, catch or failfast is specified in the call to ``main(...)`` then these options are not available at the command line.
+
+All of these options can be specified in the config file(s). The config file provides fallback defaults that will be used if no options are provided at the command line.
+
+For verbosity the two command line options are ``-s`` and ``-v``. ``-s`` will set a verbosity of 0 and ``-v`` will set a verbosity of 2. Passing both will set a verbosity of 1.
+
+If a command line option is passed then this will be set. *However* the option was set (whether by an explicit parameter to main, through a default, through a config file or through a command line parameter) then the value used will be set in the 'unittest' section of the config structure.
+
+In the configuration files, and also in the main function and TextTestRunner constructor, verbosity may be specified using the strings 'quiet', 'normal' and 'verbose'. These correspond to levels 0, 1 and 2.
+
+
+Command Line Interface
+======================
+
+Plugins may add command line options, either switches with a callback function or options that take values and will be added to a list. There are two functions that do this: ``unittest2.addOption`` and ``unittest2.addDiscoveryOption``. Some of the events are only applicable to test discovery (``matchPath`` is the only one currently I think), options that use these events should use ``addDiscoveryOption`` which will only be used if test discovery is invoked.
+
+Both functions have the same signature::
+
+    addDiscoveryOption(callback, opt=None, longOpt=None, help=None)
+    
+    addOption(plugin.method, 'X', '--extreme', 'Run tests in extreme mode')
+
+* ``callback`` is a callback function (taking no arguments) to be invoked if the option is on *or* a list indicating that this is an option that takes arguments, values passed in at the command line will be added to the list
+* ``opt`` is a short option for the command (or None) not including the leading '-'
+* ``longopt`` a long option for the command (or None) not including the leading '--'
+* ``help`` is optional help text for the option, to be displayed by ``unit2 -h``
+
+Lowercase short options are reserved for use by unittest2 internally. Plugins may only add uppercase short options.
+
+If a plugin needs a simple command line switch (on/off) then it can set the ``commandLineSwitch`` class attribute to a tuple of ``(opt, longOpt, help)``. The ``register()`` method will be used as the callback function, automatically hooking the plugin up to events if it is switched on.
+
+
+The Events
+==========
+
+This section details the events implemented so far, the order they are called in, what attributes are available on the event objects, whether the event is 'handleable' (and what that means for the event), plus the intended use case for the event.
+
+Events in rough order are:
+
+* ``pluginsLoaded``
+* ``handleFile``
+* ``matchPath``
+* ``loadTestsFromNames``
+* ``loadTestsFromName``
+* ``loadTestsFromModule``
+* ``loadTestsFromTestCase``
+* ``getTestCaseNames``
+* ``runnerCreated``
+* ``startTestRun``
+* ``startTest``
+* ``afterSetUp``
+* ``beforeTearDown``
+* ``onTestFail``
+* ``stopTest``
+* ``stopTestRun``
+* ``message``
+
+Event objects all have a `message` method for writing to the default output stream whilst honouring the verbosity of the test runner. See `New messaging API that honours verbosity`_.
+
+
+pluginsLoaded
+-------------
+
+This event is useful for plugin initialisation. It is fired after all plugins have been loaded, the config file has been read and command line options processed.
+
+The ``PluginsLoadedEvent``  has one attribute: ``loadedPlugins`` which is a list of strings referring to all plugin modules that have been loaded.
+
+
+handleFile
+----------
+
+This event is fired when a file is looked at in test discovery or a *filename* is passed at the command line. It can be used for loading tests from non-Python files, like doctests from text files, or adding tests for a file like pep8 and pyflakes checks.
+
+A ``HandleFileEvent`` object has the following attributes:
+
+* ``extraTests`` - a list, extend this with tests to *add* tests that will be loaded from this file without preventing the default test loading
+* ``name`` - the name of the file
+* ``path`` - the full path of the file being looked at
+* ``loader`` - the ``TestLoader`` in use
+* ``pattern`` - the pattern being used to match files, or None if not called during test discovery
+* ``top_level_directory`` - the top level directory of the project tests are being loaded from, or the current working directory if not called during test discovery
+
+This event *can* be handled. If it is handled then the handler should return a test suite or None. Returning None means no tests will be loaded from this file. If any plugin has created any ``extraTests`` then these will be used even if a handler handles the event and returns None.
+
+If this event is not handled then it will be matched against the pattern (test discovery only) and either be rejected or go through for standard test loading.
+
+
+matchPath
+---------
+
+``matchPath`` is called to determine if a file should be loaded as a test module. This event only fires during test discovery.
+
+``matchPath`` is only fired if the filename can be converted to a valid python module name, this is because tests are loaded by importing. If you want to load tests from files whose paths don't translate to valid python identifiers then you should use ``handleFile`` instead.
+
+A ``MatchPathEvent`` has the following attributes:
+
+* ``path`` - full path to the file
+* ``name`` - filename only
+* ``pattern`` - pattern being used for discovery
+
+If a plugin changes ``event.name`` then the new name is what will be used to load the tests.
+
+This event *can* be handled. If it is handled then the handler should return True or False to indicate whether or not test loading should be attempted from this file. If this event is not handled then the pattern supplied to test discovery will be used as a glob pattern to match the filename.
+
+
+loadTestsFromNames
+------------------
+
+This event is fired when ``TestLoader.loadTestsFromNames`` is called.
+
+Attributes on the ``LoadFromNamesEvent`` object are:
+
+* ``loader`` - the test loader
+* ``names`` - a list of the names being loaded
+* ``module`` - the module passed to ``loader.loadTestsFromNames(...)`` 
+* ``extraTests`` - a list of extra tests to be added to the suites loaded from the names
+
+This event can be handled. If it is handled then the handler should return a list of suites or None. Returning None means no tests will be loaded from these names. If any plugin has created any ``extraTests`` then these will be used even if a handler handles the event and returns None.
+
+If this event is not handled then ``loader.loadTestFromName`` will be called for each name to build up the list of suites. ``event.names`` will be used to load the tests, so this event may modify the names list in place.
+
+
+loadTestsFromName
+-----------------
+
+This event is fired when ``TestLoader.loadTestsFromName`` is called.
+
+Attributes on the ``LoadFromNameEvent`` object are:
+
+* ``loader`` - the test loader
+* ``name`` - the name being loaded
+* ``module`` - the module passed to ``loader.loadTestsFromName(...)`` 
+* ``extraTests`` - a suite of extra tests to be added to the suite loaded from the name
+
+This event can be handled. If it is handled then the handler should return a TestSuite or None. Returning None means no tests will be loaded from this name. If any plugin has created any ``extraTests`` then these will be used even if a handler handles the event and returns None.
+
+If the event is not handled then each name will be resolved and tests loaded from it, which may mean calling ``loader.loadTestsFromModule`` or ``loader.loadTestsFromTestCase``.
+
+
+
+loadTestsFromModule
+-------------------
+
+This event is fired when ``TestLoader.loadTestsFromModule`` is called. It can be used to customise the loading of tests from a module, for example loading tests from functions as well as from TestCase classes.
+
+Attributes on the ``LoadFromModuleEvent`` object are:
+
+* ``loader`` - the test loader
+* ``module`` - the module object tests 
+* ``extraTests`` - a suite of extra tests to be added to the suite loaded from the module
+
+This event can be handled. If it is handled then the handler should return a TestSuite or None. Returning None means no tests will be loaded from this module. If any plugin has created any ``extraTests`` then these will be used even if a handler handles the event and returns None.
+
+If the event is not handled then ``loader.loadTestsFromTestCase`` will be called for every TestCase in the module.
+
+Event if the event is handled, if the module defines a ``load_tests`` function then it *will* be called for the module. This removes the responsibility for implementing the ``load_tests`` protocol from plugin authors.
+
+
+loadTestsFromTestCase
+---------------------
+
+This event is fired when ``TestLoader.loadTestsFromTestCase`` is called. It could be used to customise the loading of tests from a TestCase, for example loading tests with an alternative prefix or created generative / parameterized tests.
+
+Attributes on the ``LoadFromTestCaseEvent`` object are:
+
+* ``loader`` - the test loader
+* ``testCase`` - the test case class being loaded
+* ``extraTests`` - a suite of extra tests to be added to the suite loaded from the TestCase
+
+This event can be handled. If it is handled then the handler should return a TestSuite or None. Returning None means no tests will be loaded from this module. If any plugin has created any ``extraTests`` then these will be used even if a handler handles the event and returns None
+
+If the event is not handled then ``loader.getTestCaseNames`` will be called to get method names from the test case and a suite will be created by instantiating the TestCase class with each name it returns.
+
+
+getTestCaseNames
+----------------
+
+This event is fired when ``TestLoader.getTestCaseNames`` is called. It could be used to customise the method names used to load tests from a TestCase, for example loading tests with an alternative prefix from the default or filtering for specific names.
+
+Attributes on the ``GetTestCaseNamesEvent`` object are:
+
+* ``loader`` - the test loader
+* ``testCase`` - the test case class that tests are being loaded from
+* ``testMethodPrefix`` - set to None, modify this attribute to *change* the prefix being used for this class
+* ``extraNames`` - a list of extra names to use for this test case as well as the default ones
+* ``excludedNames`` - a list of names to exclude from loading from this class
+
+This event can be handled. If it is handled it should return a list of strings. Note that if this event returns an empty list (or None which will be replaced with an empty list then ``loadTestsFromTestCase`` will still check to see if the TestCase has a ``runTest`` method.
+
+Even if the event is handled ``extraNames`` will still be added to the list, however *excludedNames`` won't be removed as they are filtered out by the default implementation which looks for all attributes that are methods (or callable) whose name begins with ``loader.testMethodPrefix`` (or ``event.testMethodPrefix`` if that is set) and aren't in the list of excluded names (converted to a set first for efficient lookup).
+
+The list of names will also be sorted using ``loader.sortTestMethodsUsing``.
+
+
+runnerCreated
+-------------
+
+This event is fired when the ``TextTestRunner`` is instantiated. It can be used to customize the test runner, for example replace the stream and result class, without needing to write a custom test harness. This should allow the default test runner script (``unit2`` or ``python -m untitest``) to be suitable for a greater range of projects. Projects that want to use custom test reporting should be able to do it through a plugin rather than having to rebuild the runner and result machinery, which also requires writing custom test collection too.
+
+The ``RunnerCreatedEvent`` object only has one attribute; ``runner`` which is the runner instance.
+
+
+startTestRun
+------------
+
+This event is fired when the test run is started. This is used, for example, by the growl notifier that displays a growl notification when a test run begins. It can also be used for filtering tests after they have all been loaded or for taking over the test run machinery altogether, for distributed testing for example.
+
+The ``StartTestRunEvent`` object has the following attributes:
+
+* ``test`` - the full suite of all tests to be run (may be modified in place)
+* ``result`` - the result object
+* ``startTime`` - the time the test run started
+
+Currently this event can be handled. This prevents the normal test run from executing, allowing an alternative implementation, but the return value is unused. Handling this event (as with handling any event) prevents other plugins from executing. This means that the it wouldn't be possible to safely combine a distributed test runner with a plugin that filters the suite. Fixing this issue is one of the open issues with the plugin system.
+
+
+startTest
+---------
+
+This event is fired immediately before a test is executed (inside ``TestCase.run(...)``).
+
+The ``StartTestEvent`` object has the following attributes:
+
+* ``test`` - the test to be run
+* ``result`` - the result object
+* ``startTime`` - the time the test starts execution
+
+This event cannot be handled.
+
+
+afterSetUp
+----------
+
+This event is fired after a *test* setUp runs. (Not class or module level setups.)
+
+The ``AfterSetUpEvent`` object has the following attributes:
+
+* ``test`` - the test to be run
+* ``result`` - the result object
+* ``exc_info`` - failure information from the setUp or None
+* ``time`` - time the setUp completed
+
+This event cannot be handled.
+
+
+beforeTearDown
+-------------- 
+
+This event is fired after a test has run but before the tearDown is executed. 
+
+The ``BeforeTearDownEvent`` object has the following attributes:
+
+* ``test`` - the test to be run
+* ``result`` - the result object
+* ``success`` - True or False indicating if the test passed or not.
+* ``time`` - time the test completed
+
+This event cannot be handled.
+
+
+
+onTestFail
+----------
+
+This event is fired when a test setUp, a test, a tearDown or a cleanUp fails or errors. It is currently used by the debugger plugin. It *is* currently called for 'internal' unittest exceptions like ``SkipTest`` or expected failures and unexpected successes, so if your plugin doesn't want to handle these it should check the ``internal`` attribute on the event.
+
+Attributes on the ``TestFailEvent`` are:
+
+* ``test`` - the test
+* ``result`` - the result
+* ``exc_info`` - the result of ``sys.exc_info()`` after the error / fail
+* ``when`` - one of 'setUp', 'call', 'tearDown', or 'cleanUp'
+* ``internal`` - True if the exception is one internal to unittest, like skipped tests, unexpected successes or expected failures
+
+This event cannot be handled. If this event sets ``exc_info`` to None then the exception is suppressed and the test becomes a pass. After this event is completed ``event.exc_info`` is reraised - so the event can *modify* the exception by modifying ``exc_info``.
+
+
+stopTest
+--------
+
+This event is fired when a test execution is completed. It includes a great deal of information about the test and could be used to completely replace test reporting, making the test result potentially obsolete. It will be used by the junit-xml plugin to generate the xml reports describing the test run.
+
+If there are errors during a tearDown or clean up functions then this event may be fired several times for a test. For each call the ``stage`` will be different, although there could be several errors during clean up functions.
+
+Attributes on the ``StopTestEvent`` are:
+
+* ``test`` - the test
+* ``result`` - the result
+* ``exc_info`` - the result of ``sys.exc_info()`` after an error / fail or None for success
+* ``stopTime``- time the test stopped, including tear down and clean up functions
+* ``timeTaken`` - total time for test execution from setUp to clean up functions
+* ``stage`` - one of setUp, call, tearDown, cleanUp, or None for success
+* ``outcome`` - one of passed, failed, error, skipped, unexpectedSuccess, expectedFailure
+
+The outcomes all correspond to an attribute that will be set to True or False depending on outcome:
+
+* ``passed``
+* ``failed``
+* ``error``
+* ``skipped``
+* ``unexpectedSuccess``
+* ``expectedFailure``
+
+In addition there is a ``skipReason`` that will be None unless the test was skipped, in which case it will be a string containing the reason.
+
+This event cannot be handled. 
+
+
+stopTestRun
+-----------
+
+This event is fired when the test run completes. It is useful for reporting tools.
+
+The ``StopTestRunEvent`` event objects have the following attributes:
+
+* ``runner`` - the test runner
+* ``result`` - the test result
+* ``stopTime`` - the time the test run completes
+* ``timeTaken`` - total time taken by the test run
+
+
+message
+-------
+
+This event is fired when a test runner receives a message to send.
+
+The ``MessageEvent`` event objects have the following attributes:
+
+* ``runner`` - the test runner
+* ``stream`` - the output stream
+* ``message`` - the message to be output
+* ``verbosity`` - a tuple of verbosities (even if there is only one), integers or strings - but 'quiet', 'normal' and 'verbose' will already have been converted into their integer equivalents
+
+All messages sent by the ``TextTestResult`` and ``TextTestRunner`` go through this API, so you can use it for customising output of a test run - for example logging to a file.
+
+If the message is handled then what happens next depends on the return value of the handler function. If the handler returns True the message will be written immediately. If the handler returns False the message will be discarded.
+
+Handler functions may modify ``event.message`` and ``event.verbosity`` and the modified values will be used.
+
+
+New messaging API that honours verbosity
+========================================
+
+There is a new messaging API for writing messages to the 'output stream' whilst honouring the verbosity the runner was started with.
+
+The easiest way of using this API is through the `message` method on event objects. This has the signature::
+
+    event.message(msg, verbosity=(1, 2))
+
+The second argument is the verbosity, which can either be a single value or a tuple of values. The message is only written to the stream if the verbosity (or one of the verbosities) *matches* the verbosity the runner was created with. `message` uses the 'default runner'. If a runner hasn't been created then the messages are queued until one is created. When a ``TextTestRunner`` is instantiated it is set as the default runner and all queued messages are output.
+
+The default verbosity is (1, 2). If this function is called without an explicit verbosity it will be output for verbosities of both 1 and 2.
+
+If you are using the default runner (the unit2 script or a ``TextTestRunner``) then this functionality is also available from a ``message`` function::
+
+    from unittest2 import message
+    
+    message('short message', 0)
+    message('longer one', (1, 2))
+
+This is supported under the hood by a new ``message(msg, verbosity)`` method on the ``TextTestRunner`` and a ``setRunner`` function for setting the default runner to be used by the messaging API.
+
+As well as the integers 0, 1, and 2 the strings 'quiet', 'normal' and 'verbose' may be used as verbosity levels.
+
+There is an experimental plugin, ``unittest2.plugins.logchannels`` that enables plugins to use custom channels as verbosity levels. If this is active and a message is output with a channel string that isn't 'quiet', 'normal' or 'verbose' then the message will only be output if the verbosity matches an active channel. Channels are enabled at the command line with ``--channel=NAME``.
+
+
+Not Yet Implemented
+===================
+
+Except where noted, everything in this document is already working in the prototype. There are a few open issues and things still to be implemented.
+
+The ``startTestRun`` event needs an alternative way of replacing the default
+test run machinery without stopping other plugins from executing. It should
+only be possible for *one* plugin to use this.
+
+TestFailEvent needs to be fired on failures in setUpClass and setUpModule etc
+
+Test reporting is hard to customize. At the moment a plugin can modify the way
+tests are reported by silencing the test result and taking over test reporting
+completely. This doesn't work well for more than one plugin.
+
+Should ``StopTestEvent.timeTaken`` (plus startTime / stopTime etc) include the
+time for setUp, tearDown and cleanUps? (afterSetUp and beforeTearDown have the
+times the setUp completes and the time the test completes - should these times
+also be in StopTest?)
+
+StopTest can be called several times if there are several failures during a
+single test (e.g. in the test *and* the tearDown and cleanUp functions).
+Should it instead be called once with a MetaEvent that collects all the
+errors.
+
+Should there be an "excluded-plugins" section in the config files, so projects
+can prevent incompatible plugins from being loaded?
+
+Should multiline values in config files be merged instead of overriding each
+other. (This is effectively what happens for the plugins list.)
+
+Should ``handleFile`` be fired when a test name is specified at the command
+line? (This would be 'tricky' as ``handleFile`` will have to be called for the
+containing module and then the correct name pulled out of the module.)
+
+A plugin that adds a "user plugin directory" and automatically activates
+(imports) all plugins located there. New plugins can be added just by dropping
+them in the directory (zero config).
+
+The location of the user config file is not settled, and will probably need
+to be platform specific. See: http://bugs.python.org/issue7175
+
+Certain event attributes should be read only (like extraTests, extraNames etc)
+because they should only be extended or modified in place instead of being
+replaced.
+
+Add an epilogue to the optparse help messages.
+
+How do we provide paramterized / generative tests?
+
+If the merge to unittest in Python 3.2 happens we need to decide which of the
+example plugins will be included in unittest. (They will probably all remain
+in unittest2.)
+
+The global runner that is used by event.message is a little ugly. Alternatives
+for handling messages sent before any runner is created?
+
+A plugins subcommand (or separate script) could be provided to manage and
+configure plugins. This should use pep 376 for plugin discovery if it is
+available (distutils2 installed or python 3.2 in use).
+
+Should unittest2 have a different config file from unittest, so they can be
+configured side-by-side? (``unittest2.cfg`` perhaps.) Alternatively the same
+config file could be used with a '[unittest2]' section instead of '[unittest]'.
+
+The discovery command line interface has changed a lot and the tests need
+reviewing to ensure they still provide full coverage.
+
+
+Additional Changes
+==================
+
+Alongside, and in support of, the plugin system a few changes have been made to unittest2. These either have no, or very minor, backwards compatibility issues. Changes so far are:
+
+TextTestRunner has a new method ``message(msg, verbosity=(1, 2))``. The message is output to the runner stream if the verbosity *matches* the verbosity of the runner. In addition unittest2 has two new functions exported, both from the `unittest2.runner` module: ``message`` and ``setRunner``. `event.message` delegates to the `message` function.
+
+TestLoader has a new attribute ``DEFAULT_PATTERN``. This is so that the
+regex matching plugin can change the default pattern used for test discovery
+when no pattern is explicitly provided.
+
+Command line parsing is all done by optparse, removing the use of getopt. This
+makes the help messages more consistent but makes the usage messages less
+useful in some situations. This can be fixed with the use of the optparse
+epilogue.
+
+The verbosity argument to the main function and the TextTestRunner can be passed in as strings ('quiet', 'normal' or 'verbose', which correspond to 0, 1, and 2) instead of just integers.
+
+Output by the TextTestRunner and the TextTestResult goes through the 'message' event. To support this the ``_WritelnDecorator`` takes an optional 'runner' argument in the constructor. If the 'runner' argument is used then all calls to ``writeln`` are sent on to the ``runner.message`` method. Direct calls to ``stream.write`` are not intercepted.
+
+unit2 (the default test runner) runs test discovery if invoked without any arguments.
+
+unit2 can execute tests in filenames as well as module names - so long as the
+module pointed to by the filename is importable from the current directory.
+
+FunctionTestCase.id() returns 'module.funcname' instead of just funcname.
+
+Added util.formatTraceback, the default way of formatting tracebacks. TestCase
+has a new formatTraceback method (delegating to util.formatTraceback). TestCase
+instances can implement formatTraceback to control how the traceback for errors
+and failures are represented. Useful for test items that don't represent Python
+tests, for example the pep8 / pyflakes checker and theoretical javascript
+test runners such as exist for py.test and nose.
+
+If you specify test names (modules, classes etc) at the command line they will
+be loaded individually using ``loader.loadTestsFromName`` instead of
+collectively with ``loader.loadTestsFromNames``. This enables individual names
+to be checked to see if they refer to filenames.
+
+
+References
+==========
+
+.. [#] See http://bitbucket.org/jpellerin/unittest2/src/tip/unittest2/plugins/attrib.py and http://bitbucket.org/jpellerin/unittest2/src/tip/unittest2/plugins/errormaster.py
+.. [#] http://lists.idyll.org/pipermail/testing-in-python/2010-March/002799.html
