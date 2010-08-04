@@ -168,21 +168,35 @@ class BeforeTearDownEvent(_Event):
         self.success = success
         self.time = time
 
+_DEFAULT_RESULTS = {
+    'passed': ('ok', '.'),
+    'error': ('ERROR', 'E'),
+    'failed': ('FAIL', 'F'),
+    'skipped': ("skipped %r", 's'),
+    'expectedFailure': ("expected failure", 'x'),
+    'unexpectedSuccess': ('unexpected success', 'u'),
+}
 class StopTestEvent(_Event):
-    def __init__(self, test, result, stopTime, timeTaken, 
-                    outcome, exc_info=None, stage=None):
+    def __init__(self, test, result, stopTime, timeTaken, outcome, exc_info,
+                 stage, traceback):
         _Event.__init__(self)
         self.test = test
         self.result = result
         self.stopTime = stopTime
         self.timeTaken = timeTaken
         self.exc_info = exc_info
+
+        self.longResult = None
+        self.shortResult = None
+        self.traceback = traceback
+        try:
+            self.description = result.getDescription(test)
+        except AttributeError:
+            self.description = str(test)
+
+        self.metadata = {}
         
-        # class, setUp, call, tearDown, cleanUp
-        # or None for a pass
-        self.stage = stage
-        self.outcome = outcome
-        
+        self.outcome = None
         self.passed = False
         self.failed = False
         self.error = False
@@ -190,6 +204,16 @@ class StopTestEvent(_Event):
         self.skipReason = None
         self.unexpectedSuccess = False
         self.expectedFailure = False
+
+        # class, setUp, call, tearDown, cleanUp
+        # or None for a pass
+        self.stage = stage
+        self.outcome = outcome
+
+        longResult, shortResult = _DEFAULT_RESULTS[outcome]
+        self.shortResult = shortResult
+        self.longResult = longResult
+
         if outcome == 'passed':
             self.passed = True
         elif outcome == 'failed':
@@ -198,11 +222,13 @@ class StopTestEvent(_Event):
             self.error = True
         elif outcome == 'skipped':
             self.skipped = True
-            self.skipReason = str(exc_info[1])
+            self.skipReason = str(self.exc_info[1])
+            self.longResult = longResult % self.skipReason
         elif outcome == 'unexpectedSuccess':
             self.unexpectedSuccess = True
         elif outcome == 'expectedFailure':
             self.expectedFailure = True
+
 
 class PluginsLoadedEvent(_Event):
     loadedPlugins = loadedPlugins
@@ -255,6 +281,7 @@ class hooks(object):
     afterSetUp = _EventHook()
     onTestFail = _EventHook()
     beforeTearDown = _EventHook()
+    createReport = _EventHook()
     stopTest = _EventHook()
     stopTestRun = _EventHook()
     message = _EventHook()
