@@ -311,15 +311,7 @@ class TestCase(unittest.TestCase):
     def __repr__(self):
         return "<%s testMethod=%s>" % \
                (strclass(self.__class__), self._testMethodName)
-    
-    def _addSkip(self, result, reason):
-        addSkip = getattr(result, 'addSkip', None)
-        if addSkip is not None:
-            addSkip(self, reason)
-        else:
-            warnings.warn("Use of a TestResult out an addSkip method is deprecated", 
-                          DeprecationWarning, 2)
-            result.addSuccess(self)
+
 
     def withTestFailEvent(self, func, result, when):
         try:
@@ -333,6 +325,60 @@ class TestCase(unittest.TestCase):
             if info is None:
                 return
             raise info[0], info[1], info[2]
+
+    def _createReport(self, exc_info, stage, outcome, result):
+        startTime = self._startTime
+        stopTime = time.time()
+        timeTaken = stopTime - startTime
+
+        traceback = None
+        
+        if outcome in ('failed', 'error'):
+            traceback = self.formatTraceback(exc_info)
+        
+        event = StopTestEvent(self, result, stopTime, timeTaken, outcome,
+                              exc_info, stage, traceback)
+
+        # first event allows customisation of the report
+        hooks.createReport(event)
+        hooks.stopTest(event)
+
+        if hasattr(result, 'addReport'):
+            result.addReport(event)
+        else:
+            # legacy result objects
+            if event.error:
+                result.addError(self, exc_info)
+            elif event.failed:
+                result.addFailure(self, exc_info)
+            elif event.passed:
+                result.addSuccess(self)
+            elif event.skipped:
+                addSkip = getattr(result, 'addSkip', None)
+                if addSkip is not None:
+                    addSkip(self, event.skipReason)
+                else:
+                    # legacy-legacy result objects
+                    warnings.warn("Use of a TestResult without an addSkip method is deprecated", 
+                                  DeprecationWarning, 2)
+                    result.addSuccess(self)
+            elif event.expectedFailure:
+                addExpectedFailure = getattr(result, 'addExpectedFailure', None)
+                if addExpectedFailure is not None:
+                    addExpectedFailure(self, exc_info)
+                else:
+                    warnings.warn("TestResult has no addExpectedFailure method, reporting as passes",
+                                  DeprecationWarning)
+                result.addSuccess(self)
+            elif event.unexpectedSuccess:
+                addUnexpectedSuccess = getattr(result, 'addUnexpectedSuccess', None)
+                if addUnexpectedSuccess is not None:
+                    addUnexpectedSuccess(self)
+                else:
+                    warnings.warn("TestResult has no addUnexpectedSuccess method, reporting as failures",
+                                  DeprecationWarning)
+                    result.addFailure(self, exc_info)
+        
 
     def run(self, result=None):
         orig_result = result
@@ -353,27 +399,21 @@ class TestCase(unittest.TestCase):
         
         testMethod = getattr(self, self._testMethodName)
         
-        def doStop(outcome, exc_info, stage):
-            stopTime = time.time()
-            timeTaken = stopTime - startTime
-            event = StopTestEvent(self, result, stopTime, timeTaken, 
-                                  outcome, exc_info, stage)
-            hooks.stopTest(event)
-        
         if (getattr(self.__class__, "__unittest_skip__", False) or 
             getattr(testMethod, "__unittest_skip__", False)):
             # If the class or method was skipped.
             try:
                 skip_why = (getattr(self.__class__, '__unittest_skip_why__', '')
                             or getattr(testMethod, '__unittest_skip_why__', ''))
-                self._addSkip(result, skip_why)
             finally:
-                result.stopTest(self)
                 exc_info = (SkipTest, SkipTest(skip_why), None)
-                doStop('skipped', exc_info, 'class')
+                self._createReport(exc_info, 'setUp', 'skipped', result)
+                result.stopTest(self)
             return
+
+        sys.exc_clear()
         try:
-            success = False
+            success = True
 
             def fireAfterSetUp():
                 exc_info = sys.exc_info()
@@ -383,52 +423,35 @@ class TestCase(unittest.TestCase):
 
             try:
                 self.withTestFailEvent(self.setUp, result, 'setUp')
-            except SkipTest, e:
-                self._addSkip(result, str(e))
+            except Exception, e:
+                success = False
                 exc_info = fireAfterSetUp()
-                doStop('skipped', exc_info, 'setUp')
-            except Exception:
-                exc_info = fireAfterSetUp()
-                doStop('error', exc_info, 'setUp')
-                result.addError(self, exc_info)
-            else:
+                if isinstance(e, SkipTest):
+                    outcome = 'skipped'
+                else:
+                    outcome = 'error'
+                self._createReport(exc_info, 'setUp', outcome, result)
+
+            if success:
                 fireAfterSetUp()
+                exc_info = None
     
                 try:
                     self.withTestFailEvent(testMethod, result, 'call')
-                except self.failureException:
+                except Exception, e:
+                    success = False
                     exc_info = sys.exc_info()
-                    doStop('failed', exc_info, 'call')
-                    result.addFailure(self, exc_info)
-                except _ExpectedFailure, e:
-                    exc_info = e.exc_info
-                    doStop('expectedFailure', exc_info, 'call')
-                    addExpectedFailure = getattr(result, 'addExpectedFailure', None)
-                    if addExpectedFailure is not None:
-                        addExpectedFailure(self, exc_info)
-                    else: 
-                        warnings.warn("Use of a TestResult without an addExpectedFailure method is deprecated", 
-                                      DeprecationWarning)
-                        result.addSuccess(self)
-                except _UnexpectedSuccess:
-                    exc_info = sys.exc_info()
-                    doStop('unexpectedSuccess', exc_info, 'call')
-                    addUnexpectedSuccess = getattr(result, 'addUnexpectedSuccess', None)
-                    if addUnexpectedSuccess is not None:
-                        addUnexpectedSuccess(self)
+                    if isinstance(e, self.failureException):
+                        outcome = 'failed'
+                    elif isinstance(e, _ExpectedFailure):
+                        outcome = 'expectedFailure'
+                    elif isinstance(e, _UnexpectedSuccess):
+                        outcome = 'unexpectedSuccess'
+                    elif isinstance(e, SkipTest):
+                        outcome = 'skipped'
                     else:
-                        warnings.warn("Use of a TestResult without an addUnexpectedSuccess method is deprecated", 
-                                      DeprecationWarning)
-                        result.addFailure(self, sys.exc_info())
-                except SkipTest, e:
-                    doStop('skipped', sys.exc_info(), 'call')
-                    self._addSkip(result, str(e))
-                except Exception:
-                    exc_info = sys.exc_info()
-                    doStop('error', exc_info, 'call')
-                    result.addError(self, exc_info)
-                else:
-                    success = True
+                        outcome = 'error'
+                    self._createReport(exc_info, 'call', outcome, result)
 
                 event = BeforeTearDownEvent(self, result, success, time.time())
                 hooks.beforeTearDown(event)
@@ -436,16 +459,15 @@ class TestCase(unittest.TestCase):
                 try:
                     self.withTestFailEvent(self.tearDown, result, 'tearDown')
                 except Exception:
-                    exc_info = sys.exc_info()
-                    doStop('error', exc_info, 'tearDown')
-                    result.addError(self, exc_info)
                     success = False
+                    exc_info = sys.exc_info()
+                    self._createReport(exc_info, 'tearDown', 'error', result)
 
             cleanUpSuccess = self.doCleanups()
             success = success and cleanUpSuccess
             if success:
-                doStop('passed', None, None)
-                result.addSuccess(self)
+                self._createReport(None, 'call', 'passed', result)
+
         finally:
             result.stopTest(self)
             if orig_result is None:
@@ -464,14 +486,9 @@ class TestCase(unittest.TestCase):
                 cleanUp = lambda: function(*args, **kwargs)
                 self.withTestFailEvent(cleanUp, result, 'cleanUp')
             except Exception:
-                exc_info = sys.exc_info()
-                stopTime = time.time()
-                timeTaken = stopTime - self._startTime
-                event = StopTestEvent(self, result, stopTime, timeTaken, 
-                                      'error', exc_info, 'cleanup')
-                hooks.stopTest(event)
                 ok = False
-                result.addError(self, exc_info)
+                exc_info = sys.exc_info()
+                self._createReport(exc_info, 'cleanUp', 'error', result)
         return ok
 
     def __call__(self, *args, **kwds):
