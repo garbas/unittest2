@@ -196,7 +196,26 @@ class StopTestEvent(_Event):
 
         self.metadata = {}
         
-        self.outcome = None
+
+        # class, setUp, call, tearDown, cleanUp
+        # or None for a pass
+        self.stage = stage
+        self.setOutcome(outcome)
+
+    def setOutcome(self, outcome, standardOutcome=None, shortResult=None,
+                   longResult=None, skipReason=''):
+        if standardOutcome is None:
+            standardOutcome = outcome
+            longResult, shortResult = _DEFAULT_RESULTS[outcome]
+            if outcome == 'skipped':
+                skipReason = str(self.exc_info[1])
+
+        self.outcome = outcome
+        self.standardOutome = standardOutcome
+
+        self.shortResult = shortResult
+        self.longResult = longResult
+
         self.passed = False
         self.failed = False
         self.error = False
@@ -205,29 +224,24 @@ class StopTestEvent(_Event):
         self.unexpectedSuccess = False
         self.expectedFailure = False
 
-        # class, setUp, call, tearDown, cleanUp
-        # or None for a pass
-        self.stage = stage
-        self.outcome = outcome
-
-        longResult, shortResult = _DEFAULT_RESULTS[outcome]
-        self.shortResult = shortResult
-        self.longResult = longResult
-
-        if outcome == 'passed':
+        if standardOutcome == 'passed':
             self.passed = True
-        elif outcome == 'failed':
+        elif standardOutcome == 'failed':
             self.failed = True
-        elif outcome == 'error':
+        elif standardOutcome == 'error':
             self.error = True
-        elif outcome == 'skipped':
+        elif standardOutcome == 'skipped':
             self.skipped = True
-            self.skipReason = str(self.exc_info[1])
+            self.skipReason = skipReason
             self.longResult = longResult % self.skipReason
-        elif outcome == 'unexpectedSuccess':
+        elif standardOutcome == 'unexpectedSuccess':
             self.unexpectedSuccess = True
-        elif outcome == 'expectedFailure':
+        elif standardOutcome == 'expectedFailure':
             self.expectedFailure = True
+        else:
+            msg = ('standardOutcome must map to a standard outcome: %r' %
+                   (standardOutcome,))
+            raise ValueError(msg)
 
 
 class PluginsLoadedEvent(_Event):

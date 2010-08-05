@@ -123,10 +123,12 @@ class TextTestResult(result.TestResult):
 
     def __init__(self, stream, descriptions, verbosity):
         super(TextTestResult, self).__init__()
+        self._reported = False
         self.stream = stream
         self.showAll = verbosity > 1
         self.dots = verbosity == 1
         self.descriptions = descriptions
+        self.reportCategories = {}
 
     def getDescription(self, test):
         doc_first_line = test.shortDescription()
@@ -136,7 +138,10 @@ class TextTestResult(result.TestResult):
             return str(test)
     
     def addReport(self, report):
+        self._reported = False
         super(TextTestResult, self).addReport(report)
+        if self._reported:
+            return
         if self.showAll:
             self.stream.writeln(report.longResult)
         elif self.dots:
@@ -144,32 +149,85 @@ class TextTestResult(result.TestResult):
             self.stream.flush()
 
     def startTest(self, test):
+        self._reported = True
         super(TextTestResult, self).startTest(test)
         if self.showAll:
             self.stream.write(self.getDescription(test))
             self.stream.write(" ... ")
             self.stream.flush()
 
+    def addSuccess(self, test):
+        super(TextTestResult, self).addSuccess(test)
+        self._reported = True
+        if self.showAll:
+            self.stream.writeln("ok")
+        elif self.dots:
+            self.stream.write('.')
+            self.stream.flush()
+
+    def addError(self, test, err):
+        super(TextTestResult, self).addError(test, err)
+        self._reported = True
+        if self.showAll:
+            self.stream.writeln("ERROR")
+        elif self.dots:
+            self.stream.write('E')
+            self.stream.flush()
+
+    def addFailure(self, test, err):
+        super(TextTestResult, self).addFailure(test, err)
+        self._reported = True
+        if self.showAll:
+            self.stream.writeln("FAIL")
+        elif self.dots:
+            self.stream.write('F')
+            self.stream.flush()
+
+    def addSkip(self, test, reason):
+        super(TextTestResult, self).addSkip(test, reason)
+        self._reported = True
+        if self.showAll:
+            self.stream.writeln("skipped %r" % reason)
+        elif self.dots:
+            self.stream.write("s")
+            self.stream.flush()
+
+    def addExpectedFailure(self, test, err):
+        super(TextTestResult, self).addExpectedFailure(test, err)
+        self._reported = True
+        if self.showAll:
+            self.stream.writeln("expected failure")
+        elif self.dots:
+            self.stream.write("x")
+            self.stream.flush()
+
+    def addUnexpectedSuccess(self, test):
+        super(TextTestResult, self).addUnexpectedSuccess(test)
+        self._reported = True
+        if self.showAll:
+            self.stream.writeln("unexpected success")
+        elif self.dots:
+            self.stream.write("u")
+            self.stream.flush()
+
     def printErrors(self):
         if self.dots or self.showAll:
             self.stream.writeln()
 
-        reportsCategories = {}
         for report in self.reports:
-            reportList = reportsCategories.setdefault(report.outcome, [])
+            reportList = self.reportCategories.setdefault(report.outcome, [])
             reportList.append((report.description, report.traceback))
         
-        errors = reportsCategories.pop('passed', [])
-        failures = reportsCategories.pop('failed', [])
-        reportsCategories.pop('skipped', None)
-        reportsCategories.pop('ok', None)
-        reportsCategories.pop('expectedFailures', None)
-        reportsCategories.pop('unexpectedSuccess', None)
-
+        errors = self.reportCategories.get('error', [])
+        failures = self.reportCategories.get('failed', [])
         self.printErrorList('ERROR', self.errors)
         self.printErrorList('FAIL', self.failures)
-        
-        for flavour, results in reportsCategories.items():
+
+        dontReport = set(['error', 'failed', 'skipped', 'passed',
+                          'expectedFailures', 'unexpectedSuccess'])
+        for flavour, results in self.reportCategories.items():
+            if flavour in dontReport:
+                continue
             self.printErrorList(flavour.upper(), results)
 
     def printErrorList(self, flavour, errors):
@@ -309,32 +367,49 @@ class TextTestRunner(unittest.TextTestRunner):
                             (run, run != 1 and "s" or "", timeTaken))
         self.message(msg, (0, 1, 2))
         
-        expectedFails = unexpectedSuccesses = skipped = 0
-        try:
-            results = map(len, (result.expectedFailures,
-                                result.unexpectedSuccesses,
-                                result.skipped))
-            expectedFails, unexpectedSuccesses, skipped = results
-        except AttributeError:
-            pass
         infos = []
-        if not result.wasSuccessful():
-            self.message("FAILED", (0, 1, 2))
-            failed, errored = map(len, (result.failures, result.errors))
-            if failed:
-                infos.append("failures=%d" % failed)
-            if errored:
-                infos.append("errors=%d" % errored)
-        else:
+        extraInfos = []
+        if result.wasSuccessful():
             self.message("OK", (0, 1, 2))
+        else:
+            self.message("FAILED", (0, 1, 2))
+
+        if not hasattr(result, 'reportCategories'):
+            expectedFails = unexpectedSuccesses = skipped = 0
+            try:
+                results = map(len, (result.expectedFailures,
+                                    result.unexpectedSuccesses,
+                                    result.skipped))
+                expectedFails, unexpectedSuccesses, skipped = results
+            except AttributeError:
+                pass
+            failed, errored = map(len, (result.failures, result.errors))
+        else:
+            failed = len(result.reportCategories.get('failed', []))
+            errored = len(result.reportCategories.get('error', []))
+            skipped = len(result.reportCategories.get('skipped', []))
+            expectedFails = len(result.reportCategories.get('expectedFails', []))
+            unexpectedSuccesses = len(result.reportCategories.get('unexpectedSuccesses', []))
+            
+            dontReport = set(['error', 'failed', 'skipped', 'passed',
+                              'expectedFailures', 'unexpectedSuccess'])
+            for flavour, results in result.reportCategories.items():
+                if flavour in dontReport:
+                    continue
+                extraInfos.append("%s=%d" % (flavour, len(results)))
+
+        if failed:
+            infos.append("failures=%d" % failed)
+        if errored:
+            infos.append("errors=%d" % errored)
         if skipped:
             infos.append("skipped=%d" % skipped)
         if expectedFails:
             infos.append("expected failures=%d" % expectedFails)
         if unexpectedSuccesses:
             infos.append("unexpected successes=%d" % unexpectedSuccesses)
+        infos.extend(extraInfos)
         if infos:
             self.message(" (%s)" % (", ".join(infos),), (0, 1, 2))
-
         self.message("\n")
         return result

@@ -6,10 +6,15 @@ Code for this plugin mainly derived from the py.test junit plugin:
     http://codespeak.net/py/dist/test/plugin/junitxml.html
 
 """
-
-from xml.etree import ElementTree as ET
-
-from unittest2.events import Plugin, addOption
+try:
+    from xml.etree import ElementTree as ET
+except ImportError:
+    try:
+        import ElementTree as ET
+    except ImportError:
+        ET = None
+    
+from unittest2.events import Plugin
 
 class JunitXml(Plugin):
 
@@ -22,7 +27,12 @@ class JunitXml(Plugin):
         self.failed = 0
         self.skipped = 0
         self.numtests = 0
-        self.tree = ET.Element('testsuite')
+        if ET is not None:
+            self.tree = ET.Element('testsuite')
+
+    def pluginsLoaded(self):
+        if ET is None:
+            raise ImportError('junit-xml plugin requires ElementTree')
 
     def startTest(self, event):
         self.numtests += 1
