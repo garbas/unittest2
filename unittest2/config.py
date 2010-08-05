@@ -21,7 +21,7 @@ def getConfig(section=None):
     # warning! mutable
     if section is None:
         return _config
-    return _config.get(section, Section(section))
+    return _config.setdefault(section, Section(section))
 
 
 def combineConfigs(parsers):
@@ -150,13 +150,13 @@ class Section(dict):
 
     def as_str(self, item, default=DEFAULT):
         value = self._get_value(item, default, allowEmpty=True)
-        if value is DEFAULT:
+        if value is RETURN_DEFAULT:
             return default
         return value
 
     def as_list(self, item, default=DEFAULT):
         value = self._get_value(item, default, allowEmpty=True)
-        if value is DEFAULT:
+        if value is RETURN_DEFAULT:
             return default
         return [line.strip() for line in value.splitlines()
                  if line.strip() and not line.strip().startswith('#')]
