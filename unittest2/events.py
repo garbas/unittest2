@@ -398,7 +398,7 @@ def loadPlugins(pluginsDisabled=False, noUserConfig=False,
     
     if not pluginsDisabled:
         for plugin in set(allPlugins):
-            loadPlugin(plugin)
+            _loadPlugin(plugin)
     
     # switch off autoregistration after plugins are loaded
     Register.autoRegister = False
@@ -406,6 +406,15 @@ def loadPlugins(pluginsDisabled=False, noUserConfig=False,
 
 
 def loadPlugin(plugin):
+    original = Register.autoRegister
+    Register.autoRegister = True
+    try:
+        _loadPlugin(plugin)
+    finally:
+        Register.autoRegister = original
+
+
+def _loadPlugin(plugin):
     __import__(plugin)
     sys.modules[plugin]
     loadedPlugins.append(plugin)
