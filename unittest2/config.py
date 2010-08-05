@@ -33,18 +33,22 @@ def combineConfigs(parsers):
 
     return options
 
+def _getList(parser, section, key):
+    values = []
+    try:
+        values = [line for line in 
+                   parser.get(section, key).splitlines()
+                   if line.strip() and not line.strip().startswith('#')]
+    except ConfigParserError:
+        pass
+    return values
 
 def loadPluginsConfigFile(path):
     parser = SafeConfigParser()
     parser.read(path)
-    plugins = []
-    try:
-        plugins = [line for line in 
-                   parser.get('unittest', 'plugins').splitlines()
-                   if line.strip() and not line.strip().startswith('#')]
-        return plugins, parser
-    except ConfigParserError:
-        return plugins, parser
+    plugins = _getList(parser, 'unittest', 'plugins')
+    excludedPlugins = _getList(parser,'unittest', 'excluded-plugins')
+    return parser, plugins, excludedPlugins
 
 
 def loadConfig(noUserConfig=False, configLocations=None):
@@ -53,14 +57,14 @@ def loadConfig(noUserConfig=False, configLocations=None):
     configs = []
     if not noUserConfig:
         cfgPath = os.path.join(os.path.expanduser('~'), CFG_NAME)
-        userPlugins, userParser = loadPluginsConfigFile(cfgPath)
-        configs.append((userPlugins, userParser))
+        userParser, userPlugins, userExcludedPlugins = loadPluginsConfigFile(cfgPath)
+        configs.append((userPlugins, userParser, userExcludedPlugins))
     
     
     if not configLocations:
         cfgPath = os.path.join(os.getcwd(), CFG_NAME)
-        localPlugins, localParser = loadPluginsConfigFile(cfgPath)
-        configs.append((localPlugins, localParser))
+        localParser, localPlugins, localExcludedPlugins = loadPluginsConfigFile(cfgPath)
+        configs.append((localPlugins, localParser, localExcludedPlugins))
     else:
         for entry in configLocations:
             path = entry
@@ -71,14 +75,15 @@ def loadConfig(noUserConfig=False, configLocations=None):
                     raise Exception('Config file location %r could not be found'
                                     % entry)
             
-            plugins, parser = loadPluginsConfigFile(path)
-            configs.append((plugins, parser))
+            parser, plugins, excludedPlugins = loadPluginsConfigFile(path)
+            configs.append((plugins, parser, excludedPlugins))
                     
 
-    plugins = set(sum([plugin for plugin, parser in configs], []))
-    parsers = [parser for plugin, parser in configs]
+    plugins = set(sum([plugin for plugin, _, __ in configs], []))
+    parsers = [parser for _, parser, __ in configs]
+    excludedPlugins = set(sum([excluded for _, __, excluded in configs], []))
     _config = combineConfigs(parsers)
-    return plugins
+    return plugins - excludedPlugins
 
 
 class Section(dict):

@@ -342,13 +342,16 @@ class TextTestRunner(unittest.TextTestRunner):
         if startTestRun is not None:
             startTestRun()
         
-        event = StartTestRunEvent(self, test, result, startTime)
+        executor = lambda suite, result: test(result)
+        event = StartTestRunEvent(self, test, result, startTime, executor)
         hooks.startTestRun(event)
+        
         # allows startTestRun to modify test suite
         test = event.suite
+        executor = event.executeTests
         try:
             if not event.handled:
-                test(result)
+                executor(test, result)
         finally:
             stopTime = time.time()
             timeTaken = stopTime - startTime

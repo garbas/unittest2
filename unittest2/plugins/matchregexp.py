@@ -4,6 +4,7 @@ from unittest2.events import hooks, addDiscoveryOption
 
 import re
 
+REGEXP_PATTERN = r'test.*\.py$'
 
 def matchRegexp(event):
     event.handled = True
@@ -14,11 +15,14 @@ def matchRegexp(event):
 
 def enable():
     hooks.matchPath += matchRegexp
-    unittest2.loader.DEFAULT_PATTERN = r'test.*\.py$'
+    if not pattern:
+        pattern = REGEXP_PATTERN
+    unittest2.loader.DEFAULT_PATTERN = pattern
 
 ourOptions = getConfig('matchregexp')
 alwaysOn = ourOptions.as_bool('always-on', default=False)
 matchFullPath = ourOptions.as_bool('full-path', default=False)
+pattern = ourOptions.as_str('pattern', default=None)
 
 if alwaysOn:
     enable()

@@ -130,12 +130,13 @@ class TestFailEvent(_Event):
         self.when = when
 
 class StartTestRunEvent(_Event):
-    def __init__(self, runner, suite, result, startTime):
+    def __init__(self, runner, suite, result, startTime, executeTests):
         _Event.__init__(self)
         self.suite = suite
         self.runner = runner
         self.result = result
         self.startTime = startTime
+        self.executeTests = executeTests
 
 class StopTestRunEvent(_Event):
     def __init__(self, runner, result, stopTime, timeTaken):
