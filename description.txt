@@ -631,10 +631,6 @@ only be possible for *one* plugin to use this.
 
 TestFailEvent needs to be fired on failures in setUpClass and setUpModule etc
 
-Test reporting is hard to customize. At the moment a plugin can modify the way
-tests are reported by silencing the test result and taking over test reporting
-completely. This doesn't work well for more than one plugin.
-
 Should ``StopTestEvent.timeTaken`` (plus startTime / stopTime etc) include the
 time for setUp, tearDown and cleanUps? (afterSetUp and beforeTearDown have the
 times the setUp completes and the time the test completes - should these times
@@ -645,8 +641,8 @@ single test (e.g. in the test *and* the tearDown and cleanUp functions).
 Should it instead be called once with a MetaEvent that collects all the
 errors.
 
-Should there be an "excluded-plugins" section in the config files, so projects
-can prevent incompatible plugins from being loaded?
+startReport, reportResult and reportSummary events for customizing how the test
+run is reported?
 
 The junit-xml plugin needs access to stdout / stderr for the test. This is
 only currently available if the test is run with buffering on.
