@@ -243,6 +243,11 @@ class StopTestEvent(_Event):
                    (standardOutcome,))
             raise ValueError(msg)
 
+    def clean(self):
+        self.test = None
+        self.exc_info = None
+        self.result = None
+        
 
 class PluginsLoadedEvent(_Event):
     loadedPlugins = loadedPlugins
