@@ -15,6 +15,7 @@ class CountTests(Plugin):
         self.skipped = set()
         self.unexpectedSuccess = set()
         self.expectedFailure = set()
+        self.other = set()
         self.seen = {}
 
         self.enhanced = self.config.as_bool('enhanced', False)
@@ -43,7 +44,7 @@ class CountTests(Plugin):
             self.seen[test_id].remove(test_id)
             del self.seen[test_id]
         
-        the_set = getattr(self, event.outcome)
+        the_set = getattr(self, event.outcome, self.other)
         the_set.add(test_id)
         self.seen[test_id] = the_set
 
@@ -51,7 +52,7 @@ class CountTests(Plugin):
         values = []
         frag = '%s%s'
         for letter, attr in [('s', 'skipped'), ('f', 'failed'), ('e', 'error'),
-                             ('u', 'unexpectedSuccess'),
+                             ('u', 'unexpectedSuccess'), ('o', 'other'),
                              ('x', 'expectedFailure'), ('p', 'passed')]:
             number = len(getattr(self, attr))
             if not number and attr != 'passed':

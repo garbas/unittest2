@@ -71,7 +71,6 @@ class TestResult(unittest.TestResult):
         See startTest for a method called before each test.
         """
     
-    @failfast
     def addReport(self, report):
         self.reports.append(report)
 
@@ -79,18 +78,17 @@ class TestResult(unittest.TestResult):
         err = report.exc_info
         reason = report.skipReason
 
-        if report.passed:
-            # call directly on this class instead?
+        if report.outcome == 'passed':
             self.addSuccess(test)
-        elif report.failed:
+        elif report.outcome == 'failed':
             self.addFailure(test, err)
-        elif report.error:
+        elif report.outcome == 'error':
             self.addError(test, err)
-        elif report.skipped:
+        elif report.outcome == 'skipped':
             self.addSkip(test, reason)
-        elif report.unexpectedSuccess:
+        elif report.outcome == 'unexpectedSuccess':
             self.addUnexpectedSuccess(test)
-        elif report.expectedFailure:
+        elif report.outcome == 'expectedFailure':
             self.addExpectedFailure(test, err)
 
     def stopTest(self, test):
@@ -158,7 +156,9 @@ class TestResult(unittest.TestResult):
 
     def wasSuccessful(self):
         "Tells whether or not this result was a success"
-        return (len(self.failures) + len(self.errors) == 0)
+        return (len([True for report in self.reports
+                    if report.outcome in ('error', 'failed') ]) == 0 and
+                len(self.errors) + len(self.failures) == 0)
 
     def stop(self):
         "Indicates that the tests should be aborted"
