@@ -148,6 +148,9 @@ class TextTestResult(result.TestResult):
             self.stream.write(report.shortResult)
             self.stream.flush()
 
+        # remove references to test/result/exception from report
+        report.clean()
+
     def startTest(self, test):
         self._reported = True
         super(TextTestResult, self).startTest(test)
