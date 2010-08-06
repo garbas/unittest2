@@ -14,7 +14,7 @@ Example plugins available and included:
     * growl notifications on test run start and stop
     * filter individual test methods using a regex
     * load test functions from modules as well as TestCases
-    * test generators
+    * test generators *and* parameterized tests
     * integration with the coverage module for coverage reporting
     * display the time of individual tests in verbose reports
     * display a progress indicator as tests are run ([39/430] format) in verbose reports
@@ -716,6 +716,8 @@ Command line parsing is all done by optparse, removing the use of getopt. This
 makes the help messages more consistent but makes the usage messages less
 useful in some situations. This can be fixed with the use of the optparse
 epilogue.
+
+`main` gains two new parameters: `configs` and `userConfig`. If configs is supplied it can be a string or sequence of strings. It will be used *instead* of loading a config file from the current project directory. If userConfig is False then the userConfig file won't be loaded. If userConfig is False and configs is not None (it can be an empty list) then the --no-plugins option is not available at the command line as the loading of plugins is being completely controlled from the `main(...)` call.
 
 The verbosity argument to the main function and the TextTestRunner can be passed in as strings ('quiet', 'normal' or 'verbose', which correspond to 0, 1, and 2) instead of just integers.
 

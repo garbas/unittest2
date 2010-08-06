@@ -61,7 +61,7 @@ def loadConfig(noUserConfig=False, configLocations=None):
         configs.append((userPlugins, userParser, userExcludedPlugins))
     
     
-    if not configLocations:
+    if configLocations is None:
         cfgPath = os.path.join(os.getcwd(), CFG_NAME)
         localParser, localPlugins, localExcludedPlugins = loadPluginsConfigFile(cfgPath)
         configs.append((localPlugins, localParser, localExcludedPlugins))
