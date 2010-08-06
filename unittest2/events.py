@@ -256,6 +256,7 @@ class TestReport(_Event):
 
 class ReportEvent(_Event):
     def __init__(self, runner, result):
+        _Event.__init__(self)
         self.runner = runner
         self.result = result
     
