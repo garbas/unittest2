@@ -105,13 +105,14 @@ class LoadFromNamesEvent(_Event):
         self.extraTests = []
 
 class GetTestCaseNamesEvent(_Event):
-    def __init__(self, loader, testCase):
+    def __init__(self, loader, testCase, isTestMethod):
         _Event.__init__(self)
         self.loader = loader
         self.testCase = testCase
         self.testMethodPrefix = None
         self.extraNames = []
         self.excludedNames = []
+        self.isTestMethod = isTestMethod
 
 class RunnerCreatedEvent(_Event):
     def __init__(self, runner):

@@ -439,10 +439,13 @@ Attributes on the ``GetTestCaseNamesEvent`` object are:
 * ``testMethodPrefix`` - set to None, modify this attribute to *change* the prefix being used for this class
 * ``extraNames`` - a list of extra names to use for this test case as well as the default ones
 * ``excludedNames`` - a list of names to exclude from loading from this class
+* ``isTestMethod`` - the default filter for telling if a name is a valid test method name
 
 This event can be handled. If it is handled it should return a list of strings. Note that if this event returns an empty list (or None which will be replaced with an empty list then ``loadTestsFromTestCase`` will still check to see if the TestCase has a ``runTest`` method.
 
 Even if the event is handled ``extraNames`` will still be added to the list, however *excludedNames`` won't be removed as they are filtered out by the default implementation which looks for all attributes that are methods (or callable) whose name begins with ``loader.testMethodPrefix`` (or ``event.testMethodPrefix`` if that is set) and aren't in the list of excluded names (converted to a set first for efficient lookup).
+
+Note that modifying ``isTestMethod`` has no effect. It is there as a convenience for plugins wanting to be able to use the default check.
 
 The list of names will also be sorted using ``loader.sortTestMethodsUsing``.
 
