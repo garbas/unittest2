@@ -625,10 +625,6 @@ Not Yet Implemented
 
 Except where noted, everything in this document is already working in the prototype. There are a few open issues and things still to be implemented.
 
-The ``startTestRun`` event needs an alternative way of replacing the default
-test run machinery without stopping other plugins from executing. It should
-only be possible for *one* plugin to use this.
-
 TestFailEvent needs to be fired on failures in setUpClass and setUpModule etc
 
 Should ``StopTestEvent.timeTaken`` (plus startTime / stopTime etc) include the
@@ -669,7 +665,8 @@ to be platform specific. See: http://bugs.python.org/issue7175
 
 Certain event attributes should be read only (like extraTests, extraNames etc)
 because they should only be extended or modified in place instead of being
-replaced.
+replaced. executeTests in startTestRun should only be able to be set by one
+plugin.
 
 Add an epilogue to the optparse help messages.
 
@@ -701,6 +698,8 @@ Alongside, and in support of, the plugin system a few changes have been made to 
 
 TextTestRunner has a new method ``message(msg, verbosity=(1, 2))``. The message is output to the runner stream if the verbosity *matches* the verbosity of the runner. In addition unittest2 has two new functions exported, both from the `unittest2.runner` module: ``message`` and ``setRunner``. `event.message` delegates to the `message` function.
 
+Output by the TextTestRunner and the TextTestResult goes through the 'message' event. To support this the ``_WritelnDecorator`` takes an optional 'runner' argument in the constructor and a new `write` method. If the 'runner' argument is used then all calls to `write` and `writeln` are sent on to the ``runner.message`` method (which writes directly to the underlying stream).
+
 TestLoader has a new attribute ``DEFAULT_PATTERN``. This is so that the
 regex matching plugin can change the default pattern used for test discovery
 when no pattern is explicitly provided.
@@ -711,8 +710,6 @@ useful in some situations. This can be fixed with the use of the optparse
 epilogue.
 
 The verbosity argument to the main function and the TextTestRunner can be passed in as strings ('quiet', 'normal' or 'verbose', which correspond to 0, 1, and 2) instead of just integers.
-
-Output by the TextTestRunner and the TextTestResult goes through the 'message' event. To support this the ``_WritelnDecorator`` takes an optional 'runner' argument in the constructor. If the 'runner' argument is used then all calls to ``writeln`` are sent on to the ``runner.message`` method. Direct calls to ``stream.write`` are not intercepted.
 
 unit2 (the default test runner) runs test discovery if invoked without any arguments.
 
