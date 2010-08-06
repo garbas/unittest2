@@ -698,7 +698,9 @@ Alongside, and in support of, the plugin system a few changes have been made to 
 
 TextTestRunner has a new method ``message(msg, verbosity=(1, 2))``. The message is output to the runner stream if the verbosity *matches* the verbosity of the runner. In addition unittest2 has two new functions exported, both from the `unittest2.runner` module: ``message`` and ``setRunner``. `event.message` delegates to the `message` function.
 
-Output by the TextTestRunner and the TextTestResult goes through the 'message' event. To support this the ``_WritelnDecorator`` takes an optional 'runner' argument in the constructor and a new `write` method. If the 'runner' argument is used then all calls to `write` and `writeln` are sent on to the ``runner.message`` method (which writes directly to the underlying stream).
+Output by the TextTestRunner and the TextTestResult goes through the 'message' event. To support this the ``_WritelnDecorator`` takes an optional 'runner' argument in the constructor and has a new `write` method. If the 'runner' argument is used then all calls to `write` and `writeln` are sent on to the ``runner.message`` method (which writes directly to the underlying stream).
+
+TextTestResult has a new addReport method used by the TextTestRunner for test reporting. This adds report objects to the ``.reports`` attribute and also delegates to the standard ``addError`` / ``addFailure`` etc methods for tests with standard outcomes. For non-standard outcomes ``addReport`` reports whatever information is specified in the 
 
 TestLoader has a new attribute ``DEFAULT_PATTERN``. This is so that the
 regex matching plugin can change the default pattern used for test discovery
