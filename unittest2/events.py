@@ -18,7 +18,7 @@ __all__ = (
     'StartTestRunEvent',
     'StopTestRunEvent',
     'StartTestEvent',
-    'StopTestEvent',
+    'TestReport',
     'TestFailEvent',
     'ReportEvent',
     'BeforeTearDownEvent',
