@@ -12,8 +12,9 @@ Example plugins available and included:
     * a doctest loader (looks for doctests in all text files in the project)
     * use a regex for matching files in test discovery instead of a glob
     * growl notifications on test run start and stop
-    * filter individual *test methods* using a regex
+    * filter individual test methods using a regex
     * load test functions from modules as well as TestCases
+    * test generators
     * integration with the coverage module for coverage reporting
     * display the time of individual tests in verbose reports
     * display a progress indicator as tests are run ([39/430] format) in verbose reports
@@ -673,7 +674,9 @@ plugin.
 
 Add an epilogue to the optparse help messages.
 
-How do we provide paramterized / generative tests?
+In the test generator plugin exceptions raised whilst loading the tests should
+become a failed test rather than bombing out of test loading. We could still
+add paramaterized tests as well as generated tests.
 
 If the merge to unittest in Python 3.2 happens we need to decide which of the
 example plugins will be included in unittest. (They will probably all remain
