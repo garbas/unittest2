@@ -7,7 +7,7 @@ import unittest
 from unittest2 import result
 from unittest2.events import (
     hooks, StartTestRunEvent, StopTestRunEvent,
-    RunnerCreatedEvent, MessageEvent
+    RunnerCreatedEvent, MessageEvent, ReportEvent
 )
 
 try:
@@ -365,6 +365,8 @@ class TextTestRunner(unittest.TextTestRunner):
             else:
                 result.printErrors()
 
+        reportEvent = ReportEvent(self, result)
+        hooks.beforeSummaryReport(reportEvent)
         if hasattr(result, 'separator2'):
             self.message(result.separator2, (0, 1, 2))
             self.message('\n')
@@ -418,4 +420,5 @@ class TextTestRunner(unittest.TextTestRunner):
         if infos:
             self.message(" (%s)" % (", ".join(infos),), (0, 1, 2))
         self.message("\n")
+        hooks.afterSummaryReport(reportEvent)
         return result

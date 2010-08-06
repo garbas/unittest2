@@ -14,11 +14,15 @@ __all__ = (
     'LoadFromModuleEvent',
     'LoadFromTestCaseEvent',
     'MessageEvent',
+    'RunnerCreatedEvent',
     'StartTestRunEvent',
     'StopTestRunEvent',
     'StartTestEvent',
     'StopTestEvent',
     'TestFailEvent',
+    'ReportEvent',
+    'BeforeTearDownEvent',
+    'AfterSetUpEvent',
     # for plugins
     'hooks',
     'addOption',
@@ -178,7 +182,7 @@ _DEFAULT_RESULTS = {
     'expectedFailure': ("expected failure", 'x'),
     'unexpectedSuccess': ('unexpected success', 'u'),
 }
-class StopTestEvent(_Event):
+class TestReport(_Event):
     def __init__(self, test, result, stopTime, timeTaken, outcome, exc_info,
                  stage, traceback):
         _Event.__init__(self)
@@ -249,7 +253,12 @@ class StopTestEvent(_Event):
         self.test = None
         self.exc_info = None
         self.result = None
-        
+
+class ReportEvent(_Event):
+    def __init__(self, runner, result):
+        self.runner = runner
+        self.result = result
+    
 
 class PluginsLoadedEvent(_Event):
     loadedPlugins = loadedPlugins
@@ -306,6 +315,9 @@ class hooks(object):
     stopTest = _EventHook()
     stopTestRun = _EventHook()
     message = _EventHook()
+    
+    beforeSummaryReport = _EventHook()
+    afterSummaryReport = _EventHook()
 
 
 class Register(type):

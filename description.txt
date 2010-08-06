@@ -307,9 +307,12 @@ Events in rough order are:
 * ``afterSetUp``
 * ``beforeTearDown``
 * ``onTestFail``
+* ``createReport``
 * ``stopTest``
 * ``stopTestRun``
 * ``message``
+* ``beforeSummaryReport``
+* ``afterSummaryReport``
 
 Event objects all have a `message` method for writing to the default output stream whilst honouring the verbosity of the test runner. See `New messaging API that honours verbosity`_.
 
@@ -534,12 +537,14 @@ Attributes on the ``TestFailEvent`` are:
 This event cannot be handled. If this event sets ``exc_info`` to None then the exception is suppressed and the test becomes a pass. After this event is completed ``event.exc_info`` is reraised - so the event can *modify* the exception by modifying ``exc_info``.
 
 
-stopTest
---------
+createReport & stopTest
+------------------------
 
-This event is fired when a test execution is completed. It includes a great deal of information about the test and could be used to completely replace test reporting, making the test result potentially obsolete. It will be used by the junit-xml plugin to generate the xml reports describing the test run.
+These events are fired when a test execution is completed. They include a great deal of information about the test result and can be used to modify the report of a test (like custom outcomes) or to provide additional reporting (like junit compatible xml for example).
 
-If there are errors during a tearDown or clean up functions then this event may be fired several times for a test. For each call the ``stage`` will be different, although there could be several errors during clean up functions.
+Modifying the way a test result is reported should be done in the ``createReport`` event so that reporting plugins hooked into ``stopTest`` all see the same report.
+
+If there are errors during a tearDown or clean up functions then these event may be fired several times for a single test. For each call the ``stage`` will be different, although there could be several errors during clean up functions.
 
 Attributes on the ``StopTestEvent`` are:
 
@@ -550,6 +555,12 @@ Attributes on the ``StopTestEvent`` are:
 * ``timeTaken`` - total time for test execution from setUp to clean up functions
 * ``stage`` - one of setUp, call, tearDown, cleanUp, or None for success
 * ``outcome`` - one of passed, failed, error, skipped, unexpectedSuccess, expectedFailure
+* ``standardOutcome`` - normally the same as ``outcome``, but guaranteed to always be one of the standard set of outcomes even if a custom outcome is used - tools that can only handle the standard set of outcomes should use this attribute instead of ``outcome``
+* ``shortResult`` - the single letter used for reporting the test result during the run (typically '.', 's', etc)
+* ``longResult`` - longer text for reporting results during a run ("ok", "skipped", etc)
+* ``description`` - description of the test (produced by calling ``result.getDescription(test)`` or ``str(test)`` if the result has no ``getDescription`` method)
+* ``traceback`` - the traceback that will be output in the event of a test fail or error (produced by calling ``test.formatTraceback(exc_info)`` or ``util.formatTraceback(exc_info)`` if the test has no ``formatTraceback`` method) or None
+* ``metadata`` - a dictionary that can be used for attaching arbitrary metadata to test reports, for use by custom reporting tools
 
 The outcomes all correspond to an attribute that will be set to True or False depending on outcome:
 
@@ -562,7 +573,7 @@ The outcomes all correspond to an attribute that will be set to True or False de
 
 In addition there is a ``skipReason`` that will be None unless the test was skipped, in which case it will be a string containing the reason.
 
-This event cannot be handled. 
+This event cannot be handled.
 
 
 stopTestRun
@@ -595,6 +606,17 @@ All messages sent by the ``TextTestResult`` and ``TextTestRunner`` go through th
 If the message is handled then what happens next depends on the return value of the handler function. If the handler returns True the message will be written immediately. If the handler returns False the message will be discarded.
 
 Handler functions may modify ``event.message`` and ``event.verbosity`` and the modified values will be used.
+
+
+beforeSummaryReport & afterSummaryReport
+----------------------------------------
+
+These two events fire before and after the summary of the test run is output. It can be used by plugins to output additional information about the test run. Both these events use the same ``ReportEvent`` objects. Attributes available are:
+
+* ``runner`` - the test runner
+* ``result`` - the test result
+
+Note that if you want to output information before the test failure / error messages are output you can use the ``stopTestRun`` event.
 
 
 New messaging API that honours verbosity
