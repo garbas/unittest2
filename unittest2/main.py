@@ -113,18 +113,24 @@ class TestProgram(object):
     
     # defaults for testing
     failfast = catchbreak = buffer = progName = module = defaultTest = None
-    pluginsLoaded = verbosity = None
+    pluginsLoaded = verbosity = configs = None
+    userConfig = True
 
     def __init__(self, module='__main__', defaultTest=None,
                  argv=None, testRunner=None,
                  testLoader=loader.defaultTestLoader, exit=True,
-                 verbosity=None, failfast=None, catchbreak=None, buffer=None):
+                 verbosity=None, failfast=None, catchbreak=None, buffer=None,
+                 configs=None, userConfig=True):
         if isinstance(module, basestring):
             __import__(module)
             self.module = sys.modules[module]
         else:
             self.module = module
 
+        if isinstance(configs, basestring):
+            configs = (configs,)
+        self.configs = configs
+        self.userConfig = userConfig
 
         if isinstance(verbosity, basestring):
             # allow string verbosities not in the dictionary
@@ -145,7 +151,9 @@ class TestProgram(object):
         if isinstance(testLoader, type):
             testLoader = testLoader()
         self.testLoader = testLoader
-        self.progName = os.path.basename(argv[0])
+
+        # allow argv[0] to be None
+        self.progName = os.path.basename(argv[0] or '')
 
         self.parseArgs(argv)
         self.runTests()
@@ -240,11 +248,14 @@ class TestProgram(object):
         # an initial pass over command line options to load config files
         # and plugins
         parser = _ImperviousOptionParser()
-        parser.add_option('--config', dest='configLocations', action='append')
-        parser.add_option('--no-user-config', dest='noUserConfig', default=False,
-                          action='store_true')
-        parser.add_option('--no-plugins', dest='pluginsDisabled', default=False,
-                          action='store_true')
+        if self.configs is None:
+            parser.add_option('--config', dest='configLocations', action='append')
+        if self.userConfig:
+            parser.add_option('--no-user-config', dest='noUserConfig', default=False,
+                              action='store_true')
+        if self.configs is None or self.userConfig:
+            parser.add_option('--no-plugins', dest='pluginsDisabled', default=False,
+                              action='store_true')
 
         if TestProgram.pluginsLoaded:
             # only needed because we call several times during tests
@@ -252,16 +263,21 @@ class TestProgram(object):
 
         # we catch any optparse errors here as they will be
         # reraised on the second pass through
-        try:
-            options, _ = parser.parse_args(argv)
-        except optparse.OptionError:
-            pluginsDisabled = False
-            noUserConfig = False
-            configLocations = []
-        else:
-            pluginsDisabled = options.pluginsDisabled
-            noUserConfig = options.noUserConfig
-            configLocations = options.configLocations
+        noUserConfig = not self.userConfig
+        configLocations = self.configs
+        pluginsDisabled = False
+        if self.configs is None or self.userConfig:
+            try:
+                options, _ = parser.parse_args(argv)
+            except optparse.OptionError:
+                pluginsDisabled = False
+                configLocations = self.configs or []
+            else:
+                pluginsDisabled = options.pluginsDisabled
+                if not noUserConfig:
+                    noUserConfig = options.noUserConfig
+                if configLocations is None:
+                    configLocations = options.configLocations or None
 
         loadPlugins(pluginsDisabled, noUserConfig, configLocations)
         TestProgram.pluginsLoaded = True
@@ -284,13 +300,16 @@ class TestProgram(object):
         parser.add_option('-q', '--quiet', dest='quiet', default=False,
                           help='Quiet output', action='store_true')
         
-        parser.add_option('--config', dest='configLocations', action='append',
-                          help='Specify local config file location')
-        parser.add_option('--no-user-config', dest='noUserConfig', default=False,
-                          action='store_true',
-                          help="Don't use user config file")
-        parser.add_option('--no-plugins', dest='pluginsDisabled', default=False,
-                          action='store_true', help="Disable all plugins")
+        if self.configs is None:
+            parser.add_option('--config', dest='configLocations', action='append',
+                              help='Specify local config file location')
+        if self.userConfig:
+            parser.add_option('--no-user-config', dest='noUserConfig', default=False,
+                              action='store_true',
+                              help="Don't use user config file")
+        if self.configs is None or self.userConfig:
+            parser.add_option('--no-plugins', dest='pluginsDisabled', default=False,
+                              action='store_true', help="Disable all plugins")
         
         if self.failfast != False:
             parser.add_option('-f', '--failfast', dest='failfast', default=None,
