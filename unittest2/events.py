@@ -394,8 +394,8 @@ class Plugin(object):
 
 
 def loadPlugins(pluginsDisabled=False, noUserConfig=False, 
-                configLocations=None):
-    allPlugins = loadConfig(noUserConfig, configLocations)
+                configLocations=None, extraConfig=None):
+    allPlugins = loadConfig(noUserConfig, configLocations, extraConfig)
     
     if not pluginsDisabled:
         for plugin in set(allPlugins):

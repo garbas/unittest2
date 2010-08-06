@@ -51,7 +51,7 @@ def loadPluginsConfigFile(path):
     return parser, plugins, excludedPlugins
 
 
-def loadConfig(noUserConfig=False, configLocations=None):
+def loadConfig(noUserConfig=False, configLocations=None, extraConfig=None):
     global _config
     
     configs = []
@@ -60,23 +60,26 @@ def loadConfig(noUserConfig=False, configLocations=None):
         userParser, userPlugins, userExcludedPlugins = loadPluginsConfigFile(cfgPath)
         configs.append((userPlugins, userParser, userExcludedPlugins))
     
-    
     if configLocations is None:
         cfgPath = os.path.join(os.getcwd(), CFG_NAME)
         localParser, localPlugins, localExcludedPlugins = loadPluginsConfigFile(cfgPath)
         configs.append((localPlugins, localParser, localExcludedPlugins))
-    else:
-        for entry in configLocations:
-            path = entry
+        configLocations = []
+    
+    if extraConfig is not None:
+        configLocations.append(extraConfig)
+        
+    for entry in configLocations:
+        path = entry
+        if not os.path.isfile(path):
+            path = os.path.join(path, CFG_NAME)
             if not os.path.isfile(path):
-                path = os.path.join(path, CFG_NAME)
-                if not os.path.isfile(path):
-                    # exception type?
-                    raise Exception('Config file location %r could not be found'
-                                    % entry)
-            
-            parser, plugins, excludedPlugins = loadPluginsConfigFile(path)
-            configs.append((plugins, parser, excludedPlugins))
+                # exception type?
+                raise Exception('Config file location %r could not be found'
+                                % entry)
+        
+        parser, plugins, excludedPlugins = loadPluginsConfigFile(path)
+        configs.append((plugins, parser, excludedPlugins))
                     
 
     plugins = set(sum([plugin for plugin, _, __ in configs], []))
