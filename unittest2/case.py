@@ -16,7 +16,7 @@ from unittest2.util import (
 
 from unittest2.compatibility import wraps
 from unittest2.events import (
-    hooks, TestFailEvent, StartTestEvent, StopTestEvent,
+    hooks, TestFailEvent, StartTestEvent, TestReport,
     AfterSetUpEvent, BeforeTearDownEvent
 )
 
@@ -201,7 +201,7 @@ class TestCase(unittest.TestCase):
     # Attribute used by cleanups for timing tests
     _startTime = 0
 
-    def __init__(self, methodName='runTest'):
+    def __init__(self, methodName='runTest', test):
         """Create an instance of the class that will use the named test
            method when executed. Raises a ValueError if the instance does
            not have a method with the specified name.
@@ -339,7 +339,7 @@ class TestCase(unittest.TestCase):
         if outcome in ('failed', 'error'):
             traceback = self.formatTraceback(exc_info)
         
-        event = StopTestEvent(self, result, stopTime, timeTaken, outcome,
+        event = TestReport(self, result, stopTime, timeTaken, outcome,
                               exc_info, stage, traceback)
 
         # first event allows customisation of the report
