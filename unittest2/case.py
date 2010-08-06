@@ -208,12 +208,15 @@ class TestCase(unittest.TestCase):
         """
         self._testMethodName = methodName
         self._resultForDoCleanups = None
+
         try:
             testMethod = getattr(self, methodName)
         except AttributeError:
             raise ValueError("no such test method in %s: %s" % \
                   (self.__class__, methodName))
+    
         self._testMethodDoc = testMethod.__doc__
+            
         self._cleanups = []
 
         # Map types to custom assertEqual functions that will compare

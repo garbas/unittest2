@@ -1,36 +1,7 @@
-from unittest2 import Plugin, FunctionTestCase
+from unittest2 import Plugin, FunctionTestCase, TestCase
 
 import types
 
-help_text = 'Load test functions from test modules'
-class TestLoading(Plugin):
-    
-    configSection = 'module-loading'
-    commandLineSwitch = (None, 'test-functions', help_text)
-
-
-    def loadTestsFromModule(self, event):
-        loader = event.loader
-        module = event.module
-        
-        def is_test(obj):
-            return obj.__name__.startswith(loader.testMethodPrefix)
-        
-        tests = []
-        for name in dir(module):
-            obj = getattr(module, name)
-            if isinstance(obj, types.FunctionType) and is_test(obj):
-                args = {}
-                setUp = getattr(obj, 'setUp', None)
-                tearDown = getattr(obj, 'tearDown', None)
-                if setUp is not None:
-                    args['setUp'] = setUp
-                if tearDown is not None:
-                    args['tearDown'] = tearDown
-                case = FunctionTestCase(obj, **args)
-                tests.append(case)
-                
-        event.extraTests.extend(tests)
 
 def setUp(setupFunction):
     def decorator(func):
@@ -47,3 +18,99 @@ def tearDown(tearDownFunction):
 def testGenerator(func):
     func.testGenerator = True
     return func
+
+class Functions(Plugin):
+    
+    generatorsEnabled = False
+    configSection = 'functions'
+    commandLineSwitch = (None, 'functions', 'Load tests from functions')
+
+    def loadTestsFromModule(self, event):
+        loader = event.loader
+        module = event.module
+        
+        def is_test(obj):
+            if obj is testGenerator:
+                return False
+            return obj.__name__.startswith(loader.testMethodPrefix)
+        
+        tests = []
+        for name in dir(module):
+            obj = getattr(module, name)
+            if isinstance(obj, types.FunctionType) and is_test(obj):
+                args = {}
+                setUp = getattr(obj, 'setUp', None)
+                tearDown = getattr(obj, 'tearDown', None)
+                if setUp is not None:
+                    args['setUp'] = setUp
+                if tearDown is not None:
+                    args['tearDown'] = tearDown
+                
+                if (not self.generatorsEnabled or 
+                    getattr(obj, 'testGenerator', None) is None):
+                    case = FunctionTestCase(obj, **args)
+                    tests.append(case)
+                else:
+                    extras = list(obj())
+                    name = '%s.%s' % (obj.__module__, obj.__name__)
+                    def createTest(name):
+                        return GeneratorFunctionCase(name, **args)
+                    tests.extend(testsFromGenerator(name, extras, createTest))
+                
+        event.extraTests.extend(tests)
+
+
+class GeneratorFunctionCase(FunctionTestCase):
+
+    def __init__(self, name, **args):
+        self._name = name
+        FunctionTestCase.__init__(self, None, **args)
+
+    _testFunc = property(lambda self: getattr(self, self._name),
+                         lambda self, func: None)
+
+    def __repr__(self):
+        return self._name
+
+    id = __str__ = __repr__
+
+
+class Generators(Plugin):
+
+    configSection = 'generators'
+    commandLineSwitch = (None, 'generators', 'Load tests from generators')
+
+    def pluginsLoaded(self, event):
+        Functions.generatorsEnabled = True
+        
+    def loadTestsFromTestCase(self, event):
+        testCaseClass = event.testCase
+        for name in dir(testCaseClass):
+            method = getattr(testCaseClass, name)
+            if getattr(method, 'testGenerator', None) is not None:
+                instance = testCaseClass(name)
+                tests = list(method(instance))
+                event.extraTests.extend(
+                    testsFromGenerator(name, tests, testCaseClass)
+                )
+
+    def getTestCaseNames(self, event):
+        names = filter(event.isTestMethod, dir(event.testCase))
+        klass = event.testCase
+        for name in names:
+            method = getattr(klass, name)
+            if getattr(method, 'testGenerator', None) is not None:
+                event.excludedNames.append(name)
+
+def testsFromGenerator(name, tests, testCaseClass):
+    for index, (func, args) in enumerate(tests):
+        summary = ', '.join(repr(arg) for arg in args)
+
+        method_name = '%s_%s\n%s' % (name, index + 1, summary[:79])
+        setattr(testCaseClass, method_name, None)
+        instance = testCaseClass(method_name)
+        delattr(testCaseClass, method_name)
+        def method(func=func, args=args):
+            return func(*args)
+        setattr(instance, method_name, method)
+        yield instance
