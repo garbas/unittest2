@@ -201,7 +201,7 @@ class TestCase(unittest.TestCase):
     # Attribute used by cleanups for timing tests
     _startTime = 0
 
-    def __init__(self, methodName='runTest', test):
+    def __init__(self, methodName='runTest'):
         """Create an instance of the class that will use the named test
            method when executed. Raises a ValueError if the instance does
            not have a method with the specified name.
