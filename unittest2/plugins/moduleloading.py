@@ -1,4 +1,5 @@
-from unittest2 import Plugin, FunctionTestCase, TestCase
+from unittest2 import Plugin, FunctionTestCase, TestCase, TestSuite
+from unittest2.util import getObjectFromName
 
 import types
 
@@ -33,6 +34,15 @@ class Functions(Plugin):
     configSection = 'functions'
     commandLineSwitch = (None, 'functions', 'Load tests from functions')
 
+    def loadTestsFromName(self, event):
+        parent, obj = getObjectFromName(event.name, event.module)
+        if isinstance(obj, types.FunctionType):
+            suite = TestSuite()
+            for test in self.createTests(obj):
+                suite.addTest(test)
+            event.handled = True
+            return suite
+
     def loadTestsFromModule(self, event):
         loader = event.loader
         module = event.module
@@ -46,36 +56,39 @@ class Functions(Plugin):
         for name in dir(module):
             obj = getattr(module, name)
             if isinstance(obj, types.FunctionType) and is_test(obj):
-                args = {}
-                setUp = getattr(obj, 'setUp', None)
-                tearDown = getattr(obj, 'tearDown', None)
-                if setUp is not None:
-                    args['setUp'] = setUp
-                if tearDown is not None:
-                    args['tearDown'] = tearDown
-                
-                paramList = getattr(obj, 'paramList', None)
-                isGenerator = getattr(obj, 'testGenerator', False)
-                if self.parametersEnabled and paramList is not None:
-                    for index, argSet in enumerate(paramList):
-                        def func(argSet=argSet, obj=obj):
-                            return obj(*argSet)
-                        name = '%s.%s' % (obj.__module__, obj.__name__)
-                        func_name = name_from_args(name, index, argSet)
-                        case = ParamsFunctionCase(func_name, func, **args)
-                        tests.append(case)
-                elif self.generatorsEnabled and isGenerator:
-                    extras = list(obj())
-                    name = '%s.%s' % (obj.__module__, obj.__name__)
-                    def createTest(name):
-                        return GeneratorFunctionCase(name, **args)
-                    tests.extend(testsFromGenerator(name, extras, createTest))
-                else:
-                    case = FunctionTestCase(obj, **args)
-                    tests.append(case)
-                
+                tests.extend(self.createTests(obj))
         event.extraTests.extend(tests)
 
+    def createTests(self, obj):
+        tests = []
+        args = {}
+        setUp = getattr(obj, 'setUp', None)
+        tearDown = getattr(obj, 'tearDown', None)
+        if setUp is not None:
+            args['setUp'] = setUp
+        if tearDown is not None:
+            args['tearDown'] = tearDown
+
+        paramList = getattr(obj, 'paramList', None)
+        isGenerator = getattr(obj, 'testGenerator', False)
+        if self.parametersEnabled and paramList is not None:
+            for index, argSet in enumerate(paramList):
+                def func(argSet=argSet, obj=obj):
+                    return obj(*argSet)
+                name = '%s.%s' % (obj.__module__, obj.__name__)
+                func_name = name_from_args(name, index, argSet)
+                case = ParamsFunctionCase(func_name, func, **args)
+                tests.append(case)
+        elif self.generatorsEnabled and isGenerator:
+            extras = list(obj())
+            name = '%s.%s' % (obj.__module__, obj.__name__)
+            def createTest(name):
+                return GeneratorFunctionCase(name, **args)
+            tests.extend(testsFromGenerator(name, extras, createTest))
+        else:
+            case = FunctionTestCase(obj, **args)
+            tests.append(case)
+        return tests
 
 class GeneratorFunctionCase(FunctionTestCase):
     def __init__(self, name, **args):
