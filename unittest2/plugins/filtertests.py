@@ -1,6 +1,14 @@
-from unittest2.events import Plugin, addOption
+from unittest2 import Plugin, addOption, TestSuite
 
 import re
+
+def flatten(thing):
+    try:
+        for sub_thing in thing:
+            for test in flatten(sub_thing):
+                yield test
+    except TypeError:
+        yield thing
 
 class FilterTests(Plugin):
     """
@@ -17,15 +25,18 @@ class FilterTests(Plugin):
         self.regex = [re.compile(regex) for regex in self.regex]
         if not self.regex:
             self.unregister()
-    
-    def getTestCaseNames(self, event):
-        testCase = event.testCase
-        
-        def is_invalid(attr):
-            for regex in self.regex:
-                if regex.match(attr):
-                    return False
-            return True
-        
-        excluded = filter(is_invalid, dir(testCase))
-        event.excludedNames.extend(excluded)
+
+    def startTestRun(self, event):
+        suite = TestSuite()
+        regexes = self.regex
+        for test in flatten(event.suite):
+            try:
+                name = test.id()
+            except AttributeError:
+                name = test.__name__
+            
+            for regex in regexes:
+                if regex.search(name):
+                    suite.addTest(test)
+                    break
+        event.suite = suite

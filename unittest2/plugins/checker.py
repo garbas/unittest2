@@ -8,6 +8,7 @@ from unittest2 import FunctionTestCase
 from unittest2.events import Plugin
 
 import sys
+__unittest = True
 
 try:
     from pyflakes.scripts.pyflakes import check as pyflakes_check
