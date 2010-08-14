@@ -694,6 +694,10 @@ because they should only be extended or modified in place instead of being
 replaced. executeTests in startTestRun should only be able to be set by one
 plugin.
 
+Inserted tests may have the "wrong" class and module, causing class and module
+level setup / teardown to be re-executed. A way of faking this, or indicating
+that they should be ignored for this purpose, should be available.
+
 Add an epilogue to the optparse help messages.
 
 In the test generator plugin exceptions raised whilst loading the tests should
