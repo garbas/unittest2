@@ -264,17 +264,17 @@ class TestDiscovery(unittest2.TestCase):
         program.parseArgs(['unittest2', 'discover', '-v'])
         self.assertEqual(program.verbosity, 2)
         self.assertEqual(program.test, 'tests')
-        self.assertEqual(Loader.args, [('.', None, None)])
+        self.assertEqual(Loader.args, [(None, None, None)])
 
         program = makeProgram()
         program.parseArgs(['unittest2', 'discover', '--verbose'])
         self.assertEqual(program.test, 'tests')
-        self.assertEqual(Loader.args, [('.', None, None)])
+        self.assertEqual(Loader.args, [(None, None, None)])
 
         program = makeProgram()
         program.parseArgs(['unittest2'])
         self.assertEqual(program.test, 'tests')
-        self.assertEqual(Loader.args, [('.', None, None)])
+        self.assertEqual(Loader.args, [(None, None, None)])
 
         program = makeProgram()
         program.parseArgs(['unittest2', 'discover', 'fish'])
