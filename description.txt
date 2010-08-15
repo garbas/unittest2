@@ -732,7 +732,9 @@ TextTestRunner has a new method ``message(msg, verbosity=(1, 2))``. The message 
 
 Output by the TextTestRunner and the TextTestResult goes through the 'message' event. To support this the ``_WritelnDecorator`` takes an optional 'runner' argument in the constructor and has a new `write` method. If the 'runner' argument is used then all calls to `write` and `writeln` are sent on to the ``runner.message`` method (which writes directly to the underlying stream).
 
-TextTestResult has a new addReport method used by the TextTestRunner for test reporting. This adds report objects to the ``.reports`` attribute and also delegates to the standard ``addError`` / ``addFailure`` etc methods for tests with standard outcomes. For non-standard outcomes ``addReport`` reports whatever information is specified in the 
+TextTestResult has a new addReport method used by the TextTestRunner for test reporting. This adds report objects to the ``.reports`` attribute and also delegates to the standard ``addError`` / ``addFailure`` etc methods for tests with standard outcomes. For non-standard outcomes ``addReport`` reports whatever information is specified in the XXXXX
+
+Test discovery has been improved. The initial implementation in Python 2.7 was very conservative. The new implementation supports many more common package layouts. It supports the package code being in a 'src' or a 'lib' subdirectory (that isn't itself a package). It also supports tests being in any top level directory that isn't a package, so long as the directory name contains 'test' in it.
 
 TestLoader has a new attribute ``DEFAULT_PATTERN``. This is so that the
 regex matching plugin can change the default pattern used for test discovery
