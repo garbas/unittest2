@@ -3,7 +3,16 @@ import os
 from ConfigParser import SafeConfigParser
 from ConfigParser import Error as ConfigParserError
 
-CFG_NAME = 'unittest.cfg'
+__all__ = (
+    'loadConfig',
+    'getConfig',
+)
+
+USER_DIR = '~'
+CFG_NAMES = (
+    'unittest.cfg',
+    '.unittest.cfg',
+)
 
 DEFAULT = object()
 RETURN_DEFAULT = object()
@@ -11,11 +20,6 @@ TRUE = set((True, '1', 'true', 'on', 'yes'))
 FALSE = set((False, '0', 'false', 'off', 'no', ''))
 
 _config = None
-
-__all__ = (
-    'loadConfig',
-    'getConfig',
-)
 
 def getConfig(section=None):
     # warning! mutable
@@ -56,12 +60,18 @@ def loadConfig(noUserConfig=False, configLocations=None, extraConfig=None):
     
     configs = []
     if not noUserConfig:
-        cfgPath = os.path.join(os.path.expanduser('~'), CFG_NAME)
+        for CFG_NAME in CFG_NAMES:
+            cfgPath = os.path.join(os.path.expanduser(USER_DIR), CFG_NAME)
+            if os.path.isfile(cfgPath):
+                break
         userParser, userPlugins, userExcludedPlugins = loadPluginsConfigFile(cfgPath)
         configs.append((userPlugins, userParser, userExcludedPlugins))
     
     if configLocations is None:
-        cfgPath = os.path.join(os.getcwd(), CFG_NAME)
+        for CFG_NAME in CFG_NAMES:
+            cfgPath = os.path.join(os.getcwd(), CFG_NAME)
+            if os.path.isfile(cfgPath):
+                break
         localParser, localPlugins, localExcludedPlugins = loadPluginsConfigFile(cfgPath)
         configs.append((localPlugins, localParser, localExcludedPlugins))
         configLocations = []
@@ -72,8 +82,11 @@ def loadConfig(noUserConfig=False, configLocations=None, extraConfig=None):
     for entry in configLocations:
         path = entry
         if not os.path.isfile(path):
-            path = os.path.join(path, CFG_NAME)
-            if not os.path.isfile(path):
+            for CFG_NAME in CFG_NAMES:
+                path = os.path.join(path, CFG_NAME)
+                if os.path.isfile(path):
+                    break
+            else:
                 # exception type?
                 raise Exception('Config file location %r could not be found'
                                 % entry)
@@ -86,7 +99,11 @@ def loadConfig(noUserConfig=False, configLocations=None, extraConfig=None):
     parsers = [parser for _, parser, __ in configs]
     excludedPlugins = set(sum([excluded for _, __, excluded in configs], []))
     _config = combineConfigs(parsers)
-    return plugins - excludedPlugins
+    finalPlugins = plugins - excludedPlugins
+    unittestSection = _config.get('unittest', Section('unittest'))
+    unittestSection['plugins'] = finalPlugins
+    unittestSection['excluded-plugins'] = excludedPlugins
+    return finalPlugins
 
 
 class Section(dict):
