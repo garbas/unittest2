@@ -220,6 +220,7 @@ class TestLoader(unittest.TestLoader):
         implicit_start = False
         if start_dir is None:
             start_dir = '.'
+            implicit_start = True
         if pattern is None:
             pattern = DEFAULT_PATTERN
         set_implicit_top = False
@@ -262,7 +263,36 @@ class TestLoader(unittest.TestLoader):
         if is_not_importable:
             raise ImportError('Start directory is not importable: %r' % start_dir)
 
+        def check_dir(the_dir):
+            if not implicit_start:
+                return
+            full_path =  os.path.join(start_dir, the_dir)
+            if (os.path.isdir(full_path) and not 
+                os.path.isfile(os.path.join(full_path, '__init__.py'))):
+                sys.path.append(full_path)
+                return full_path
+
+        src_dir = check_dir('src')
+        lib_dir = check_dir('lib')
         tests = list(self._find_tests(start_dir, pattern))
+        real_top_level = self._top_level_dir
+        if src_dir is not None:
+            self._top_level_dir = src_dir
+            tests.extend(list(self._find_tests(src_dir, pattern)))
+        if lib_dir is not None:
+            self._top_level_dir = lib_dir
+            tests.extend(list(self._find_tests(lib_dir, pattern)))
+        if implicit_start:
+            for entry in os.listdir(start_dir):
+                if not 'test' in entry.lower():
+                    continue
+                full = check_dir(entry)
+                if full is None:
+                    continue
+                self._top_level_dir = full
+                tests.extend(list(self._find_tests(full, pattern)))
+        
+        self._top_level_dir = real_top_level
         return self.suiteClass(tests)
 
     def _get_name_from_path(self, path):
