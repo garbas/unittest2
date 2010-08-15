@@ -31,7 +31,7 @@ __all__ = [
     'FunctionTestCase', 'main', 'defaultTestLoader', 'SkipTest', 'skip', 
     'skipIf', 'skipUnless', 'expectedFailure', 'TextTestResult', '__version__',
     'collector', 'setRunner', 'message', 'Plugin', 'loadedPlugins', 'addOption',
-    'addDiscoveryOption', 'loadConfig', 'getConfig'
+    'addDiscoveryOption', 'loadConfig', 'getConfig', 'loadPlugin'
 ]
 
 __version__ = '0.6.0 alpha (plugins branch)'
@@ -70,7 +70,8 @@ else:
 
 
 from unittest2.events import (
-    Plugin, loadedPlugins, addOption, addDiscoveryOption
+    Plugin, loadedPlugins, addOption, addDiscoveryOption,
+    loadPlugin
 )
 
 from unittest2.config import loadConfig, getConfig
