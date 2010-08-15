@@ -276,12 +276,12 @@ class TestLoader(unittest.TestLoader):
         lib_dir = check_dir('lib')
         tests = list(self._find_tests(start_dir, pattern))
         real_top_level = self._top_level_dir
-        if src_dir is not None:
-            self._top_level_dir = src_dir
-            tests.extend(list(self._find_tests(src_dir, pattern)))
         if lib_dir is not None:
             self._top_level_dir = lib_dir
             tests.extend(list(self._find_tests(lib_dir, pattern)))
+        if src_dir is not None:
+            self._top_level_dir = src_dir
+            tests.extend(list(self._find_tests(src_dir, pattern)))
         if implicit_start:
             for entry in os.listdir(start_dir):
                 if not 'test' in entry.lower():
