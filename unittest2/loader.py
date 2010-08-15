@@ -217,6 +217,9 @@ class TestLoader(unittest.TestLoader):
         packages can continue discovery themselves. top_level_dir is stored so
         load_tests does not need to pass this argument in to loader.discover().
         """
+        implicit_start = False
+        if start_dir is None:
+            start_dir = '.'
         if pattern is None:
             pattern = DEFAULT_PATTERN
         set_implicit_top = False
@@ -258,7 +261,7 @@ class TestLoader(unittest.TestLoader):
 
         if is_not_importable:
             raise ImportError('Start directory is not importable: %r' % start_dir)
-        
+
         tests = list(self._find_tests(start_dir, pattern))
         return self.suiteClass(tests)
 

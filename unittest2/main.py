@@ -177,7 +177,7 @@ class TestProgram(object):
         if (not forDiscovery and not args and self.module is None and 
             self.defaultTest is None):
             # launched with no args from script
-            options.start = '.'
+            options.start = None
             options.top = options.pattern = None
             forDiscovery =True
 
@@ -308,7 +308,7 @@ class TestProgram(object):
                               action='store_true')
 
         if forDiscovery:
-            parser.add_option('-s', '--start-directory', dest='start', default='.',
+            parser.add_option('-s', '--start-directory', dest='start', default=None,
                               help="Directory to start discovery ('.' default)")
             parser.add_option('-p', '--pattern', dest='pattern', default=None,
                               help="Pattern to match tests ('test*.py' default)")
