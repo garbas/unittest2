@@ -66,6 +66,7 @@ class Functions(Plugin):
     parametersEnabled = False
     configSection = 'functions'
     commandLineSwitch = (None, 'functions', 'Load tests from functions')
+    unpack = enumerate
 
     def loadTestsFromName(self, event):
         name = event.name
@@ -109,7 +110,7 @@ class Functions(Plugin):
             args['tearDown'] = tearDown
 
         paramList = getattr(obj, 'paramList', None)
-        isGenerator = getattr(obj, 'testGenerator', False)
+        isGenerator = self.isGenerator(obj)
         if self.parametersEnabled and paramList is not None:
             for index, argSet in enumerate(paramList):
                 def func(argSet=argSet, obj=obj):
@@ -123,7 +124,8 @@ class Functions(Plugin):
             name = '%s.%s' % (obj.__module__, obj.__name__)
             def createTest(name):
                 return GeneratorFunctionCase(name, **args)
-            tests.extend(testsFromGenerator(name, extras, createTest))
+            tests.extend(testsFromGenerator(name, extras, createTest,
+                                            self.unpack))
         else:
             case = FunctionTestCase(obj, **args)
             tests.append(case)
@@ -131,6 +133,9 @@ class Functions(Plugin):
             # what if this doesn't exist?
             return [tests[testIndex-1]]
         return tests
+
+    def isGenerator(self, obj):
+        return getattr(obj, 'testGenerator', None) is not None
 
 
 class GeneratorFunctionCase(FunctionTestCase):
@@ -162,6 +167,7 @@ class Generators(Plugin):
 
     configSection = 'generators'
     commandLineSwitch = (None, 'generators', 'Load tests from generators')
+    unpack = enumerate
 
     def pluginsLoaded(self, event):
         Functions.generatorsEnabled = True
@@ -170,18 +176,22 @@ class Generators(Plugin):
         testCaseClass = event.testCase
         for name in dir(testCaseClass):
             method = getattr(testCaseClass, name)
-            if getattr(method, 'testGenerator', None) is not None:
+            if self.isGenerator(method):
                 instance = testCaseClass(name)
                 event.extraTests.extend(
-                    testsFromGenerator(name, method(instance), testCaseClass)
+                    testsFromGenerator(name, method(instance), testCaseClass,
+                                       self.unpack)
                 )
 
+    def isGenerator(self, obj):
+        return getattr(obj, 'testGenerator', None) is not None
+        
     def getTestCaseNames(self, event):
         names = filter(event.isTestMethod, dir(event.testCase))
         klass = event.testCase
         for name in names:
             method = getattr(klass, name)
-            if getattr(method, 'testGenerator', None) is not None:
+            if self.isGenerator(method):
                 event.excludedNames.append(name)
 
     def loadTestsFromName(self, event):
@@ -195,14 +205,15 @@ class Generators(Plugin):
         parent, obj, name, index = result
         if (index is None or not isinstance(parent, type) or 
             not issubclass(parent, TestCase) or 
-            not getattr(obj, 'testGenerator', False)):
+            not self.isGenerator(obj)):
             # we're only handling TestCase generator methods here
             return
 
         instance = parent(obj.__name__)
         
         try:
-            test = list(testsFromGenerator(name, obj(instance), parent))[index-1]
+            test = list(testsFromGenerator(name, obj(instance), parent, 
+                                           self.unpack))[index-1]
         except IndexError:
             raise TestNotFoundError(original_name)
         
@@ -212,9 +223,9 @@ class Generators(Plugin):
         return suite
 
 
-def testsFromGenerator(name, generator, testCaseClass):
+def testsFromGenerator(name, generator, testCaseClass, unpack):
     try:
-        for index, (func, args) in enumerate(generator):
+        for index, (func, args) in unpack(generator):
             method_name = name_from_args(name, index, args)
             setattr(testCaseClass, method_name, None)
             instance = testCaseClass(method_name)
