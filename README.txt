@@ -19,7 +19,9 @@ maintained as a separate branch and is a separate download.
 To avoid problems with ``pip`` installing the wrong distribution, the Python 2.3
 version of unittest2 can't be hosted on PyPI:
 
-* `Download unittest2 0.5.1 for Python 2.3 <http://voidspace.org.uk/downloads/unittest2-0.5.1-python2.3.zip>`_
+* `Download unittest2 0.5.1 for Python 2.3 <http://bit.ly/cGd7i5>`_
+
+(Link tiny-fied with bit.ly to avoid it being used by `pip`.)
 
 There is also a version of unittest2 for Python 3. This has the project name
 "unittest2py3k" but uses the same package name ("unittest2"):
