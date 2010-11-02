@@ -40,7 +40,7 @@ New features include:
 * *many* new assert methods including better defaults for comparing lists,
   sets, dicts unicode strings etc and the ability to specify new default methods
   for comparing specific types
-* ``assertRaises`` as context manager, with access to the exception afterwards 
+* ``assertRaises`` as context manager, with access to the exception afterwards
 * test discovery and new command line options (including failfast and better
   handling of ctrl-C during test runs)
 * class and module level fixtures: ``setUpClass``, ``tearDownClass``,
@@ -48,7 +48,7 @@ New features include:
 * test skipping and expected failures
 * new ``delta`` keyword argument to ``assertAlmostEqual`` for more useful
   comparison and for comparing non-numeric objects (like datetimes)
-* ``load_tests`` protocol for loading tests from modules or packages 
+* ``load_tests`` protocol for loading tests from modules or packages
 * ``startTestRun`` and ``stopTestRun`` methods on TestResult
 * various other API improvements and fixes
 
@@ -58,14 +58,14 @@ New features include:
     discover) with ``python -m unittest <args>``. As unittest is a package, and
     the ability to invoke packages with ``python -m ...`` is new in Python 2.7,
     we can't do this for unittest2.
-    
-    Instead unittest2 comes with a script ``unit2``. 
+
+    Instead unittest2 comes with a script ``unit2``.
     `Command line usage
     <http://docs.python.org/dev/library/unittest.html#command-line-interface>`_::
-    
+
         unit2 discover
         unit2 -v test_module
-    
+
     There is also a copy of this script called ``unit2.py``, useful for Windows
     which uses file-extensions rather than shebang lines to determine what
     program to execute files with. Both of these scripts are installed by
@@ -82,11 +82,11 @@ Look for notes about features added or changed in Python 2.7.
 
     unittest2 is already in use for development of `distutils2
     <http://hg.python.org/distutils2>`_.
-    
+
     Version 0.5.1 of unittest2 has feature parity with unittest_ in Python 2.7
     final. If you want to ensure that your tests run identically under unittest2
     and unittest in Python 2.7 you should use unittest2 0.5.1.
-    
+
     Later versions of unittest2 include changes in unittest made in Python 3.2
     and onwards after the release of Python 2.7.
 
@@ -111,7 +111,7 @@ be deep-copyable on Python versions prior to 2.7.
 False in Python 2.7 for backwards compatibility reasons.
 
 ``python -m package`` doesn't work in versions of Python before Python 2.7. The
-command line features of unittest2 are provided by a ``unit2`` (and 
+command line features of unittest2 are provided by a ``unit2`` (and
 ``unit2.py``) script instead.
 
 unittest2 includes a very basic setuptools compatible test collector. Specify
@@ -153,6 +153,11 @@ failure messages. These methods use ``prettyprint`` and ``difflib``.
 CHANGELOG
 =========
 
+2010/XX/XX - 0.6.0
+------------------
+
+* Fix Python issue 9926. TestSuite subclasses that override __call__ are called
+  correctly.
 
 2010/07/12 - 0.5.1
 ------------------
@@ -191,7 +196,7 @@ Feature parity with the Python 2.7 final release.
 
 Improved help message for ``unit2 discover -h``.
 
-SkipTest in unittest.TestCase.setUpClass or setUpModule is now reported as a 
+SkipTest in unittest.TestCase.setUpClass or setUpModule is now reported as a
 skip rather than an error.
 
 Excessively large diffs due to ``TestCase.assertSequenceEqual`` are no
@@ -232,7 +237,7 @@ Addition of ``removeHandler`` for removing the control-C handler.
 ``delta`` keyword argument for ``assertAlmostEqual`` and
 ``assertNotAlmostEqual``.
 
-Addition of -b command line option (and ``TestResult.buffer``) for buffering 
+Addition of -b command line option (and ``TestResult.buffer``) for buffering
 stdout / stderr during test runs.
 
 Addition of ``TestCase.assertNotRegexpMatches``.

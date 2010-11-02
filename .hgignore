@@ -1,5 +1,6 @@
 syntax:glob
 *.pyc
+*.pyo
 MANIFEST
 dist
 *.wpu
@@ -7,3 +8,7 @@ dist
 unittest2.egg-info/*
 build/*
 .tox/*
+*.diff
+*.orig
+*.rej
+
