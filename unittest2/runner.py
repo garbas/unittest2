@@ -180,9 +180,10 @@ class TextTestRunner(unittest.TextTestRunner):
             results = map(len, (result.expectedFailures,
                                 result.unexpectedSuccesses,
                                 result.skipped))
-            expectedFails, unexpectedSuccesses, skipped = results
         except AttributeError:
             pass
+        else:
+            expectedFails, unexpectedSuccesses, skipped = results
         infos = []
         if not result.wasSuccessful():
             self.stream.write("FAILED")
