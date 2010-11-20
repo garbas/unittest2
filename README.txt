@@ -103,10 +103,6 @@ Differences between unittest2 and unittest in Python 2.7:
 ``warnings.catch_warnings()`` which is new in Python 2.6 (and is used as a
 context manager which would be a pain to make work with Python 2.4).
 
-The underlying dictionary storing the type equality functions on TestCase is a
-custom object rather than a real dictionary. This allows TestCase instances to
-be deep-copyable on Python versions prior to 2.7.
-
 ``TestCase.longMessage`` defaults to True because it is better. It defaults to
 False in Python 2.7 for backwards compatibility reasons.
 
@@ -118,6 +114,11 @@ unittest2 includes a very basic setuptools compatible test collector. Specify
 ``test_suite = 'unittest2.collector'`` in your setup.py. This starts test
 discovery with the default parameters from the directory containing setup.py, so
 it is perhaps most useful as an example (see unittest2/collector.py).
+
+In unittest2 TextTestResult.stopTestRun is responsible for calling printErrors.
+This is desirable behaviour but in Python 3.1 TestResult.stopTestRun was
+documented as being empty and subclasses shouldn't need to call it. This would
+make the change backwards incompatible and needs thinking about.
 
 
 
@@ -158,6 +159,7 @@ CHANGELOG
 
 * Fix Python issue 9926. TestSuite subclasses that override __call__ are called
   correctly.
+
 
 2010/07/12 - 0.5.1
 ------------------
