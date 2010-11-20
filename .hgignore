@@ -1,5 +1,8 @@
 syntax:glob
 *.pyc
+*.pyo
+*.orig
+*.diff
 MANIFEST
 dist
 *.wpu
