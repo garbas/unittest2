@@ -31,7 +31,7 @@ __all__ = ['TestResult', 'TestCase', 'TestSuite',
            'defaultTestLoader', 'SkipTest', 'skip', 'skipIf', 'skipUnless',
            'expectedFailure', 'TextTestResult', '__version__', 'collector']
 
-__version__ = '0.5.1'
+__version__ = '0.6.0a1'
 
 # Expose obsolete functions for backwards compatibility
 __all__.extend(['getTestCaseNames', 'makeSuite', 'findTestCases'])
@@ -59,7 +59,7 @@ except ImportError:
     # Compatibility with platforms that don't have the signal module
     pass
 else:
-    __all__.extend(['installHandler', 'registerResult', 'removeResult', 
+    __all__.extend(['installHandler', 'registerResult', 'removeResult',
                     'removeHandler'])
 
 # deprecated
