@@ -159,6 +159,7 @@ CHANGELOG
 
 * Fix Python issue 9926. TestSuite subclasses that override __call__ are called
   correctly.
+* Removed unused `maxDiff` parameter from `TestCase.assertSequenceEqual`.
 
 
 2010/07/12 - 0.5.1
