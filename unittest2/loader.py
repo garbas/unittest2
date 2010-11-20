@@ -53,7 +53,7 @@ def _make_failed_test(classname, methodname, exception, suiteClass):
     attrs = {methodname: testFailure}
     TestClass = type(classname, (case.TestCase,), attrs)
     return suiteClass((TestClass(methodname),))
-    
+
 
 class TestLoader(unittest.TestLoader):
     """
@@ -162,9 +162,9 @@ class TestLoader(unittest.TestLoader):
 
     def discover(self, start_dir, pattern='test*.py', top_level_dir=None):
         """Find and return all test modules from the specified start
-        directory, recursing into subdirectories to find them. Only test files
-        that match the pattern will be loaded. (Using shell style pattern
-        matching.)
+        directory, recursing into subdirectories to find them and return all
+        tests found within them. Only test files that match the pattern will
+        be loaded. (Using shell style pattern matching.)
 
         All test modules must be importable from the top level of the project.
         If the start directory is not the top level directory then the top
@@ -241,7 +241,7 @@ class TestLoader(unittest.TestLoader):
     def _match_path(self, path, full_path, pattern):
         # override this method to use alternative matching strategy
         return fnmatch(path, pattern)
-    
+
     def _find_tests(self, start_dir, pattern):
         """Used by discovery. Yields test suites it loads."""
         paths = os.listdir(start_dir)
