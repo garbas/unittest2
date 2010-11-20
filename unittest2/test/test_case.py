@@ -1,4 +1,5 @@
 import difflib
+import pickle
 import pprint
 import re
 
@@ -624,7 +625,7 @@ class Test_TestCase(unittest2.TestCase, EqualityMixin, HashingMixin):
         self.assertRaises(unittest2.TestCase.failureException,
                           self.assertDictContainsSubset, {'a': 1, 'c': 1},
                           {'a': 1}, '.*Missing:.*Mismatched values:.*')
-        
+
         self.assertRaises(self.failureException,
                           self.assertDictContainsSubset, {1: "one"}, {})
 
@@ -733,7 +734,7 @@ class Test_TestCase(unittest2.TestCase, EqualityMixin, HashingMixin):
         self.assertItemsEqual([{'a': 1}, {'b': 2}], [{'b': 2}, {'a': 1}])
         self.assertRaises(self.failureException, self.assertItemsEqual,
                           [[1]], [[2]])
-        
+
         # Test unsortable objects
         self.assertItemsEqual([2j, None], [None, 2j])
         self.assertRaises(self.failureException, self.assertItemsEqual,
@@ -1059,6 +1060,24 @@ test case
 
         # This shouldn't blow up
         deepcopy(test)
+
+
+    def testPickle(self):
+        # Issue 10326
+
+        # Can't use TestCase classes defined in Test class as
+        # pickle does not work with inner classes
+        test = unittest2.TestCase('run')
+        for protocol in range(pickle.HIGHEST_PROTOCOL + 1):
+
+            # blew up prior to fix
+            pickled_test = pickle.dumps(test, protocol=protocol)
+            unpickled_test = pickle.loads(pickled_test)
+            self.assertEqual(test, unpickled_test)
+
+            # exercise the TestCase instance in a way that will invoke
+            # the type equality lookup mechanism
+            unpickled_test.assertEqual(set(), set())
 
 
 if __name__ == "__main__":
