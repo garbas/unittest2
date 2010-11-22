@@ -154,9 +154,10 @@ failure messages. These methods use ``prettyprint`` and ``difflib``.
 CHANGELOG
 =========
 
-2010/XX/XX - 0.6.0
-------------------
+2010/XX/XX - 0.6.0 alpha 1
+--------------------------
 
+* Invoking `unit2` without args starts test discovery
 * Fix Python issue 9926. TestSuite subclasses that override __call__ are called
   correctly.
 * Removed unused `maxDiff` parameter from `TestCase.assertSequenceEqual`.

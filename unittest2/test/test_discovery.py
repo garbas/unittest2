@@ -5,6 +5,18 @@ import sys
 import unittest2
 
 
+class TestableTestProgram(unittest2.TestProgram):
+    module = '__main__'
+    exit = True
+    defaultTest = failfast = catchbreak = buffer = None
+    verbosity = 1
+    progName = ''
+    testRunner = testLoader = None
+
+    def __init__(self):
+        pass
+
+
 class TestDiscovery(unittest2.TestCase):
 
     # Heavily mocked tests so I can avoid hitting the filesystem
@@ -202,7 +214,7 @@ class TestDiscovery(unittest2.TestCase):
 
     def test_command_line_handling_parseArgs(self):
         # Haha - take that uninstantiable class
-        program = object.__new__(unittest2.TestProgram)
+        program = TestableTestProgram()
 
         args = []
         def do_discovery(argv):
@@ -214,13 +226,25 @@ class TestDiscovery(unittest2.TestCase):
         program.parseArgs(['something', 'discover', 'foo', 'bar'])
         self.assertEqual(args, ['foo', 'bar'])
 
+    def test_command_line_handling_discover_by_default(self):
+        program = TestableTestProgram()
+        program.module = None
+
+        self.called = False
+        def do_discovery(argv):
+            self.called = True
+            self.assertEqual(argv, [])
+        program._do_discovery = do_discovery
+        program.parseArgs(['something'])
+        self.assertTrue(self.called)
+
     def test_command_line_handling_do_discovery_too_many_arguments(self):
         class Stop(Exception):
             pass
         def usageExit():
             raise Stop
 
-        program = object.__new__(unittest2.TestProgram)
+        program = TestableTestProgram()
         program.usageExit = usageExit
 
         self.assertRaises(Stop,
@@ -229,7 +253,7 @@ class TestDiscovery(unittest2.TestCase):
 
 
     def test_command_line_handling_do_discovery_calls_loader(self):
-        program = object.__new__(unittest2.TestProgram)
+        program = TestableTestProgram()
 
         class Loader(object):
             args = []
@@ -243,49 +267,49 @@ class TestDiscovery(unittest2.TestCase):
         self.assertEqual(Loader.args, [('.', 'test*.py', None)])
 
         Loader.args = []
-        program = object.__new__(unittest2.TestProgram)
+        program = TestableTestProgram()
         program._do_discovery(['--verbose'], Loader=Loader)
         self.assertEqual(program.test, 'tests')
         self.assertEqual(Loader.args, [('.', 'test*.py', None)])
 
         Loader.args = []
-        program = object.__new__(unittest2.TestProgram)
+        program = TestableTestProgram()
         program._do_discovery([], Loader=Loader)
         self.assertEqual(program.test, 'tests')
         self.assertEqual(Loader.args, [('.', 'test*.py', None)])
 
         Loader.args = []
-        program = object.__new__(unittest2.TestProgram)
+        program = TestableTestProgram()
         program._do_discovery(['fish'], Loader=Loader)
         self.assertEqual(program.test, 'tests')
         self.assertEqual(Loader.args, [('fish', 'test*.py', None)])
 
         Loader.args = []
-        program = object.__new__(unittest2.TestProgram)
+        program = TestableTestProgram()
         program._do_discovery(['fish', 'eggs'], Loader=Loader)
         self.assertEqual(program.test, 'tests')
         self.assertEqual(Loader.args, [('fish', 'eggs', None)])
 
         Loader.args = []
-        program = object.__new__(unittest2.TestProgram)
+        program = TestableTestProgram()
         program._do_discovery(['fish', 'eggs', 'ham'], Loader=Loader)
         self.assertEqual(program.test, 'tests')
         self.assertEqual(Loader.args, [('fish', 'eggs', 'ham')])
 
         Loader.args = []
-        program = object.__new__(unittest2.TestProgram)
+        program = TestableTestProgram()
         program._do_discovery(['-s', 'fish'], Loader=Loader)
         self.assertEqual(program.test, 'tests')
         self.assertEqual(Loader.args, [('fish', 'test*.py', None)])
 
         Loader.args = []
-        program = object.__new__(unittest2.TestProgram)
+        program = TestableTestProgram()
         program._do_discovery(['-t', 'fish'], Loader=Loader)
         self.assertEqual(program.test, 'tests')
         self.assertEqual(Loader.args, [('.', 'test*.py', 'fish')])
 
         Loader.args = []
-        program = object.__new__(unittest2.TestProgram)
+        program = TestableTestProgram()
         program._do_discovery(['-p', 'fish'], Loader=Loader)
         self.assertEqual(program.test, 'tests')
         self.assertEqual(Loader.args, [('.', 'fish', None)])
@@ -300,7 +324,7 @@ class TestDiscovery(unittest2.TestCase):
         else:
             args.append('-c')
         Loader.args = []
-        program = object.__new__(unittest2.TestProgram)
+        program = TestableTestProgram()
         program._do_discovery(args, Loader=Loader)
         self.assertEqual(program.test, 'tests')
         self.assertEqual(Loader.args, [('fish', 'eggs', None)])
@@ -317,7 +341,7 @@ class TestDiscovery(unittest2.TestCase):
         original_listdir = os.listdir
         original_isfile = os.path.isfile
         original_isdir = os.path.isdir
-        
+
         def cleanup():
             os.listdir = original_listdir
             os.path.isfile = original_isfile
@@ -326,7 +350,7 @@ class TestDiscovery(unittest2.TestCase):
             if full_path in sys.path:
                 sys.path.remove(full_path)
         self.addCleanup(cleanup)
-        
+
         def listdir(_):
             return ['foo.py']
         def isfile(_):
@@ -336,9 +360,9 @@ class TestDiscovery(unittest2.TestCase):
         os.listdir = listdir
         os.path.isfile = isfile
         os.path.isdir = isdir
-        
+
         loader = unittest2.TestLoader()
-        
+
         mod_dir = os.path.abspath('bar')
         expected_dir = os.path.abspath('foo')
         msg = re.escape(r"'foo' module incorrectly imported from %r. Expected %r. "
@@ -349,10 +373,10 @@ class TestDiscovery(unittest2.TestCase):
         )
         self.assertEqual(sys.path[0], full_path)
 
-        
+
     def test_discovery_from_dotted_path(self):
         loader = unittest2.TestLoader()
-        
+
         tests = [self]
         expectedPath = os.path.abspath(os.path.dirname(unittest2.test.__file__))
 
