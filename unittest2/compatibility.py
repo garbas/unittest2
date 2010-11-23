@@ -62,3 +62,73 @@ if os.path is sys.modules.get('ntpath'):
     relpath = _relpath_nt
 else:
     relpath = _relpath_posix
+
+
+def with_context(context, callableobj, *args, **kwargs):
+    """
+    Execute a callable utilizing a context object
+    in the same way that the 'with' statement would
+    """
+    context.__enter__()
+    try:
+        callableobj(*args, **kwargs)
+    except:
+        if not context.__exit__(*sys.exc_info()):
+            raise
+        else:
+            return
+    else:
+        context.__exit__(None, None, None)
+
+
+# copied from Python 2.6
+try:
+    from warnings import catch_warnings
+except ImportError:
+    class catch_warnings(object):
+        def __init__(self, record=False, module=None):
+            self._record = record
+            self._module = sys.modules['warnings']
+            self._entered = False
+    
+        def __repr__(self):
+            args = []
+            if self._record:
+                args.append("record=True")
+            name = type(self).__name__
+            return "%s(%s)" % (name, ", ".join(args))
+    
+        def __enter__(self):
+            if self._entered:
+                raise RuntimeError("Cannot enter %r twice" % self)
+            self._entered = True
+            self._filters = self._module.filters
+            self._module.filters = self._filters[:]
+            self._showwarning = self._module.showwarning
+            if self._record:
+                log = []
+                def showwarning(*args, **kwargs):
+                    log.append(WarningMessage(*args, **kwargs))
+                self._module.showwarning = showwarning
+                return log
+            else:
+                return None
+    
+        def __exit__(self, *exc_info):
+            if not self._entered:
+                raise RuntimeError("Cannot exit %r without entering first" % self)
+            self._module.filters = self._filters
+            self._module.showwarning = self._showwarning
+
+    class WarningMessage(object):
+        _WARNING_DETAILS = ("message", "category", "filename", "lineno", "file",
+                            "line")
+        def __init__(self, message, category, filename, lineno, file=None,
+                        line=None):
+            local_values = locals()
+            for attr in self._WARNING_DETAILS:
+                setattr(self, attr, local_values[attr])
+            self._category_name = None
+            if category.__name__:
+                self._category_name = category.__name__
+

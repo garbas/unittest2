@@ -14,10 +14,10 @@ from unittest2 import __version__ as VERSION
 NAME = 'unittest2'
 
 PACKAGES = ['unittest2', 'unittest2.test']
-SCRIPTS = ['unit2.py', 'unit2']
+SCRIPTS = ['unit2.py', 'unit2']#, 'unittestgui', 'unittestgui.py']
 
-DESCRIPTION = ('The new features in unittest for Python 2.7 backported to '
-               'Python 2.3+.')
+DESCRIPTION = ('The new features in unittest backported to '
+               'Python 2.4+.')
 
 URL = 'http://pypi.python.org/pypi/unittest2'
 
@@ -30,7 +30,6 @@ CLASSIFIERS = [
     'Intended Audience :: Developers',
     'License :: OSI Approved :: BSD License',
     'Programming Language :: Python',
-    'Programming Language :: Python :: 2.3',
     'Programming Language :: Python :: 2.4',
     'Programming Language :: Python :: 2.5',
     'Programming Language :: Python :: 2.6',
@@ -79,7 +78,7 @@ else:
             '%s = unittest2:main_' % SCRIPT2,
         ],
     }
-    
+
     params['test_suite'] = 'unittest2.collector'
 
 setup(**params)
