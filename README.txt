@@ -13,8 +13,8 @@ google code:
 * `Article / Docs: New features in unittest
   <http://www.voidspace.org.uk/python/articles/unittest2.shtml>`_
 
-Thanks to Mark Roddy, there is also a version of for Python 2.3. This is
-maintained as a separate branch and is a separate download.
+Thanks to Mark Roddy, there is a distribution of unittest2 0.5.1 for Python 2.3.
+This is maintained as a separate branch and is a separate download.
 
 To avoid problems with ``pip`` installing the wrong distribution, the Python 2.3
 version of unittest2 can't be hosted on PyPI:
@@ -158,6 +158,7 @@ CHANGELOG
 --------------------------
 
 * Invoking `unit2` without args starts test discovery
+* Added `TestCase.assertWarns` and `TestCase.assertWarnsRegexp` context managers
 * Fix Python issue 9926. TestSuite subclasses that override __call__ are called
   correctly.
 * Removed unused `maxDiff` parameter from `TestCase.assertSequenceEqual`.
