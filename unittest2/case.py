@@ -399,7 +399,7 @@ class TestCase(unittest.TestCase):
                 exc_info = sys.exc_info()
                 addExpectedFailure = getattr(result, 'addExpectedFailure', None)
 
-                if (hasattr(testMethod, 'expectedFailure') and
+                if (getattr(testMethod, 'expectedFailure', None) is not None and
                     addExpectedFailure is not None):
                     addExpectedFailure(self, exc_info)
                 else:
