@@ -1080,5 +1080,26 @@ test case
             unpickled_test.assertEqual(set(), set())
 
 
+    def testExpectedFailureInSetUp(self):
+        class Test(unittest2.TestCase):
+            def setUp(self):
+                1/0
+            @unittest2.expectedFailure
+            def test_something(self):
+                pass
+
+        test = Test('test_something')
+
+        result = unittest2.TestResult()
+        test(result)
+
+        self.assertEqual(len(result.errors), 0)
+        self.assertEqual(len(result.expectedFailures), 1)
+
+        result = OldTestResult()
+        test(result)
+        self.assertEqual(len(result.errors), 1)
+
+
 if __name__ == "__main__":
     unittest2.main()
