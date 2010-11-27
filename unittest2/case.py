@@ -90,7 +90,7 @@ def expectedFailure(func):
         except Exception:
             raise _ExpectedFailure(sys.exc_info())
         raise _UnexpectedSuccess
-    wrapper.expectedFailure = True
+    wrapper._expectedFailure = True
     return wrapper
 
 
@@ -399,8 +399,8 @@ class TestCase(unittest.TestCase):
                 exc_info = sys.exc_info()
                 addExpectedFailure = getattr(result, 'addExpectedFailure', None)
 
-                if (getattr(testMethod, 'expectedFailure', None) is not None and
-                    addExpectedFailure is not None):
+                if (getattr(testMethod, '_expectedFailure', None) is not None
+                    and addExpectedFailure is not None):
                     addExpectedFailure(self, exc_info)
                 else:
                     result.addError(self, exc_info)
