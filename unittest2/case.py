@@ -366,6 +366,15 @@ class TestCase(unittest.TestCase):
                           DeprecationWarning, 2)
             result.addSuccess(self)
 
+    def _addExpectedFailure(self, result, exc_info):
+        addExpectedFailure = getattr(result, 'addExpectedFailure', None)
+        if addExpectedFailure is not None:
+            addExpectedFailure(self, exc_info)
+        else:
+            warnings.warn("Use of a TestResult without an addExpectedFailure method is deprecated",
+                          DeprecationWarning)
+            result.addSuccess(self)
+
     def run(self, result=None):
         orig_result = result
         if result is None:
@@ -397,14 +406,8 @@ class TestCase(unittest.TestCase):
                 self._addSkip(result, str(e))
             except Exception:
                 exc_info = sys.exc_info()
-                addExpectedFailure = getattr(result, 'addExpectedFailure', None)
-
                 if getattr(testMethod, '_expectedFailure', None) is not None:
-                    if addExpectedFailure is not None:
-                        addExpectedFailure(self, exc_info)
-                    else:
-                        warnings.warn("Use of a TestResult without an addExpectedFailure method is deprecated",
-                                      DeprecationWarning)
+                    self._addExpectedFailure(result, exc_info)
                 else:
                     result.addError(self, exc_info)
             else:
@@ -412,14 +415,8 @@ class TestCase(unittest.TestCase):
                     testMethod()
                 except self.failureException:
                     result.addFailure(self, sys.exc_info())
-                except _ExpectedFailure, e:
-                    addExpectedFailure = getattr(result, 'addExpectedFailure', None)
-                    if addExpectedFailure is not None:
-                        addExpectedFailure(self, e.exc_info)
-                    else:
-                        warnings.warn("Use of a TestResult without an addExpectedFailure method is deprecated",
-                                      DeprecationWarning)
-                        result.addSuccess(self)
+                except _ExpectedFailure:
+                    self._addExpectedFailure(result, sys.exc_info())
                 except _UnexpectedSuccess:
                     addUnexpectedSuccess = getattr(result, 'addUnexpectedSuccess', None)
                     if addUnexpectedSuccess is not None:
@@ -438,8 +435,12 @@ class TestCase(unittest.TestCase):
                 try:
                     self.tearDown()
                 except Exception:
-                    result.addError(self, sys.exc_info())
-                    success = False
+                    exc_info = sys.exc_info()
+                    if getattr(testMethod, '_expectedFailure', None) is not None:
+                        self._addExpectedFailure(result, exc_info)
+                    else:
+                        result.addError(self, exc_info)
+                        success = False
 
             cleanUpSuccess = self.doCleanups()
             success = success and cleanUpSuccess
