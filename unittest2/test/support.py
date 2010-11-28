@@ -17,7 +17,8 @@ class OldTestResult(object):
         self.shouldStop = False
 
     def startTest(self, test):
-        pass
+        # so this fake TestResult can still count tests
+        self.testsRun += 1
 
     def stopTest(self, test):
         pass

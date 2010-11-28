@@ -1094,6 +1094,7 @@ test case
         test(result)
 
         self.assertEqual(len(result.errors), 0)
+        self.assertEqual(len(result.failures), 0)
         self.assertEqual(len(result.expectedFailures), 1)
         self.assertEqual(result.testsRun, 1)
 
@@ -1118,7 +1119,9 @@ test case
         test(result)
 
         self.assertEqual(len(result.errors), 0)
+        self.assertEqual(len(result.failures), 0)
         self.assertEqual(len(result.expectedFailures), 1)
+        self.assertEqual(len(result.unexpectedSuccesses), 0)
         self.assertEqual(result.testsRun, 1)
 
         result = OldTestResult()
@@ -1142,7 +1145,9 @@ test case
         test(result)
 
         self.assertEqual(len(result.errors), 0)
+        self.assertEqual(len(result.failures), 0)
         self.assertEqual(len(result.expectedFailures), 1)
+        self.assertEqual(len(result.unexpectedSuccesses), 0)
         self.assertEqual(result.testsRun, 1)
 
         result = OldTestResult()
