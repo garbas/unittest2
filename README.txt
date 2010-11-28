@@ -159,8 +159,8 @@ CHANGELOG
 
 * Invoking `unit2` without args starts test discovery
 * Added `TestCase.assertWarns` and `TestCase.assertWarnsRegexp` context managers
-* Error in setUp for a test marked as an expectedFailure is recorded as an
-  expectedFailure and not an error. Python issue 10548.
+* Error in setUp, tearDown or cleanUp function for a test marked as an
+  expectedFailure is recorded as a pass and not an error. Python issue 10548.
 * Fix Python issue 9926. TestSuite subclasses that override __call__ are called
   correctly.
 * Removed unused `maxDiff` parameter from `TestCase.assertSequenceEqual`.
