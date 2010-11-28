@@ -1095,10 +1095,61 @@ test case
 
         self.assertEqual(len(result.errors), 0)
         self.assertEqual(len(result.expectedFailures), 1)
+        self.assertEqual(result.testsRun, 1)
 
         result = OldTestResult()
         test(result)
-        self.assertEqual(len(result.errors), 1)
+        self.assertEqual(len(result.errors), 0)
+        self.assertEqual(len(result.failures), 0)
+        self.assertEqual(result.testsRun, 1)
+
+
+    def testExpectedFailureInTearDown(self):
+        class Test(unittest2.TestCase):
+            def tearDown(self):
+                1/0
+            @unittest2.expectedFailure
+            def test_something(self):
+                pass
+
+        test = Test('test_something')
+
+        result = unittest2.TestResult()
+        test(result)
+
+        self.assertEqual(len(result.errors), 0)
+        self.assertEqual(len(result.expectedFailures), 1)
+        self.assertEqual(result.testsRun, 1)
+
+        result = OldTestResult()
+        test(result)
+        self.assertEqual(len(result.errors), 0)
+        self.assertEqual(len(result.failures), 0)
+        self.assertEqual(result.testsRun, 1)
+
+
+    def testExpectedFailureInCleanUp(self):
+        class Test(unittest2.TestCase):
+            @unittest2.expectedFailure
+            def test_something(self):
+                def foo():
+                    1/0
+                self.addCleanup(foo)
+
+        test = Test('test_something')
+
+        result = unittest2.TestResult()
+        test(result)
+
+        self.assertEqual(len(result.errors), 0)
+        self.assertEqual(len(result.expectedFailures), 1)
+        self.assertEqual(result.testsRun, 1)
+
+        result = OldTestResult()
+        test(result)
+        self.assertEqual(len(result.errors), 0)
+        self.assertEqual(len(result.failures), 0)
+        self.assertEqual(result.testsRun, 1)
 
 
 if __name__ == "__main__":
