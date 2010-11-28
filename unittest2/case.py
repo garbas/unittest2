@@ -399,9 +399,12 @@ class TestCase(unittest.TestCase):
                 exc_info = sys.exc_info()
                 addExpectedFailure = getattr(result, 'addExpectedFailure', None)
 
-                if (getattr(testMethod, '_expectedFailure', None) is not None
-                    and addExpectedFailure is not None):
-                    addExpectedFailure(self, exc_info)
+                if getattr(testMethod, '_expectedFailure', None) is not None:
+                    if addExpectedFailure is not None:
+                        addExpectedFailure(self, exc_info)
+                    else:
+                        warnings.warn("Use of a TestResult without an addExpectedFailure method is deprecated",
+                                      DeprecationWarning)
                 else:
                     result.addError(self, exc_info)
             else:
