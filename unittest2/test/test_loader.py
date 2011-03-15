@@ -166,11 +166,11 @@ class Test_TestLoader(unittest2.TestCase):
         loader = unittest2.TestLoader()
         suite = loader.loadTestsFromModule(m)
         self.assertIsInstance(suite, unittest2.TestSuite)
-        self.assertEquals(load_tests_args, [loader, suite, None])
+        self.assertEqual(load_tests_args, [loader, suite, None])
 
         load_tests_args = []
         suite = loader.loadTestsFromModule(m, use_load_tests=False)
-        self.assertEquals(load_tests_args, [])
+        self.assertEqual(load_tests_args, [])
 
     def test_loadTestsFromModule__faulty_load_tests(self):
         m = types.ModuleType('m')
@@ -184,9 +184,9 @@ class Test_TestLoader(unittest2.TestCase):
         self.assertIsInstance(suite, unittest2.TestSuite)
         self.assertEqual(suite.countTestCases(), 1)
         test = list(suite)[0]
-        
+
         self.assertRaisesRegexp(TypeError, "some failure", test.m)
-        
+
 
     ################################################################
     ### /Tests for TestLoader.loadTestsFromModule()
