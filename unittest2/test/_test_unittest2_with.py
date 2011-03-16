@@ -148,6 +148,9 @@ class TestWith(unittest2.TestCase):
             (self.assert_, (True,)),
             (self.failUnlessRaises, (TypeError, lambda _: 3.14 + 'spam')),
             (self.failIf, (False,)),
+            (self.assertRaisesRegexp, (KeyError, 'foo', lambda: {}['foo'])),
+            (self.assertRegexpMatches, ('bar', 'bar')),
+            (self.assertNotRegexpMatches, ('xxx', 'yyy')),
         )
         for meth, args in old:
             with self.assertWarns(PendingDeprecationWarning):
@@ -219,26 +222,26 @@ class TestWith(unittest2.TestCase):
                 with self.assertWarns(DeprecationWarning):
                     _runtime_warn()
 
-    def testAssertWarnsRegexpCallable(self):
+    def testAssertWarnsRegexCallable(self):
         def _runtime_warn(msg):
             warnings.warn(msg, RuntimeWarning)
-        self.assertWarnsRegexp(RuntimeWarning, "o+",
-                               _runtime_warn, "foox")
+        self.assertWarnsRegex(RuntimeWarning, "o+",
+                              _runtime_warn, "foox")
         # Failure when no warning is triggered
         with self.assertRaises(self.failureException):
-            self.assertWarnsRegexp(RuntimeWarning, "o+",
-                                   lambda: 0)
+            self.assertWarnsRegex(RuntimeWarning, "o+",
+                                  lambda: 0)
         # Failure when another warning is triggered
         with catch_warnings():
             # Force default filter (in case tests are run with -We)
             warnings.simplefilter("default", RuntimeWarning)
             with self.assertRaises(self.failureException):
-                self.assertWarnsRegexp(DeprecationWarning, "o+",
-                                       _runtime_warn, "foox")
+                self.assertWarnsRegex(DeprecationWarning, "o+",
+                                      _runtime_warn, "foox")
         # Failure when message doesn't match
         with self.assertRaises(self.failureException):
-            self.assertWarnsRegexp(RuntimeWarning, "o+",
-                                   _runtime_warn, "barz")
+            self.assertWarnsRegex(RuntimeWarning, "o+",
+                                  _runtime_warn, "barz")
         # A little trickier: we ask RuntimeWarnings to be raised, and then
         # check for some of them.  It is implementation-defined whether
         # non-matching RuntimeWarnings are simply re-raised, or produce a
@@ -246,15 +249,15 @@ class TestWith(unittest2.TestCase):
         with catch_warnings():
             warnings.simplefilter("error", RuntimeWarning)
             with self.assertRaises((RuntimeWarning, self.failureException)):
-                self.assertWarnsRegexp(RuntimeWarning, "o+",
-                                       _runtime_warn, "barz")
+                self.assertWarnsRegex(RuntimeWarning, "o+",
+                                      _runtime_warn, "barz")
 
-    def testAssertWarnsRegexpContext(self):
-        # Same as above, but with assertWarnsRegexp as a context manager
+    def testAssertWarnsRegexContext(self):
+        # Same as above, but with assertWarnsRegex as a context manager
         def _runtime_warn(msg):
             warnings.warn(msg, RuntimeWarning)
         _runtime_warn_lineno = inspect.getsourcelines(_runtime_warn)[1]
-        with self.assertWarnsRegexp(RuntimeWarning, "o+") as cm:
+        with self.assertWarnsRegex(RuntimeWarning, "o+") as cm:
             _runtime_warn("foox")
         self.assertIsInstance(cm.warning, RuntimeWarning)
         self.assertEqual(cm.warning.args[0], "foox")
@@ -262,18 +265,18 @@ class TestWith(unittest2.TestCase):
         self.assertEqual(cm.lineno, _runtime_warn_lineno + 1)
         # Failure when no warning is triggered
         with self.assertRaises(self.failureException):
-            with self.assertWarnsRegexp(RuntimeWarning, "o+"):
+            with self.assertWarnsRegex(RuntimeWarning, "o+"):
                 pass
         # Failure when another warning is triggered
         with catch_warnings():
             # Force default filter (in case tests are run with -We)
             warnings.simplefilter("default", RuntimeWarning)
             with self.assertRaises(self.failureException):
-                with self.assertWarnsRegexp(DeprecationWarning, "o+"):
+                with self.assertWarnsRegex(DeprecationWarning, "o+"):
                     _runtime_warn("foox")
         # Failure when message doesn't match
         with self.assertRaises(self.failureException):
-            with self.assertWarnsRegexp(RuntimeWarning, "o+"):
+            with self.assertWarnsRegex(RuntimeWarning, "o+"):
                 _runtime_warn("barz")
         # A little trickier: we ask RuntimeWarnings to be raised, and then
         # check for some of them.  It is implementation-defined whether
@@ -282,7 +285,7 @@ class TestWith(unittest2.TestCase):
         with catch_warnings():
             warnings.simplefilter("error", RuntimeWarning)
             with self.assertRaises((RuntimeWarning, self.failureException)):
-                with self.assertWarnsRegexp(RuntimeWarning, "o+"):
+                with self.assertWarnsRegex(RuntimeWarning, "o+"):
                     _runtime_warn("barz")
 
 

@@ -97,7 +97,7 @@ def expectedFailure(func):
 class _AssertRaisesBaseContext(object):
 
     def __init__(self, expected, test_case, callable_obj=None,
-                 expected_regexp=None):
+                 expected_regex=None):
         self.expected = expected
         self.failureException = test_case.failureException
         if callable_obj is not None:
@@ -107,9 +107,9 @@ class _AssertRaisesBaseContext(object):
                 self.obj_name = str(callable_obj)
         else:
             self.obj_name = None
-        if isinstance(expected_regexp, basestring):
-            expected_regexp = re.compile(expected_regexp)
-        self.expected_regexp = expected_regexp
+        if isinstance(expected_regex, basestring):
+            expected_regex = re.compile(expected_regex)
+        self.expected_regex = expected_regex
 
 
 class _AssertRaisesContext(_AssertRaisesBaseContext):
@@ -130,13 +130,13 @@ class _AssertRaisesContext(_AssertRaisesBaseContext):
             # let unexpected exceptions pass through
             return False
         self.exception = exc_value # store for later retrieval
-        if self.expected_regexp is None:
+        if self.expected_regex is None:
             return True
 
-        expected_regexp = self.expected_regexp
-        if not expected_regexp.search(str(exc_value)):
+        expected_regex = self.expected_regex
+        if not expected_regex.search(str(exc_value)):
             raise self.failureException('%r does not match %r' %
-                     (expected_regexp.pattern, str(exc_value)))
+                     (expected_regex.pattern, str(exc_value)))
         return True
 
 
@@ -170,8 +170,8 @@ class _AssertWarnsContext(_AssertRaisesBaseContext):
                 continue
             if first_matching is None:
                 first_matching = w
-            if (self.expected_regexp is not None and
-                not self.expected_regexp.search(str(w))):
+            if (self.expected_regex is not None and
+                not self.expected_regex.search(str(w))):
                 continue
             # store warning for later retrieval
             self.warning = w
@@ -181,7 +181,7 @@ class _AssertWarnsContext(_AssertRaisesBaseContext):
         # Now we simply try to choose a helpful failure message
         if first_matching is not None:
             raise self.failureException('%r does not match %r' %
-                     (self.expected_regexp.pattern, str(first_matching)))
+                     (self.expected_regex.pattern, str(first_matching)))
         if self.obj_name:
             raise self.failureException("%s not triggered by %s"
                 % (exc_name, self.obj_name))
@@ -711,24 +711,6 @@ class TestCase(unittest.TestCase):
         raise self.failureException(msg)
 
 
-    def _deprecate(original_func):
-        def deprecated_func(*args, **kwargs):
-            warnings.warn(
-                ('Please use %s instead.' % original_func.__name__),
-                PendingDeprecationWarning, 2)
-            return original_func(*args, **kwargs)
-        return deprecated_func
-
-    # The fail* methods have been removed in 3.3, the 5 assert* methods will
-    # have to stay around for a few more versions.  See #9424.
-    failUnlessEqual = assertEquals = _deprecate(assertEqual)
-    failIfEqual = assertNotEquals = _deprecate(assertNotEqual)
-    failUnlessAlmostEqual = assertAlmostEquals = _deprecate(assertAlmostEqual)
-    failIfAlmostEqual = assertNotAlmostEquals = _deprecate(assertNotAlmostEqual)
-    failUnless = assert_ = _deprecate(assertTrue)
-    failUnlessRaises = _deprecate(assertRaises)
-    failIf = _deprecate(assertFalse)
-
     def assertSequenceEqual(self, seq1, seq2, msg=None, seq_type=None):
         """An equality assertion for ordered sequences (like lists and tuples).
 
@@ -1071,28 +1053,28 @@ class TestCase(unittest.TestCase):
             standardMsg = '%s is an instance of %r' % (safe_repr(obj), cls)
             self.fail(self._formatMessage(msg, standardMsg))
 
-    def assertRaisesRegexp(self, expected_exception, expected_regexp,
-                           callable_obj=None, *args, **kwargs):
-        """Asserts that the message in a raised exception matches a regexp.
+    def assertRaisesRegex(self, expected_exception, expected_regex,
+                          callable_obj=None, *args, **kwargs):
+        """Asserts that the message in a raised exception matches a regex.
 
         Args:
             expected_exception: Exception class expected to be raised.
-            expected_regexp: Regexp (re pattern object or string) expected
+            expected_regex: Regex (re pattern object or string) expected
                     to be found in error message.
             callable_obj: Function to be called.
             args: Extra args.
             kwargs: Extra kwargs.
         """
         if callable_obj is None:
-            return _AssertRaisesContext(expected_exception, self, expected_regexp)
+            return _AssertRaisesContext(expected_exception, self, expected_regex)
         try:
             callable_obj(*args, **kwargs)
         except expected_exception, exc_value:
-            if isinstance(expected_regexp, basestring):
-                expected_regexp = re.compile(expected_regexp)
-            if not expected_regexp.search(str(exc_value)):
+            if isinstance(expected_regex, basestring):
+                expected_regex = re.compile(expected_regex)
+            if not expected_regex.search(str(exc_value)):
                 raise self.failureException('"%s" does not match "%s"' %
-                         (expected_regexp.pattern, str(exc_value)))
+                         (expected_regex.pattern, str(exc_value)))
         else:
             if hasattr(expected_exception, '__name__'):
                 excName = expected_exception.__name__
@@ -1100,47 +1082,70 @@ class TestCase(unittest.TestCase):
                 excName = str(expected_exception)
             raise self.failureException, "%s not raised" % excName
 
-    def assertWarnsRegexp(self, expected_warning, expected_regexp,
-                          callable_obj=None, *args, **kwargs):
-        """Asserts that the message in a triggered warning matches a regexp.
+    def assertWarnsRegex(self, expected_warning, expected_regex,
+                         callable_obj=None, *args, **kwargs):
+        """Asserts that the message in a triggered warning matches a regex.
         Basic functioning is similar to assertWarns() with the addition
         that only warnings whose messages also match the regular expression
         are considered successful matches.
 
         Args:
             expected_warning: Warning class expected to be triggered.
-            expected_regexp: Regexp (re pattern object or string) expected
+            expected_regex: Regex (re pattern object or string) expected
                     to be found in error message.
             callable_obj: Function to be called.
             args: Extra args.
             kwargs: Extra kwargs.
         """
-        context = _AssertWarnsContext(expected_warning, self, callable_obj,expected_regexp)
+        context = _AssertWarnsContext(expected_warning, self, callable_obj, expected_regex)
         if callable_obj is None:
             return context
         with_context(context, callable_obj, *args, **kwargs)
 
-    def assertRegexpMatches(self, text, expected_regexp, msg=None):
+    def assertRegex(self, text, expected_regex, msg=None):
         """Fail the test unless the text matches the regular expression."""
-        if isinstance(expected_regexp, basestring):
-            expected_regexp = re.compile(expected_regexp)
-        if not expected_regexp.search(text):
-            msg = msg or "Regexp didn't match"
-            msg = '%s: %r not found in %r' % (msg, expected_regexp.pattern, text)
+        if isinstance(expected_regex, basestring):
+            expected_regex = re.compile(expected_regex)
+        if not expected_regex.search(text):
+            msg = msg or "Regex didn't match"
+            msg = '%s: %r not found in %r' % (msg, expected_regex.pattern, text)
             raise self.failureException(msg)
 
-    def assertNotRegexpMatches(self, text, unexpected_regexp, msg=None):
+    def assertNotRegex(self, text, unexpected_regex, msg=None):
         """Fail the test if the text matches the regular expression."""
-        if isinstance(unexpected_regexp, basestring):
-            unexpected_regexp = re.compile(unexpected_regexp)
-        match = unexpected_regexp.search(text)
+        if isinstance(unexpected_regex, basestring):
+            unexpected_regex = re.compile(unexpected_regex)
+        match = unexpected_regex.search(text)
         if match:
-            msg = msg or "Regexp matched"
+            msg = msg or "Regex matched"
             msg = '%s: %r matches %r in %r' % (msg,
                                                text[match.start():match.end()],
-                                               unexpected_regexp.pattern,
+                                               unexpected_regex.pattern,
                                                text)
             raise self.failureException(msg)
+
+
+    def _deprecate(original_func):
+        def deprecated_func(*args, **kwargs):
+            warnings.warn(
+                ('Please use %s instead.' % original_func.__name__),
+                PendingDeprecationWarning, 2)
+            return original_func(*args, **kwargs)
+        return deprecated_func
+
+    # The fail* methods have been removed in 3.3, the 5 assert* methods will
+    # have to stay around for a few more versions.  See #9424.
+    failUnlessEqual = assertEquals = _deprecate(assertEqual)
+    failIfEqual = assertNotEquals = _deprecate(assertNotEqual)
+    failUnlessAlmostEqual = assertAlmostEquals = _deprecate(assertAlmostEqual)
+    failIfAlmostEqual = assertNotAlmostEquals = _deprecate(assertNotAlmostEqual)
+    failUnless = assert_ = _deprecate(assertTrue)
+    failUnlessRaises = _deprecate(assertRaises)
+    failIf = _deprecate(assertFalse)
+    assertRaisesRegexp = _deprecate(assertRaisesRegex)
+    assertRegexpMatches = _deprecate(assertRegex)
+    assertNotRegexpMatches = _deprecate(assertNotRegex)
+
 
 class FunctionTestCase(TestCase):
     """A test case that wraps a test function.

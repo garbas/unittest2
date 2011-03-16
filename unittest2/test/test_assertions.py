@@ -58,15 +58,15 @@ class Test_Assertions(unittest2.TestCase):
         self.assertNotAlmostEqual(first, second,
                                   delta=datetime.timedelta(seconds=5))
 
-    def testAssertNotRegexpMatches(self):
-        self.assertNotRegexpMatches('Ala ma kota', r'r+')
+    def testAssertNotRegex(self):
+        self.assertNotRegex('Ala ma kota', r'r+')
         try:
-            self.assertNotRegexpMatches('Ala ma kota', r'k.t', 'Message')
+            self.assertNotRegex('Ala ma kota', r'k.t', 'Message')
         except self.failureException, e:
             self.assertIn("'kot'", e.args[0])
             self.assertIn('Message', e.args[0])
         else:
-            self.fail('assertNotRegexpMatches should have failed.')
+            self.fail('assertNotRegex should have failed.')
 
 
 class TestLongMessage(unittest2.TestCase):
@@ -114,16 +114,16 @@ class TestLongMessage(unittest2.TestCase):
                 test = self.testableTrue
             return getattr(test, methodName)
 
-        for i, expected_regexp in enumerate(errors):
+        for i, expected_regex in enumerate(errors):
             testMethod = getMethod(i)
             kwargs = {}
             withMsg = i % 2
             if withMsg:
                 kwargs = {"msg": "oops"}
 
-            self.assertRaisesRegexp(self.failureException,
-                                    expected_regexp,
-                                    lambda: testMethod(*args, **kwargs))
+            self.assertRaisesRegex(self.failureException,
+                                   expected_regex,
+                                   lambda: testMethod(*args, **kwargs))
 
     def testAssertTrue(self):
         self.assertMessages('assertTrue', (False,),

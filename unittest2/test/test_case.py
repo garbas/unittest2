@@ -985,54 +985,54 @@ test case
         self.assertIsNotNone('DjZoPloGears on Rails')
         self.assertRaises(self.failureException, self.assertIsNotNone, None)
 
-    def testAssertRegexpMatches(self):
-        self.assertRegexpMatches('asdfabasdf', r'ab+')
-        self.assertRaises(self.failureException, self.assertRegexpMatches,
+    def testAssertRegex(self):
+        self.assertRegex('asdfabasdf', r'ab+')
+        self.assertRaises(self.failureException, self.assertRegex,
                           'saaas', r'aaaa')
 
-    def testAssertRaisesRegexp(self):
+    def testAssertRaisesRegex(self):
         class ExceptionMock(Exception):
             pass
 
         def Stub():
             raise ExceptionMock('We expect')
 
-        self.assertRaisesRegexp(ExceptionMock, re.compile('expect$'), Stub)
-        self.assertRaisesRegexp(ExceptionMock, 'expect$', Stub)
-        self.assertRaisesRegexp(ExceptionMock, u'expect$', Stub)
+        self.assertRaisesRegex(ExceptionMock, re.compile('expect$'), Stub)
+        self.assertRaisesRegex(ExceptionMock, 'expect$', Stub)
+        self.assertRaisesRegex(ExceptionMock, u'expect$', Stub)
 
-    def testAssertNotRaisesRegexp(self):
-        self.assertRaisesRegexp(
+    def testAssertNotRaisesRegex(self):
+        self.assertRaisesRegex(
                 self.failureException, '^Exception not raised$',
-                self.assertRaisesRegexp, Exception, re.compile('x'),
+                self.assertRaisesRegex, Exception, re.compile('x'),
                 lambda: None)
-        self.assertRaisesRegexp(
+        self.assertRaisesRegex(
                 self.failureException, '^Exception not raised$',
-                self.assertRaisesRegexp, Exception, 'x',
+                self.assertRaisesRegex, Exception, 'x',
                 lambda: None)
-        self.assertRaisesRegexp(
+        self.assertRaisesRegex(
                 self.failureException, '^Exception not raised$',
-                self.assertRaisesRegexp, Exception, u'x',
+                self.assertRaisesRegex, Exception, u'x',
                 lambda: None)
 
-    def testAssertRaisesRegexpMismatch(self):
+    def testAssertRaisesRegexMismatch(self):
         def Stub():
             raise Exception('Unexpected')
 
-        self.assertRaisesRegexp(
+        self.assertRaisesRegex(
                 self.failureException,
                 r'"\^Expected\$" does not match "Unexpected"',
-                self.assertRaisesRegexp, Exception, '^Expected$',
+                self.assertRaisesRegex, Exception, '^Expected$',
                 Stub)
-        self.assertRaisesRegexp(
+        self.assertRaisesRegex(
                 self.failureException,
                 r'"\^Expected\$" does not match "Unexpected"',
-                self.assertRaisesRegexp, Exception, u'^Expected$',
+                self.assertRaisesRegex, Exception, u'^Expected$',
                 Stub)
-        self.assertRaisesRegexp(
+        self.assertRaisesRegex(
                 self.failureException,
                 r'"\^Expected\$" does not match "Unexpected"',
-                self.assertRaisesRegexp, Exception,
+                self.assertRaisesRegex, Exception,
                 re.compile('^Expected$'), Stub)
 
 
