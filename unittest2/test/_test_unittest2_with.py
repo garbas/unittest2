@@ -5,6 +5,7 @@ import unittest2
 from unittest2.test.support import OldTestResult
 from unittest2.compatibility import catch_warnings
 
+import sys
 import warnings
 import inspect
 
@@ -128,19 +129,29 @@ class TestWith(unittest2.TestCase):
         Test = unittest2.skip('no reason')(Test)
         self.assertOldResultWarning(Test('testFoo'), 0)
 
-    def testPendingDeprecationMethodNames(self):
-        """Test fail* methods pending deprecation, they will warn in 3.2.
+    def testDeprecatedMethodNames(self):
+        """Test that the deprecated methods raise a DeprecationWarning.
 
-        Do not use these methods.  They will go away in 3.3.
+        The fail* methods have been removed in 3.3. The assert* methods will
+        have to stay around for a few more versions.  See #9424.
         """
-        with catch_warnings(record=True):
-            self.failIfEqual(3, 5)
-            self.failUnlessEqual(3, 3)
-            self.failUnlessAlmostEqual(2.0, 2.0)
-            self.failIfAlmostEqual(3.0, 5.0)
-            self.failUnless(True)
-            self.failUnlessRaises(TypeError, lambda _: 3.14 + u'spam')
-            self.failIf(False)
+        old = (
+            (self.failIfEqual, (3, 5)),
+            (self.assertNotEquals, (3, 5)),
+            (self.failUnlessEqual, (3, 3)),
+            (self.assertEquals, (3, 3)),
+            (self.failUnlessAlmostEqual, (2.0, 2.0)),
+            (self.assertAlmostEquals, (2.0, 2.0)),
+            (self.failIfAlmostEqual, (3.0, 5.0)),
+            (self.assertNotAlmostEquals, (3.0, 5.0)),
+            (self.failUnless, (True,)),
+            (self.assert_, (True,)),
+            (self.failUnlessRaises, (TypeError, lambda _: 3.14 + 'spam')),
+            (self.failIf, (False,)),
+        )
+        for meth, args in old:
+            with self.assertWarns(PendingDeprecationWarning):
+                meth(*args)
 
     def testAssertWarnsCallable(self):
         def _runtime_warn():

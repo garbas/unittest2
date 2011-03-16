@@ -1036,20 +1036,6 @@ test case
                 re.compile('^Expected$'), Stub)
 
 
-    def testSynonymAssertMethodNames(self):
-        """Test undocumented method name synonyms.
-
-        Please do not use these methods names in your own code.
-
-        This test confirms their continued existence and functionality
-        in order to avoid breaking existing code.
-        """
-        self.assertNotEquals(3, 5)
-        self.assertEquals(3, 3)
-        self.assertAlmostEquals(2.0, 2.0)
-        self.assertNotAlmostEquals(3.0, 5.0)
-        self.assert_(True)
-
     def testDeepcopy(self):
         # Issue: 5660
         class TestableTest(unittest2.TestCase):
