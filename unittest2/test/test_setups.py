@@ -499,4 +499,4 @@ class TestSetups(unittest2.TestCase):
         suite.addTest(_suite)
         messages = ('setUpModule', 'tearDownModule', 'setUpClass', 'tearDownClass', 'test_something')
         for phase, msg in enumerate(messages):
-            self.assertRaisesRegexp(Exception, msg, suite.debug)
+            self.assertRaisesRegex(Exception, msg, suite.debug)

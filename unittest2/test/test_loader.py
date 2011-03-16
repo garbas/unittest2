@@ -185,7 +185,7 @@ class Test_TestLoader(unittest2.TestCase):
         self.assertEqual(suite.countTestCases(), 1)
         test = list(suite)[0]
 
-        self.assertRaisesRegexp(TypeError, "some failure", test.m)
+        self.assertRaisesRegex(TypeError, "some failure", test.m)
 
 
     ################################################################
