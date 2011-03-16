@@ -318,11 +318,11 @@ class Test_TestSuite(unittest2.TestCase, EqualityMixin):
             @staticmethod
             def tearDownModule():
                 Module.wasTornDown = True
-        
+
         Test.__module__ = 'Module'
         sys.modules['Module'] = Module
         self.addCleanup(sys.modules.pop, 'Module')
-        
+
         suite = unittest2.BaseTestSuite()
         suite.addTests([Test('testPass'), Test('testFail')])
         self.assertEqual(suite.countTestCases(), 2)

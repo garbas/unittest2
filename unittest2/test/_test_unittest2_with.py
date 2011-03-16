@@ -31,7 +31,7 @@ class TestWith(unittest2.TestCase):
         self.assertIsInstance(e, ExceptionMock)
         self.assertEqual(e.args[0], v)
 
-    
+
     def test_assertRaises(self):
         def _raise(e):
             raise e
@@ -87,7 +87,7 @@ class TestWith(unittest2.TestCase):
             one = ''.join(chr(i) for i in range(255))
             # this used to cause a UnicodeDecodeError constructing msg
             self._formatMessage(one, u'\uFFFD')
-                
+
     def assertOldResultWarning(self, test, failures):
         with catch_warnings(record=True) as log:
             result = OldTestResult()
@@ -106,13 +106,13 @@ class TestWith(unittest2.TestCase):
             @unittest2.expectedFailure
             def testUnexpectedSuccess(self):
                 pass
-        
-        for test_name, should_pass in (('testSkip', True), 
-                                       ('testExpectedFail', True), 
+
+        for test_name, should_pass in (('testSkip', True),
+                                       ('testExpectedFail', True),
                                        ('testUnexpectedSuccess', False)):
             test = Test(test_name)
             self.assertOldResultWarning(test, int(not should_pass))
-        
+
     def test_old_testresult_setup(self):
         class Test(unittest2.TestCase):
             def setUp(self):
@@ -120,7 +120,7 @@ class TestWith(unittest2.TestCase):
             def testFoo(self):
                 pass
         self.assertOldResultWarning(Test('testFoo'), 0)
-        
+
     def test_old_testresult_class(self):
         class Test(unittest2.TestCase):
             def testFoo(self):
