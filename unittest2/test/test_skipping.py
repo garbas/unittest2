@@ -35,13 +35,13 @@ class Test_TestSkipping(unittest2.TestCase):
         for deco, do_skip, dont_skip in op_table:
             class Foo(unittest2.TestCase):
                 @deco(do_skip, "testing")
-                def test_skip(self): 
+                def test_skip(self):
                     pass
 
                 @deco(dont_skip, "testing")
-                def test_dont_skip(self): 
+                def test_dont_skip(self):
                     pass
-            
+
             test_do_skip = Foo("test_skip")
             test_dont_skip = Foo("test_dont_skip")
             suite = unittest2.TestSuite([test_do_skip, test_dont_skip])
@@ -55,12 +55,12 @@ class Test_TestSkipping(unittest2.TestCase):
             self.assertEqual(result.testsRun, 2)
             self.assertEqual(result.skipped, [(test_do_skip, "testing")])
             self.assertTrue(result.wasSuccessful())
-        
+
     def test_skip_class(self):
         class Foo(unittest2.TestCase):
             def test_1(self):
                 record.append(1)
-        
+
         # was originally a class decorator...
         Foo = unittest2.skip("testing")(Foo)
         record = []
@@ -111,7 +111,7 @@ class Test_TestSkipping(unittest2.TestCase):
             @unittest2.skip('testing')
             def test_1(self):
                 pass
-        
+
         result = unittest2.TestResult()
         test = Foo("test_1")
         suite = unittest2.TestSuite([test])
@@ -119,19 +119,19 @@ class Test_TestSkipping(unittest2.TestCase):
         self.assertEqual(result.skipped, [(test, "testing")])
         self.assertFalse(Foo.wasSetUp)
         self.assertFalse(Foo.wasTornDown)
-    
+
     def test_decorated_skip(self):
         def decorator(func):
             def inner(*a):
                 return func(*a)
             return inner
-        
+
         class Foo(unittest2.TestCase):
             @decorator
             @unittest2.skip('testing')
             def test_1(self):
                 pass
-        
+
         result = unittest2.TestResult()
         test = Foo("test_1")
         suite = unittest2.TestSuite([test])
