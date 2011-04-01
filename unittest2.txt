@@ -1,0 +1,22 @@
+
+Improvements from unittest in Python 2.6
+========================================
+
+
+Improvements from unittest in Python 3.2
+========================================
+
+
+Differences from unittest in Python Standard Library
+====================================================
+
+
+CHANGELOG
+=========
+
+
+0.6.0 alpha
+------------
+
+* DeprecationWarning for unsupported result objects (missing addSkip method)
+  became RuntimeWarning.
