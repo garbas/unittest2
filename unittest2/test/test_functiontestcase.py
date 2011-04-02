@@ -58,7 +58,7 @@ class Test_FunctionTestCase(unittest2.TestCase):
         def tearDown():
             events.append('tearDown')
 
-        expected = ['startTest', 'setUp', 'test', 'addError', 'tearDown',
+        expected = ['startTest', 'setUp', 'test', 'tearDown', 'addError',
                     'stopTest']
         unittest2.FunctionTestCase(test, setUp, tearDown).run(result)
         self.assertEqual(events, expected)
@@ -84,7 +84,7 @@ class Test_FunctionTestCase(unittest2.TestCase):
         def tearDown():
             events.append('tearDown')
 
-        expected = ['startTest', 'setUp', 'test', 'addFailure', 'tearDown',
+        expected = ['startTest', 'setUp', 'test', 'tearDown', 'addFailure',
                     'stopTest']
         unittest2.FunctionTestCase(test, setUp, tearDown).run(result)
         self.assertEqual(events, expected)

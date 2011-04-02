@@ -3,8 +3,11 @@ Improvements from unittest in Python 2.6
 ========================================
 
 
-Improvements from unittest in Python 3.2
+Improvements from unittest in Python 2.7
 ========================================
+
+* `assertWarns`
+* Addition of `unittestgui`
 
 
 Differences from unittest in Python Standard Library
@@ -20,3 +23,4 @@ CHANGELOG
 
 * DeprecationWarning for unsupported result objects (missing addSkip method)
   became RuntimeWarning.
+* Addition of `TestCase.assertWarns` as a context manager. (Needs Python 2.5 to be used.)
