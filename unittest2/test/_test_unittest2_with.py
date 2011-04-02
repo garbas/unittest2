@@ -16,6 +16,8 @@ class TestWith(unittest2.TestCase):
     """Tests that use the with statement live in this
     module so that all other tests can be run with Python 2.4.
     """
+    def setUp(self):
+        self.foo = False
 
     def testAssertRaisesExcValue(self):
         class ExceptionMock(Exception):
@@ -95,7 +97,7 @@ class TestWith(unittest2.TestCase):
             test.run(result)
             self.assertEqual(len(result.failures), failures)
             warning, = log
-            self.assertIs(warning.category, DeprecationWarning)
+            self.assertIs(warning.category, RuntimeWarning)
 
     def test_old_testresult(self):
         class Test(unittest2.TestCase):
@@ -114,12 +116,14 @@ class TestWith(unittest2.TestCase):
             test = Test(test_name)
             self.assertOldResultWarning(test, int(not should_pass))
 
+
     def test_old_testresult_setup(self):
         class Test(unittest2.TestCase):
             def setUp(self):
                 self.skipTest('no reason')
             def testFoo(self):
                 pass
+        self.foo = True
         self.assertOldResultWarning(Test('testFoo'), 0)
 
     def test_old_testresult_class(self):

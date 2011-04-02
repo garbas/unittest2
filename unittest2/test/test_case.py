@@ -43,137 +43,6 @@ class Test(object):
             self.events.append('tearDown')
 
 
-
-class TestCleanUp(unittest2.TestCase):
-
-    def testCleanUp(self):
-        class TestableTest(unittest2.TestCase):
-            def testNothing(self):
-                pass
-
-        test = TestableTest('testNothing')
-        self.assertEqual(test._cleanups, [])
-
-        cleanups = []
-
-        def cleanup1(*args, **kwargs):
-            cleanups.append((1, args, kwargs))
-
-        def cleanup2(*args, **kwargs):
-            cleanups.append((2, args, kwargs))
-
-        test.addCleanup(cleanup1, 1, 2, 3, four='hello', five='goodbye')
-        test.addCleanup(cleanup2)
-
-        self.assertEqual(test._cleanups,
-                         [(cleanup1, (1, 2, 3), dict(four='hello', five='goodbye')),
-                          (cleanup2, (), {})])
-
-        result = test.doCleanups()
-        self.assertTrue(result)
-
-        self.assertEqual(cleanups, [(2, (), {}), (1, (1, 2, 3), dict(four='hello', five='goodbye'))])
-
-    def testCleanUpWithErrors(self):
-        class TestableTest(unittest2.TestCase):
-            def testNothing(self):
-                pass
-
-        class MockResult(object):
-            errors = []
-            def addError(self, test, exc_info):
-                self.errors.append((test, exc_info))
-
-        result = MockResult()
-        test = TestableTest('testNothing')
-        test._resultForDoCleanups = result
-
-        exc1 = Exception('foo')
-        exc2 = Exception('bar')
-        def cleanup1():
-            raise exc1
-
-        def cleanup2():
-            raise exc2
-
-        test.addCleanup(cleanup1)
-        test.addCleanup(cleanup2)
-
-        self.assertFalse(test.doCleanups())
-
-        (test1, (Type1, instance1, _)), (test2, (Type2, instance2, _)) = reversed(MockResult.errors)
-        self.assertEqual((test1, Type1, instance1), (test, Exception, exc1))
-        self.assertEqual((test2, Type2, instance2), (test, Exception, exc2))
-
-    def testCleanupInRun(self):
-        blowUp = False
-        ordering = []
-
-        class TestableTest(unittest2.TestCase):
-            def setUp(self):
-                ordering.append('setUp')
-                if blowUp:
-                    raise Exception('foo')
-
-            def testNothing(self):
-                ordering.append('test')
-
-            def tearDown(self):
-                ordering.append('tearDown')
-
-        test = TestableTest('testNothing')
-
-        def cleanup1():
-            ordering.append('cleanup1')
-        def cleanup2():
-            ordering.append('cleanup2')
-        test.addCleanup(cleanup1)
-        test.addCleanup(cleanup2)
-
-        def success(some_test):
-            self.assertEqual(some_test, test)
-            ordering.append('success')
-
-        result = unittest2.TestResult()
-        result.addSuccess = success
-
-        test.run(result)
-        self.assertEqual(ordering, ['setUp', 'test', 'tearDown',
-                                    'cleanup2', 'cleanup1', 'success'])
-
-        blowUp = True
-        ordering = []
-        test = TestableTest('testNothing')
-        test.addCleanup(cleanup1)
-        test.run(result)
-        self.assertEqual(ordering, ['setUp', 'cleanup1'])
-
-    def testTestCaseDebugExecutesCleanups(self):
-        ordering = []
-
-        class TestableTest(unittest2.TestCase):
-            def setUp(self):
-                ordering.append('setUp')
-                self.addCleanup(cleanup1)
-
-            def testNothing(self):
-                ordering.append('test')
-
-            def tearDown(self):
-                ordering.append('tearDown')
-
-        test = TestableTest('testNothing')
-
-        def cleanup1():
-            ordering.append('cleanup1')
-            test.addCleanup(cleanup2)
-        def cleanup2():
-            ordering.append('cleanup2')
-
-        test.debug()
-        self.assertEqual(ordering, ['setUp', 'test', 'tearDown', 'cleanup1', 'cleanup2'])
-
-
 class Test_TestCase(unittest2.TestCase, EqualityMixin, HashingMixin):
 
     ### Set up attributes used by inherited tests
@@ -307,7 +176,7 @@ class Test_TestCase(unittest2.TestCase, EqualityMixin, HashingMixin):
                 super(Foo, self).test()
                 raise RuntimeError('raised by Foo.test')
 
-        expected = ['startTest', 'setUp', 'test', 'addError', 'tearDown',
+        expected = ['startTest', 'setUp', 'test', 'tearDown', 'addError',
                     'stopTest']
         Foo(events).run(result)
         self.assertEqual(events, expected)
@@ -325,8 +194,8 @@ class Test_TestCase(unittest2.TestCase, EqualityMixin, HashingMixin):
                 super(Foo, self).test()
                 raise RuntimeError('raised by Foo.test')
 
-        expected = ['startTestRun', 'startTest', 'setUp', 'test', 'addError',
-                    'tearDown', 'stopTest', 'stopTestRun']
+        expected = ['startTestRun', 'startTest', 'setUp', 'test',
+                    'tearDown', 'addError', 'stopTest', 'stopTestRun']
         Foo(events).run()
         self.assertEqual(events, expected)
 
@@ -346,7 +215,7 @@ class Test_TestCase(unittest2.TestCase, EqualityMixin, HashingMixin):
                 super(Foo, self).test()
                 self.fail('raised by Foo.test')
 
-        expected = ['startTest', 'setUp', 'test', 'addFailure', 'tearDown',
+        expected = ['startTest', 'setUp', 'test', 'tearDown', 'addFailure',
                     'stopTest']
         Foo(events).run(result)
         self.assertEqual(events, expected)
@@ -361,8 +230,8 @@ class Test_TestCase(unittest2.TestCase, EqualityMixin, HashingMixin):
                 super(Foo, self).test()
                 self.fail('raised by Foo.test')
 
-        expected = ['startTestRun', 'startTest', 'setUp', 'test', 'addFailure',
-                    'tearDown', 'stopTest', 'stopTestRun']
+        expected = ['startTestRun', 'startTest', 'setUp', 'test',
+                    'tearDown', 'addFailure', 'stopTest', 'stopTestRun']
         events = []
         Foo(events).run()
         self.assertEqual(events, expected)
@@ -1066,81 +935,84 @@ test case
             unpickled_test.assertEqual(set(), set())
 
 
-    def testExpectedFailureInSetUp(self):
-        class Test(unittest2.TestCase):
-            def setUp(self):
-                1/0
-            @unittest2.expectedFailure
+    def testKeyboardInterrupt(self):
+        def _raise(self=None):
+            raise KeyboardInterrupt
+        def nothing(self):
+            pass
+
+        class Test1(unittest2.TestCase):
+            test_something = _raise
+
+        class Test2(unittest2.TestCase):
+            setUp = _raise
+            test_something = nothing
+
+        class Test3(unittest2.TestCase):
+            test_something = nothing
+            tearDown = _raise
+
+        class Test4(unittest2.TestCase):
             def test_something(self):
-                pass
+                self.addCleanup(_raise)
 
-        test = Test('test_something')
+        for klass in (Test1, Test2, Test3, Test4):
+            with self.assertRaises(KeyboardInterrupt):
+                klass('test_something').run()
 
-        result = unittest2.TestResult()
-        test(result)
+    def testSkippingEverywhere(self):
+        def _skip(self=None):
+            raise unittest2.SkipTest('some reason')
+        def nothing(self):
+            pass
 
-        self.assertEqual(len(result.errors), 0)
-        self.assertEqual(len(result.failures), 0)
-        self.assertEqual(len(result.expectedFailures), 1)
-        self.assertEqual(result.testsRun, 1)
+        class Test1(unittest2.TestCase):
+            test_something = _skip
 
-        result = OldTestResult()
-        test(result)
-        self.assertEqual(len(result.errors), 0)
-        self.assertEqual(len(result.failures), 0)
-        self.assertEqual(result.testsRun, 1)
+        class Test2(unittest2.TestCase):
+            setUp = _skip
+            test_something = nothing
 
+        class Test3(unittest2.TestCase):
+            test_something = nothing
+            tearDown = _skip
 
-    def testExpectedFailureInTearDown(self):
-        class Test(unittest2.TestCase):
-            def tearDown(self):
-                1/0
-            @unittest2.expectedFailure
+        class Test4(unittest2.TestCase):
             def test_something(self):
-                pass
+                self.addCleanup(_skip)
 
-        test = Test('test_something')
+        for klass in (Test1, Test2, Test3, Test4):
+            result = unittest2.TestResult()
+            klass('test_something').run(result)
+            self.assertEqual(len(result.skipped), 1)
+            self.assertEqual(result.testsRun, 1)
 
-        result = unittest2.TestResult()
-        test(result)
+    def testSystemExit(self):
+        def _raise(self=None):
+            raise SystemExit
+        def nothing(self):
+            pass
 
-        self.assertEqual(len(result.errors), 0)
-        self.assertEqual(len(result.failures), 0)
-        self.assertEqual(len(result.expectedFailures), 1)
-        self.assertEqual(len(result.unexpectedSuccesses), 0)
-        self.assertEqual(result.testsRun, 1)
+        class Test1(unittest2.TestCase):
+            test_something = _raise
 
-        result = OldTestResult()
-        test(result)
-        self.assertEqual(len(result.errors), 0)
-        self.assertEqual(len(result.failures), 0)
-        self.assertEqual(result.testsRun, 1)
+        class Test2(unittest2.TestCase):
+            setUp = _raise
+            test_something = nothing
 
+        class Test3(unittest2.TestCase):
+            test_something = nothing
+            tearDown = _raise
 
-    def testExpectedFailureInCleanUp(self):
-        class Test(unittest2.TestCase):
-            @unittest2.expectedFailure
+        class Test4(unittest2.TestCase):
             def test_something(self):
-                def foo():
-                    1/0
-                self.addCleanup(foo)
+                self.addCleanup(_raise)
 
-        test = Test('test_something')
-
-        result = unittest2.TestResult()
-        test(result)
-
-        self.assertEqual(len(result.errors), 0)
-        self.assertEqual(len(result.failures), 0)
-        self.assertEqual(len(result.expectedFailures), 1)
-        self.assertEqual(len(result.unexpectedSuccesses), 0)
-        self.assertEqual(result.testsRun, 1)
-
-        result = OldTestResult()
-        test(result)
-        self.assertEqual(len(result.errors), 0)
-        self.assertEqual(len(result.failures), 0)
-        self.assertEqual(result.testsRun, 1)
+        for klass in (Test1, Test2, Test3, Test4):
+            result = unittest2.TestResult()
+            klass('test_something').run(result)
+            self.assertEqual(len(result.errors), 1)
+            self.assertEqual(result.testsRun, 1)
 
 
 if __name__ == "__main__":
