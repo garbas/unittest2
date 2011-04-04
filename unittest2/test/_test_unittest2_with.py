@@ -92,12 +92,10 @@ class TestWith(unittest2.TestCase):
             self._formatMessage(one, u'\uFFFD')
 
     def assertOldResultWarning(self, test, failures):
-        with catch_warnings(record=True) as log:
+        with self.assertWarns(RuntimeWarning):
             result = OldTestResult()
             test.run(result)
             self.assertEqual(len(result.failures), failures)
-            warning, = log
-            self.assertIs(warning.category, RuntimeWarning)
 
     def test_old_testresult(self):
         class Test(unittest2.TestCase):
