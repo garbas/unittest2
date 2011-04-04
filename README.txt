@@ -1,5 +1,5 @@
 unittest2 is a backport of the new features added to the unittest testing
-framework in Python 2.7. It is tested to run on Python 2.4 - 2.7.
+framework in Python 2.7 and onwards. It is tested to run on Python 2.4 - 2.7.
 
 To use unittest2 instead of unittest simply replace ``import unittest`` with
 ``import unittest2``.
@@ -157,6 +157,9 @@ CHANGELOG
 2010/XX/XX - 0.6.0 alpha 1
 --------------------------
 
+Many thanks to Mark Roddy and Ezio Melotti who contributed substantially to
+this release.
+
 * Invoking `unit2` without args starts test discovery
 * Added `TestCase.assertWarns` and `TestCase.assertWarnsRegexp` context managers
 * Error in setUp, tearDown or cleanUp function for a test marked as an
@@ -164,6 +167,10 @@ CHANGELOG
 * Fix Python issue 9926. TestSuite subclasses that override __call__ are called
   correctly.
 * Removed unused `maxDiff` parameter from `TestCase.assertSequenceEqual`.
+* DeprecationWarning for unsupported result objects (missing addSkip method)
+  became RuntimeWarning.
+* Addition of `TestCase.assertWarns` as a context manager. (Needs Python 2.5 to
+  be used.)
 
 
 2010/07/12 - 0.5.1
