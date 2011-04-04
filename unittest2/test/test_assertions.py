@@ -29,10 +29,12 @@ class Test_Assertions(unittest2.TestCase):
                               float('inf'), float('inf'))
         except ValueError:
             # float('inf') is invalid on Windows in Python 2.4 / 2.5
-            x = object()
-            self.assertAlmostEqual(x, x)
-            self.assertRaises(self.failureException, self.assertNotAlmostEqual,
-                              x, x)
+            pass
+
+        x = object()
+        self.assertAlmostEqual(x, x)
+        self.assertRaises(self.failureException, self.assertNotAlmostEqual,
+                          x, x)
 
 
     def test_AmostEqualWithDelta(self):
