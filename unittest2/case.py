@@ -506,13 +506,13 @@ class TestCase(unittest.TestCase):
     def assertFalse(self, expr, msg=None):
         "Fail the test if the expression is true."
         if expr:
-            msg = self._formatMessage(msg, "%s is not False" % safe_repr(expr))
+            msg = self._formatMessage(msg, "%s is not false" % safe_repr(expr))
             raise self.failureException(msg)
 
     def assertTrue(self, expr, msg=None):
         """Fail the test unless the expression is true."""
         if not expr:
-            msg = self._formatMessage(msg, "%s is not True" % safe_repr(expr))
+            msg = self._formatMessage(msg, "%s is not true" % safe_repr(expr))
             raise self.failureException(msg)
 
     def _formatMessage(self, msg, standardMsg):
