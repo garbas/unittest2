@@ -957,8 +957,8 @@ test case
                 self.addCleanup(_raise)
 
         for klass in (Test1, Test2, Test3, Test4):
-            with self.assertRaises(KeyboardInterrupt):
-                klass('test_something').run()
+            self.assertRaises(KeyboardInterrupt,
+                klass('test_something').run)
 
     def testSkippingEverywhere(self):
         def _skip(self=None):
