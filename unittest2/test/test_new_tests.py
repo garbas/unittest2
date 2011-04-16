@@ -41,6 +41,30 @@ class TestUnittest(unittest2.TestCase):
         self.assertEqual(result.testsRun, 1)
         self.assertEqual(len(result.errors), 0)
 
+    def test_multiple_inheritance_setup(self):
+        test = self
+        test.setup_called = False
+        test.teardown_called = False
+
+        class OtherOther(unittest2.TestCase):
+            def setUp(self):
+                test.setup_called = True
+                super(OtherOther, self).setUp()
+            def tearDown(self):
+                test.teardown_called = True
+                super(OtherOther, self).setUp()
+
+        class Other(unittest2.TestCase):
+            pass
+
+        class Both(Other, OtherOther):
+            pass
+
+        Both('assert_').setUp()
+        Both('assert_').tearDown()
+        self.assertTrue(test.setup_called)
+        self.assertTrue(test.teardown_called)
+
 
 if __name__ == '__main__':
     unittest2.main()
