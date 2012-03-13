@@ -55,6 +55,13 @@ def _make_failed_test(classname, methodname, exception, suiteClass):
     return suiteClass((TestClass(methodname),))
 
 
+def _jython_aware_splitext(path):
+    if path.lower().endswith('$py.class'):
+        return path[:-9]
+    return os.path.splitext(path)[0]
+
+
+
 class TestLoader(unittest.TestLoader):
     """
     This class is responsible for loading tests according to various criteria
@@ -225,7 +232,7 @@ class TestLoader(unittest.TestLoader):
         return self.suiteClass(tests)
 
     def _get_name_from_path(self, path):
-        path = os.path.splitext(os.path.normpath(path))[0]
+        path = _jython_aware_splitext(os.path.normpath(path))
 
         _relpath = relpath(path, self._top_level_dir)
         assert not os.path.isabs(_relpath), "Path must be within the project"
@@ -262,11 +269,11 @@ class TestLoader(unittest.TestLoader):
                     yield _make_failed_import_test(name, self.suiteClass)
                 else:
                     mod_file = os.path.abspath(getattr(module, '__file__', full_path))
-                    realpath = os.path.splitext(mod_file)[0]
-                    fullpath_noext = os.path.splitext(full_path)[0]
+                    realpath = _jython_aware_splitext(mod_file)
+                    fullpath_noext = _jython_aware_splitext(full_path)
                     if realpath.lower() != fullpath_noext.lower():
                         module_dir = os.path.dirname(realpath)
-                        mod_name = os.path.splitext(os.path.basename(full_path))[0]
+                        mod_name = _jython_aware_splitext(os.path.basename(full_path))
                         expected_dir = os.path.dirname(full_path)
                         msg = ("%r module incorrectly imported from %r. Expected %r. "
                                "Is this module globally installed?")
