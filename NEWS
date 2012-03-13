@@ -1,0 +1,2 @@
+- Issue #10543: Fix unittest test discovery with Jython bytecode files.
+
