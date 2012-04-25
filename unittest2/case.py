@@ -4,6 +4,7 @@ import sys
 import difflib
 import pprint
 import re
+import types
 import unittest
 import warnings
 
@@ -61,12 +62,19 @@ class _Outcome(object):
 def _id(obj):
     return obj
 
+
+class_types = [type]
+if getattr(types, 'ClassType', None):
+    class_types.append(types.ClassType)
+class_types = tuple(class_types)
+
+
 def skip(reason):
     """
     Unconditionally skip a test.
     """
     def decorator(test_item):
-        if not isinstance(test_item, type):
+        if not isinstance(test_item, class_types):
             @wraps(test_item)
             def skip_wrapper(*args, **kwargs):
                 raise SkipTest(reason)
