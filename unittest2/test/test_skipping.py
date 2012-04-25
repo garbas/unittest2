@@ -1,6 +1,7 @@
 from unittest2.test.support import LoggingResult
 
 import unittest2
+import unittest2 as unittest
 
 
 class Test_TestSkipping(unittest2.TestCase):
@@ -67,6 +68,21 @@ class Test_TestSkipping(unittest2.TestCase):
         result = unittest2.TestResult()
         test = Foo("test_1")
         suite = unittest2.TestSuite([test])
+        suite.run(result)
+        self.assertEqual(result.skipped, [(test, "testing")])
+        self.assertEqual(record, [])
+
+    def test_skip_non_unittest_class(self):
+        @unittest.skip("testing")
+        class Mixin(object):
+            def test_1(self):
+                record.append(1)
+        class Foo(Mixin, unittest.TestCase):
+            pass
+        record = []
+        result = unittest.TestResult()
+        test = Foo("test_1")
+        suite = unittest.TestSuite([test])
         suite.run(result)
         self.assertEqual(result.skipped, [(test, "testing")])
         self.assertEqual(record, [])
