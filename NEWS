@@ -1,3 +1,5 @@
+- Issue #12376: Pass on parameters in TextTestResult.__init__ super call
+
 - Issue #14664: It is now possible to use @unittest.skip{If,Unless} on a
   test class that doesn't inherit from TestCase (i.e. a mixin).
 

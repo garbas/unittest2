@@ -6,6 +6,7 @@ from six import u
 
 from unittest2.test.support import LoggingResult, OldTestResult
 import unittest2
+import unittest2 as unittest
 
 
 class TestCleanUp(unittest2.TestCase):
@@ -148,6 +149,19 @@ class Test_TextTestRunner(unittest2.TestCase):
         self.assertEqual(runner.verbosity, 1)
         self.assertTrue(runner.descriptions)
         self.assertEqual(runner.resultclass, unittest2.TextTestResult)
+
+
+    def test_multiple_inheritance(self):
+        class AResult(unittest.TestResult):
+            def __init__(self, stream, descriptions, verbosity):
+                super(AResult, self).__init__(stream, descriptions, verbosity)
+
+        class ATextResult(unittest.TextTestResult, AResult):
+            pass
+
+        # This used to raise an exception due to TextTestResult not passing
+        # on arguments in its __init__ super call
+        ATextResult(None, None, 0)
 
 
     def testBufferAndFailfast(self):

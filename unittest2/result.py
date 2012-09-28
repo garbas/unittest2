@@ -37,7 +37,7 @@ class TestResult(unittest.TestResult):
     _previousTestClass = None
     _moduleSetUpFailed = False
 
-    def __init__(self):
+    def __init__(self, stream=None, descriptions=None, verbosity=None):
         self.failfast = False
         self.failures = []
         self.errors = []
