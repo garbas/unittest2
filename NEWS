@@ -1,3 +1,5 @@
+- Issue #17502: unittest discovery should use self.testLoader.
+
 - Issue #15505: `unittest.installHandler` no longer assumes SIGINT handler is
   set to a callable object.
 

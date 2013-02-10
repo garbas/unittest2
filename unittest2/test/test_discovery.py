@@ -3,6 +3,7 @@ import re
 import sys
 
 import unittest2
+import unittest2 as unittest
 
 
 class TestableTestProgram(unittest2.TestProgram):
@@ -246,10 +247,24 @@ class TestDiscovery(unittest2.TestCase):
 
         program = TestableTestProgram()
         program.usageExit = usageExit
+        program.testLoader = None
 
         self.assertRaises(Stop,
             # too many args
             lambda: program._do_discovery(['one', 'two', 'three', 'four']))
+
+    def test_command_line_handling_do_discovery_uses_default_loader(self):
+        program = object.__new__(unittest.TestProgram)
+
+        class Loader(object):
+            args = []
+            def discover(self, start_dir, pattern, top_level_dir):
+                self.args.append((start_dir, pattern, top_level_dir))
+                return 'tests'
+
+        program.testLoader = Loader()
+        program._do_discovery(['-v'])
+        self.assertEqual(Loader.args, [('.', 'test*.py', None)])
 
 
     def test_command_line_handling_do_discovery_calls_loader(self):
