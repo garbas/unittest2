@@ -1,3 +1,6 @@
+- Issue #15132: Allow a list for the defaultTest argument of
+  unittest.TestProgram. Patch by Jyrki Pulliainen.
+
 - Issue #17052: unittest discovery should use self.testLoader.
 
 - Issue #15505: `unittest.installHandler` no longer assumes SIGINT handler is
