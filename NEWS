@@ -1,3 +1,6 @@
+- Issue #16935: unittest now counts the module as skipped if it raises SkipTest,
+  instead of counting it as an error.  Patch by Zachary Ware.
+
 - Issue #15132: Allow a list for the defaultTest argument of
   unittest.TestProgram. Patch by Jyrki Pulliainen.
 

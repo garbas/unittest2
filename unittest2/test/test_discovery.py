@@ -191,11 +191,9 @@ class TestDiscovery(unittest2.TestCase):
         self.assertEqual(_find_tests_args, [(start_dir, 'pattern')])
         self.assertIn(top_level_dir, sys.path)
 
-    def test_discover_with_modules_that_fail_to_import(self):
-        loader = unittest2.TestLoader()
-
+    def setup_import_issue_tests(self, fakefile):
         listdir = os.listdir
-        os.listdir = lambda _: ['test_this_does_not_exist.py']
+        os.listdir = lambda _: [fakefile]
         isfile = os.path.isfile
         os.path.isfile = lambda _: True
         orig_sys_path = sys.path[:]
@@ -205,6 +203,11 @@ class TestDiscovery(unittest2.TestCase):
             sys.path[:] = orig_sys_path
         self.addCleanup(restore)
 
+    def test_discover_with_modules_that_fail_to_import(self):
+        loader = unittest.TestLoader()
+
+        self.setup_import_issue_tests('test_this_does_not_exist.py')
+
         suite = loader.discover('.')
         self.assertIn(os.getcwd(), sys.path)
         self.assertEqual(suite.countTestCases(), 1)
@@ -212,6 +215,22 @@ class TestDiscovery(unittest2.TestCase):
 
         self.assertRaises(ImportError,
             lambda: test.test_this_does_not_exist())
+
+    def test_discover_with_module_that_raises_SkipTest_on_import(self):
+        loader = unittest.TestLoader()
+
+        def _get_module_from_name(name):
+            raise unittest.SkipTest('skipperoo')
+        loader._get_module_from_name = _get_module_from_name
+
+        self.setup_import_issue_tests('test_skip_dummy.py')
+
+        suite = loader.discover('.')
+        self.assertEqual(suite.countTestCases(), 1)
+
+        result = unittest.TestResult()
+        suite.run(result)
+        self.assertEqual(len(result.skipped), 1)
 
     def test_command_line_handling_parseArgs(self):
         # Haha - take that uninstantiable class
