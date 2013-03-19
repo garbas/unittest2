@@ -205,6 +205,9 @@ class TestLoader(unittest.TestLoader):
         The pattern is deliberately not stored as a loader attribute so that
         packages can continue discovery themselves. top_level_dir is stored so
         load_tests does not need to pass this argument in to loader.discover().
+
+        Paths are sorted before being imported to ensure reproducible execution
+        order even on filesystems with non-alphabetical ordering like ext3/4.
         """
         set_implicit_top = False
         if top_level_dir is None and self._top_level_dir is not None:
@@ -269,7 +272,7 @@ class TestLoader(unittest.TestLoader):
 
     def _find_tests(self, start_dir, pattern):
         """Used by discovery. Yields test suites it loads."""
-        paths = os.listdir(start_dir)
+        paths = sorted(os.listdir(start_dir))
 
         for path in paths:
             full_path = os.path.join(start_dir, path)
