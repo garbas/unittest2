@@ -1,3 +1,6 @@
+- Issue #16709: unittest discover order is no-longer filesystem specific. Patch
+  by Jeff Ramnani.
+
 - Issue #16935: unittest now counts the module as skipped if it raises SkipTest,
   instead of counting it as an error.  Patch by Zachary Ware.
 
