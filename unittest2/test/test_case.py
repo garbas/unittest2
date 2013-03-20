@@ -11,7 +11,8 @@ from six import b, u
 import unittest2
 
 from unittest2.test.support import (
-    OldTestResult, EqualityMixin, HashingMixin, LoggingResult
+    OldTestResult, EqualityMixin, HashingMixin, LoggingResult,
+    LegacyLoggingResult
 )
 
 
@@ -287,6 +288,98 @@ class Test_TestCase(unittest2.TestCase, EqualityMixin, HashingMixin):
                 pass
 
         Foo('test').run()
+
+    def _check_call_order__subtests(self, result, events, expected_events):
+        class Foo(Test.LoggingTestCase):
+            def test(self):
+                super(Foo, self).test()
+                for i in [1, 2, 3]:
+                    with self.subTest(i=i):
+                        if i == 1:
+                            self.fail('failure')
+                        for j in [2, 3]:
+                            with self.subTest(j=j):
+                                if i * j == 6:
+                                    raise RuntimeError('raised by Foo.test')
+                1 / 0
+
+        # Order is the following:
+        # i=1 => subtest failure
+        # i=2, j=2 => subtest success
+        # i=2, j=3 => subtest error
+        # i=3, j=2 => subtest error
+        # i=3, j=3 => subtest success
+        # toplevel => error
+        Foo(events).run(result)
+        self.assertEqual(events, expected_events)
+
+    def test_run_call_order__subtests(self):
+        events = []
+        result = LoggingResult(events)
+        expected = ['startTest', 'setUp', 'test', 'tearDown',
+                    'addSubTestFailure', 'addSubTestSuccess',
+                    'addSubTestFailure', 'addSubTestFailure',
+                    'addSubTestSuccess', 'addError', 'stopTest']
+        self._check_call_order__subtests(result, events, expected)
+
+    def test_run_call_order__subtests_legacy(self):
+        # With a legacy result object (without a addSubTest method),
+        # text execution stops after the first subtest failure.
+        events = []
+        result = LegacyLoggingResult(events)
+        expected = ['startTest', 'setUp', 'test', 'tearDown',
+                    'addFailure', 'stopTest']
+        self._check_call_order__subtests(result, events, expected)
+
+    def _check_call_order__subtests_success(self, result, events, expected_events):
+        class Foo(Test.LoggingTestCase):
+            def test(self):
+                super(Foo, self).test()
+                for i in [1, 2]:
+                    with self.subTest(i=i):
+                        for j in [2, 3]:
+                            with self.subTest(j=j):
+                                pass
+
+        Foo(events).run(result)
+        self.assertEqual(events, expected_events)
+
+    def test_run_call_order__subtests_success(self):
+        events = []
+        result = LoggingResult(events)
+        # The 6 subtest successes are individually recorded, in addition
+        # to the whole test success.
+        expected = (['startTest', 'setUp', 'test', 'tearDown']
+                    + 6 * ['addSubTestSuccess']
+                    + ['addSuccess', 'stopTest'])
+        self._check_call_order__subtests_success(result, events, expected)
+
+    def test_run_call_order__subtests_success_legacy(self):
+        # With a legacy result, only the whole test success is recorded.
+        events = []
+        result = LegacyLoggingResult(events)
+        expected = ['startTest', 'setUp', 'test', 'tearDown',
+                    'addSuccess', 'stopTest']
+        self._check_call_order__subtests_success(result, events, expected)
+
+    def test_run_call_order__subtests_failfast(self):
+        events = []
+        result = LoggingResult(events)
+        result.failfast = True
+
+        class Foo(Test.LoggingTestCase):
+            def test(self):
+                super(Foo, self).test()
+                with self.subTest(i=1):
+                    self.fail('failure')
+                with self.subTest(i=2):
+                    self.fail('failure')
+                self.fail('failure')
+
+        expected = ['startTest', 'setUp', 'test', 'tearDown',
+                    'addSubTestFailure', 'stopTest']
+        Foo(events).run(result)
+        self.assertEqual(events, expected)
 
     # "This class attribute gives the exception raised by the test() method.
     # If a test framework needs to use a specialized exception, possibly to

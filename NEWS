@@ -1,3 +1,6 @@
+- Issue #16997: unittest.TestCase now provides a subTest() context manager
+  to procedurally generate, in an easy way, small test instances.
+
 - Issue #16709: unittest discover order is no-longer filesystem specific. Patch
   by Jeff Ramnani.
 
