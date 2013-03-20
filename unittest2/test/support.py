@@ -38,50 +38,74 @@ class OldTestResult(object):
     def printErrors(self):
         pass
 
-class LoggingResult(unittest2.TestResult):
+class _BaseLoggingResult(unittest2.TestResult):
     def __init__(self, log):
         self._events = log
-        super(LoggingResult, self).__init__()
+        super(_BaseLoggingResult, self).__init__()
 
     def startTest(self, test):
         self._events.append('startTest')
-        super(LoggingResult, self).startTest(test)
+        super(_BaseLoggingResult, self).startTest(test)
 
     def startTestRun(self):
         self._events.append('startTestRun')
-        super(LoggingResult, self).startTestRun()
+        super(_BaseLoggingResult, self).startTestRun()
 
     def stopTest(self, test):
         self._events.append('stopTest')
-        super(LoggingResult, self).stopTest(test)
+        super(_BaseLoggingResult, self).stopTest(test)
 
     def stopTestRun(self):
         self._events.append('stopTestRun')
-        super(LoggingResult, self).stopTestRun()
+        super(_BaseLoggingResult, self).stopTestRun()
 
     def addFailure(self, *args):
         self._events.append('addFailure')
-        super(LoggingResult, self).addFailure(*args)
+        super(_BaseLoggingResult, self).addFailure(*args)
 
     def addSuccess(self, *args):
         self._events.append('addSuccess')
-        super(LoggingResult, self).addSuccess(*args)
+        super(_BaseLoggingResult, self).addSuccess(*args)
 
     def addError(self, *args):
         self._events.append('addError')
-        super(LoggingResult, self).addError(*args)
+        super(_BaseLoggingResult, self).addError(*args)
 
     def addSkip(self, *args):
         self._events.append('addSkip')
-        super(LoggingResult, self).addSkip(*args)
+        super(_BaseLoggingResult, self).addSkip(*args)
 
     def addExpectedFailure(self, *args):
         self._events.append('addExpectedFailure')
-        super(LoggingResult, self).addExpectedFailure(*args)
+        super(_BaseLoggingResult, self).addExpectedFailure(*args)
 
     def addUnexpectedSuccess(self, *args):
         self._events.append('addUnexpectedSuccess')
-        super(LoggingResult, self).addUnexpectedSuccess(*args)
+        super(_BaseLoggingResult, self).addUnexpectedSuccess(*args)
+
+
+class LegacyLoggingResult(_BaseLoggingResult):
+    """
+    A legacy TestResult implementation, without an addSubTest method,
+    which records its method calls.
+    """
+
+    @property
+    def addSubTest(self):
+        raise AttributeError
+
+
+class LoggingResult(_BaseLoggingResult):
+    """
+    A TestResult implementation which records its method calls.
+    """
+
+    def addSubTest(self, test, subtest, err):
+        if err is None:
+            self._events.append('addSubTestSuccess')
+        else:
+            self._events.append('addSubTestFailure')
+        super(LoggingResult, self).addSubTest(test, subtest, err)
 
 
 class EqualityMixin(object):

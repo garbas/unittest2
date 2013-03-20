@@ -7,6 +7,7 @@ from six import u
 from unittest2.test.support import LoggingResult, OldTestResult
 import unittest2
 import unittest2 as unittest
+from unittest2.case import _Outcome
 
 
 class TestCleanUp(unittest2.TestCase):
@@ -45,12 +46,8 @@ class TestCleanUp(unittest2.TestCase):
             def testNothing(self):
                 pass
 
-        class MockOutcome(object):
-            success = True
-            errors = []
-
         test = TestableTest('testNothing')
-        test._outcomeForDoCleanups = MockOutcome
+        outcome = test._outcome = _Outcome()
 
         exc1 = Exception('foo')
         exc2 = Exception('bar')
@@ -64,9 +61,10 @@ class TestCleanUp(unittest2.TestCase):
         test.addCleanup(cleanup2)
 
         self.assertFalse(test.doCleanups())
-        self.assertFalse(MockOutcome.success)
+        self.assertFalse(outcome.success)
 
-        (Type1, instance1, _), (Type2, instance2, _) = reversed(MockOutcome.errors)
+        ((_, (Type1, instance1, _)),
+         (_, (Type2, instance2, _))) = reversed(outcome.errors)
         self.assertEqual((Type1, instance1), (Exception, exc1))
         self.assertEqual((Type2, instance2), (Exception, exc2))
 
