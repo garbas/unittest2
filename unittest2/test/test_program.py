@@ -65,7 +65,7 @@ class Test_TestProgram(unittest2.TestCase):
                                        defaultTest='unittest.test',
                                        testLoader=self.FooBarLoader())
         sys.argv = old_argv
-        self.assertEquals(('unittest.test',), program.testNames)
+        self.assertEqual(('unittest.test',), program.testNames)
 
     def test_defaultTest_with_iterable(self):
         class FakeRunner(object):
@@ -81,7 +81,7 @@ class Test_TestProgram(unittest2.TestCase):
             defaultTest=['unittest.test', 'unittest.test2'],
             testLoader=self.FooBarLoader())
         sys.argv = old_argv
-        self.assertEquals(['unittest.test', 'unittest.test2'],
+        self.assertEqual(['unittest.test', 'unittest.test2'],
                           program.testNames)
 
     def test_NonExit(self):
