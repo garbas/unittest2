@@ -1,3 +1,6 @@
+- Issue #14971: unittest test discovery no longer gets confused when a function
+  has a different __name__ than its name in the TestCase class dictionary.
+
 - Issue #16997: unittest.TestCase now provides a subTest() context manager
   to procedurally generate, in an easy way, small test instances.
 

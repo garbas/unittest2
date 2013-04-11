@@ -143,7 +143,7 @@ class TestLoader(unittest.TestLoader):
               and isinstance(obj, types.UnboundMethodType)) and
               isinstance(parent, type) and
               issubclass(parent, case.TestCase)):
-            return self.suiteClass([parent(obj.__name__)])
+            return self.suiteClass([parent(parts[-1])])
         elif (isinstance(obj, types.FunctionType) and
               isinstance(parent, type) and
               issubclass(parent, case.TestCase)):
