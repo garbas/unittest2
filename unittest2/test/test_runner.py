@@ -140,6 +140,18 @@ class TestCleanUp(unittest2.TestCase):
 class Test_TextTestRunner(unittest2.TestCase):
     """Tests for TextTestRunner."""
 
+    def setUp(self):
+        # clean the environment from pre-existing PYTHONWARNINGS to make
+        # test_warnings results consistent
+        self.pythonwarnings = os.environ.get('PYTHONWARNINGS')
+        if self.pythonwarnings:
+            del os.environ['PYTHONWARNINGS']
+
+    def tearDown(self):
+        # bring back pre-existing PYTHONWARNINGS if present
+        if self.pythonwarnings:
+            os.environ['PYTHONWARNINGS'] = self.pythonwarnings
+
     def test_init(self):
         runner = unittest2.TextTestRunner()
         self.assertFalse(runner.failfast)
