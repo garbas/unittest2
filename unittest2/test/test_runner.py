@@ -1,4 +1,5 @@
 import io
+import os
 import pickle
 
 from six.moves import StringIO
