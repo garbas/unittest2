@@ -3,6 +3,7 @@ import sys
 from six.moves import StringIO
 
 import unittest2
+import unittest2 as unittest
 from unittest2.test.support import resultFactory
 
 
@@ -492,11 +493,8 @@ class TestSetups(unittest2.TestCase):
         Test.__module__ = 'Module'
         sys.modules['Module'] = Module
 
-        _suite = unittest2.defaultTestLoader.loadTestsFromTestCase(Test)
-        suite = unittest2.TestSuite()
-
-        # nesting a suite again exposes a bug in the initial implementation
-        suite.addTest(_suite)
         messages = ('setUpModule', 'tearDownModule', 'setUpClass', 'tearDownClass', 'test_something')
         for phase, msg in enumerate(messages):
+            _suite = unittest.defaultTestLoader.loadTestsFromTestCase(Test)
+            suite = unittest.TestSuite([_suite])
             self.assertRaisesRegex(Exception, msg, suite.debug)

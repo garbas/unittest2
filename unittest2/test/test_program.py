@@ -2,6 +2,7 @@ from six.moves import StringIO
 
 import sys
 import unittest2
+import unittest2 as unittest
 
 hasInstallHandler = hasattr(unittest2, 'installHandler')
 
