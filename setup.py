@@ -56,7 +56,7 @@ KEYWORDS = "unittest testing tests".split(' ')
 # Both install and setup requires - because we read VERSION from within the
 # package, and the package also exports all the APIs.
 # six for compat helpers
-REQUIRES = ['six'],
+REQUIRES = ['argparse', 'six'],
 
 params = dict(
     name=NAME,
