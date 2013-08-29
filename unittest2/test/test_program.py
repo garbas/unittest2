@@ -3,6 +3,7 @@ from six.moves import StringIO
 import sys
 import unittest2
 import unittest2 as unittest
+from unittest2.test import support
 
 hasInstallHandler = hasattr(unittest2, 'installHandler')
 
@@ -150,23 +151,6 @@ class TestCommandLineArgs(unittest2.TestCase):
         FakeRunner.test = None
         FakeRunner.raiseError = False
 
-    def testHelpAndUnknown(self):
-        program = self.program
-        def usageExit(msg=None):
-            program.msg = msg
-            program.exit = True
-        program.usageExit = usageExit
-
-        for opt in '-h', '-H', '--help':
-            program.exit = False
-            program.parseArgs([None, opt])
-            self.assertTrue(program.exit)
-            self.assertIsNone(program.msg)
-
-        program.parseArgs([None, '-$'])
-        self.assertTrue(program.exit)
-        self.assertIsNotNone(program.msg)
-
     def testVerbosity(self):
         program = self.program
 
@@ -187,20 +171,38 @@ class TestCommandLineArgs(unittest2.TestCase):
             if attr == 'catch' and not hasInstallHandler:
                 continue
 
+            setattr(program, attr, None)
+            program.parseArgs([None])
+            self.assertIs(getattr(program, attr), False)
+
+            false = []
+            setattr(program, attr, false)
+            program.parseArgs([None])
+            self.assertIs(getattr(program, attr), false)
+
+            true = [42]
+            setattr(program, attr, true)
+            program.parseArgs([None])
+            self.assertIs(getattr(program, attr), true)
+
             short_opt = '-%s' % arg[0]
             long_opt = '--%s' % arg
             for opt in short_opt, long_opt:
                 setattr(program, attr, None)
-
                 program.parseArgs([None, opt])
-                self.assertTrue(getattr(program, attr))
+                self.assertIs(getattr(program, attr), True)
 
-            for opt in short_opt, long_opt:
-                not_none = object()
-                setattr(program, attr, not_none)
+                setattr(program, attr, False)
+                with support.captured_stderr() as stderr, \
+                    self.assertRaises(SystemExit) as cm:
+                    program.parseArgs([None, opt])
+                self.assertEqual(cm.exception.args, (2,))
 
-                program.parseArgs([None, opt])
-                self.assertEqual(getattr(program, attr), not_none)
+                setattr(program, attr, True)
+                with support.captured_stderr() as stderr, \
+                    self.assertRaises(SystemExit) as cm:
+                    program.parseArgs([None, opt])
+                self.assertEqual(cm.exception.args, (2,))
 
     def testRunTestsRunnerClass(self):
         program = self.program
