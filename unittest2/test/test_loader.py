@@ -1310,6 +1310,21 @@ class Test_TestLoader(unittest2.TestCase):
         loader = unittest2.TestLoader()
         self.assertTrue(loader.suiteClass is unittest2.TestSuite)
 
+    # Make sure the dotted name resolution works even if the actual
+    # function doesn't have the same name as is used to find it.
+    def test_loadTestsFromName__function_with_different_name_than_method(self):
+        # lambdas have the name '<lambda>'.
+        m = types.ModuleType('m')
+        class MyTestCase(unittest.TestCase):
+            test = lambda: 1
+        m.testcase_1 = MyTestCase
+
+        loader = unittest.TestLoader()
+        suite = loader.loadTestsFromNames(['testcase_1.test'], m)
+        self.assertIsInstance(suite, loader.suiteClass)
+
+        ref_suite = unittest.TestSuite([MyTestCase('test')])
+        self.assertEqual(list(suite), [ref_suite])
 
 if __name__ == '__main__':
     unittest2.main()
