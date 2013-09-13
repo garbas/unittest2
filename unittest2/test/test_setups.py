@@ -498,3 +498,7 @@ class TestSetups(unittest2.TestCase):
             _suite = unittest.defaultTestLoader.loadTestsFromTestCase(Test)
             suite = unittest.TestSuite([_suite])
             self.assertRaisesRegex(Exception, msg, suite.debug)
+
+
+if __name__ == '__main__':
+    unittest2.main()

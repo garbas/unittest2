@@ -284,6 +284,7 @@ class TestBreakSignalIgnored(TestBreak):
 class TestBreakSignalDefault(TestBreak):
     int_handler = signal.SIG_DFL
 
+
 @unittest.skipUnless(hasattr(os, 'kill'), "Test requires os.kill")
 @unittest.skipIf(sys.platform =="win32", "Test cannot run on Windows")
 @unittest.skipIf(sys.platform == 'freebsd6', "Test kills regrtest on freebsd6 "
