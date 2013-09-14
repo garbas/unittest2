@@ -1,3 +1,6 @@
+- Issue #18937: Add an assertLogs() context manager to unittest.TestCase
+  to ensure that a block of code emits a message using the logging module.
+
 - Issue #17974: Switch unittest from using getopt to using argparse.
 
 - Issue #11798: TestSuite now drops references to own tests after execution.
