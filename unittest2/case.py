@@ -17,7 +17,7 @@ from six.moves import range
 from unittest2 import result
 from unittest2.util import (
     safe_repr, safe_str, strclass,
-    unorderable_list_difference
+    unorderable_list_difference, _common_shorten_repr
 )
 
 from unittest2.compatibility import wraps, with_context, catch_warnings
@@ -783,7 +783,7 @@ class TestCase(unittest.TestCase):
     def _baseAssertEqual(self, first, second, msg=None):
         """The default assertEqual implementation, not type specific."""
         if not first == second:
-            standardMsg = '%s != %s' % (safe_repr(first), safe_repr(second))
+            standardMsg = '%s != %s' % _common_shorten_repr(first, second)
             msg = self._formatMessage(msg, standardMsg)
             raise self.failureException(msg)
 
@@ -916,14 +916,9 @@ class TestCase(unittest.TestCase):
             if seq1 == seq2:
                 return
 
-            seq1_repr = repr(seq1)
-            seq2_repr = repr(seq2)
-            if len(seq1_repr) > 30:
-                seq1_repr = seq1_repr[:30] + '...'
-            if len(seq2_repr) > 30:
-                seq2_repr = seq2_repr[:30] + '...'
-            elements = (seq_type_name.capitalize(), seq1_repr, seq2_repr)
-            differing = '%ss differ: %s != %s\n' % elements
+            differing = '%ss differ: %s != %s\n' % (
+                    (seq_type_name.capitalize(),) +
+                    _common_shorten_repr(seq1, seq2))
 
             for i in range(min(len1, len2)):
                 try:
@@ -1084,7 +1079,7 @@ class TestCase(unittest.TestCase):
         self.assertIsInstance(d2, dict, 'Second argument is not a dictionary')
 
         if d1 != d2:
-            standardMsg = '%s != %s' % (safe_repr(d1, True), safe_repr(d2, True))
+            standardMsg = '%s != %s' % _common_shorten_repr(d1, d2)
             diff = ('\n' + '\n'.join(difflib.ndiff(
                            pprint.pformat(d1).splitlines(),
                            pprint.pformat(d2).splitlines())))
@@ -1164,7 +1159,7 @@ class TestCase(unittest.TestCase):
                 'Second argument is not a string'))
 
         if first != second:
-            standardMsg = '%s != %s' % (safe_repr(first, True), safe_repr(second, True))
+            standardMsg = '%s != %s' % _common_shorten_repr(first, second)
             diff = '\n' + ''.join(difflib.ndiff(first.splitlines(True),
                                                        second.splitlines(True)))
             standardMsg = self._truncateMessage(standardMsg, diff)
