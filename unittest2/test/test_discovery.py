@@ -381,7 +381,7 @@ class TestDiscovery(unittest2.TestCase):
         if signal is not None:
             self.assertTrue(program.catchbreak)
 
-    def test_detect_module_clash(self):
+    def setup_module_clash(self):
         class Module(object):
             __file__ = 'bar/foo.py'
         sys.modules['foo'] = Module
@@ -408,7 +408,10 @@ class TestDiscovery(unittest2.TestCase):
         os.listdir = listdir
         os.path.isfile = isfile
         os.path.isdir = isdir
-
+        return full_path
+ 
+    def test_detect_module_clash(self):
+        full_path = self.setup_module_clash()
         loader = unittest2.TestLoader()
 
         mod_dir = os.path.abspath('bar')
@@ -421,6 +424,25 @@ class TestDiscovery(unittest2.TestCase):
         )
         self.assertEqual(sys.path[0], full_path)
 
+    def test_module_symlink_ok(self):
+        full_path = self.setup_module_clash()
+
+        original_realpath = os.path.realpath
+
+        mod_dir = os.path.abspath('bar')
+        expected_dir = os.path.abspath('foo')
+
+        def cleanup():
+            os.path.realpath = original_realpath
+        self.addCleanup(cleanup)
+
+        def realpath(path):
+            if path == os.path.join(mod_dir, 'foo.py'):
+                return os.path.join(expected_dir, 'foo.py')
+            return path
+        os.path.realpath = realpath
+        loader = unittest.TestLoader()
+        loader.discover(start_dir='foo', pattern='foo.py')
 
     def test_discovery_from_dotted_path(self):
         loader = unittest2.TestLoader()
