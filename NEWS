@@ -1,3 +1,6 @@
+- Issue #19352: Fix unittest discovery when a module can be reached
+  through several paths (e.g. under Debian/Ubuntu with virtualenv).
+
 - Issue #18996: TestCase.assertEqual() now more cleverly shorten differing
   strings in error report.
 
