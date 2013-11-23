@@ -1,6 +1,8 @@
 import os
 import re
 import sys
+import types
+import builtins
 
 import unittest2
 import unittest2 as unittest
@@ -180,7 +182,7 @@ class TestDiscovery(unittest2.TestCase):
         self.addCleanup(restore_isdir)
 
         _find_tests_args = []
-        def _find_tests(start_dir, pattern):
+        def _find_tests(start_dir, pattern, namespace=None):
             _find_tests_args.append((start_dir, pattern))
             return ['tests']
         loader._find_tests = _find_tests
@@ -451,7 +453,7 @@ class TestDiscovery(unittest2.TestCase):
         expectedPath = os.path.abspath(os.path.dirname(unittest2.test.__file__))
 
         self.wasRun = False
-        def _find_tests(start_dir, pattern):
+        def _find_tests(start_dir, pattern, namespace=None):
             self.wasRun = True
             self.assertEqual(start_dir, expectedPath)
             return tests
@@ -459,6 +461,80 @@ class TestDiscovery(unittest2.TestCase):
         suite = loader.discover('unittest2.test')
         self.assertTrue(self.wasRun)
         self.assertEqual(suite._tests, tests)
+
+
+    def test_discovery_from_dotted_path_builtin_modules(self):
+
+        loader = unittest.TestLoader()
+
+        listdir = os.listdir
+        os.listdir = lambda _: ['test_this_does_not_exist.py']
+        isfile = os.path.isfile
+        isdir = os.path.isdir
+        os.path.isdir = lambda _: False
+        orig_sys_path = sys.path[:]
+        def restore():
+            os.path.isfile = isfile
+            os.path.isdir = isdir
+            os.listdir = listdir
+            sys.path[:] = orig_sys_path
+        self.addCleanup(restore)
+
+        with self.assertRaises(TypeError) as cm:
+            loader.discover('sys')
+        self.assertEqual(str(cm.exception),
+                         'Can not use builtin modules '
+                         'as dotted module names')
+
+    def test_discovery_from_dotted_namespace_packages(self):
+        loader = unittest.TestLoader()
+
+        orig_import = __import__
+        package = types.ModuleType('package')
+        package.__path__ = ['/a', '/b']
+        package.__spec__ = types.SimpleNamespace(
+           loader=None,
+           submodule_search_locations=['/a', '/b']
+        )
+
+        def _import(packagename, *args, **kwargs):
+            sys.modules[packagename] = package
+            return package
+
+        def cleanup():
+            builtins.__import__ = orig_import
+        self.addCleanup(cleanup)
+        builtins.__import__ = _import
+
+        _find_tests_args = []
+        def _find_tests(start_dir, pattern, namespace=None):
+            _find_tests_args.append((start_dir, pattern))
+            return ['%s/tests' % start_dir]
+
+        loader._find_tests = _find_tests
+        loader.suiteClass = list
+        suite = loader.discover('package')
+        self.assertEqual(suite, ['/a/tests', '/b/tests'])
+
+    def test_discovery_failed_discovery(self):
+        loader = unittest.TestLoader()
+        package = types.ModuleType('package')
+        orig_import = __import__
+
+        def _import(packagename, *args, **kwargs):
+            sys.modules[packagename] = package
+            return package
+
+        def cleanup():
+            builtins.__import__ = orig_import
+        self.addCleanup(cleanup)
+        builtins.__import__ = _import
+
+        with self.assertRaises(TypeError) as cm:
+            loader.discover('package')
+        self.assertEqual(str(cm.exception),
+                         'don\'t know how to discover from {!r}'
+                         .format(package))
 
 
 if __name__ == '__main__':

@@ -1,3 +1,6 @@
+- Issue #17457: unittest test discovery now works with namespace packages.
+  Patch by Claudiu Popa.
+
 - Issue #19352: Fix unittest discovery when a module can be reached
   through several paths (e.g. under Debian/Ubuntu with virtualenv).
 
