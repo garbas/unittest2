@@ -1,3 +1,6 @@
+- Issue #19880: Fix a reference leak in unittest.TestCase. Explicitly break
+  reference cycles between frames and the _Outcome instance.
+
 - Issue #17457: unittest test discovery now works with namespace packages.
   Patch by Claudiu Popa.
 
