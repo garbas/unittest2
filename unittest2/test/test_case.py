@@ -710,8 +710,6 @@ class Test_TestCase(unittest2.TestCase, EqualityMixin, HashingMixin):
         with self.assertRaises(self.failureException) as cm:
             self.assertEqual(s1, s2)
         c = 'xxxx[85 chars]xxxxxxxxxxx'
-        #print()
-        #print(str(cm.exception))
         self.assertEqual(str(cm.exception), "'%sa%s' != '%sb%s'" % (c, p, c, p))
 
         p = 'y' * 100
