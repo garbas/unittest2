@@ -1,3 +1,5 @@
+- Fix breakage in TestSuite.countTestCases() introduced by issue #11798.
+
 - Issue #19880: Fix a reference leak in unittest.TestCase. Explicitly break
   reference cycles between frames and the _Outcome instance.
 
