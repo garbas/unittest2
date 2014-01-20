@@ -179,7 +179,7 @@ class Test_TestSkipping(unittest2.TestCase):
                          ['startTest', 'addUnexpectedSuccess', 'stopTest'])
         self.assertFalse(result.failures)
         self.assertEqual(result.unexpectedSuccesses, [test])
-        self.assertTrue(result.wasSuccessful())
+        self.assertFalse(result.wasSuccessful())
 
     def test_unexpected_success_subtests(self):
         # Success in all subtests counts as the unexpected success of
@@ -203,7 +203,7 @@ class Test_TestSkipping(unittest2.TestCase):
                           'addUnexpectedSuccess', 'stopTest'])
         self.assertFalse(result.failures)
         self.assertEqual(result.unexpectedSuccesses, [test])
-        self.assertTrue(result.wasSuccessful())
+        self.assertFalse(result.wasSuccessful())
 
     def test_skip_doesnt_run_setup(self):
         class Foo(unittest2.TestCase):

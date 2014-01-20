@@ -11,6 +11,7 @@ import six
 from six import b, u
 
 import unittest2
+import unittest2 as unittest
 
 from unittest2.test.support import (
     OldTestResult, EqualityMixin, HashingMixin, LoggingResult,
