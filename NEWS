@@ -1,3 +1,6 @@
+- Issue #20165: The unittest module no longer considers tests marked with
+  @expectedFailure successful if they pass.
+
 - Fix breakage in TestSuite.countTestCases() introduced by issue #11798.
 
 - Issue #19880: Fix a reference leak in unittest.TestCase. Explicitly break
