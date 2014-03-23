@@ -1,3 +1,6 @@
+- Issue #20145: `assertRaisesRegex` and `assertWarnsRegex` now raise a
+  TypeError if the second argument is not a string or compiled regex.
+
 - Issue #20165: The unittest module no longer considers tests marked with
   @expectedFailure successful if they pass.
 

@@ -157,9 +157,23 @@ class _AssertRaisesBaseContext(_BaseTestCaseContext):
                 self.obj_name = str(callable_obj)
         else:
             self.obj_name = None
-        if isinstance(expected_regex, six.string_types):
+        if expected_regex is not None:
             expected_regex = re.compile(expected_regex)
         self.expected_regex = expected_regex
+        self.msg = None
+
+    def handle(self, name, callable_obj, args, kwargs):
+        """
+        If callable_obj is None, assertRaises/Warns is being used as a
+        context manager, so check for a 'msg' kwarg and return self.
+        If callable_obj is not None, call it passing args and kwargs.
+        """
+        if callable_obj is None:
+            self.msg = kwargs.pop('msg', None)
+            return self
+        with self:
+            callable_obj(*args, **kwargs)
+
 
 class _AssertRaisesContext(_AssertRaisesBaseContext):
     """A context manager used to implement TestCase.assertRaises* methods."""
@@ -184,7 +198,7 @@ class _AssertRaisesContext(_AssertRaisesBaseContext):
 
         expected_regex = self.expected_regex
         if not expected_regex.search(str(exc_value)):
-            raise self.failureException('%r does not match %r' %
+            raise self.failureException('"%s" does not match "%s"' %
                      (expected_regex.pattern, str(exc_value)))
         return True
 
@@ -1238,23 +1252,9 @@ class TestCase(unittest.TestCase):
             args: Extra args.
             kwargs: Extra kwargs.
         """
-        if callable_obj is None:
-            return _AssertRaisesContext(expected_exception, self, expected_regex)
-        try:
-            callable_obj(*args, **kwargs)
-        except expected_exception:
-            exc_value = sys.exc_info()[1]
-            if isinstance(expected_regex, six.string_types):
-                expected_regex = re.compile(expected_regex)
-            if not expected_regex.search(str(exc_value)):
-                raise self.failureException('"%s" does not match "%s"' %
-                         (expected_regex.pattern, str(exc_value)))
-        else:
-            if hasattr(expected_exception, '__name__'):
-                excName = expected_exception.__name__
-            else:
-                excName = str(expected_exception)
-            raise self.failureException("%s not raised" % excName)
+        context = _AssertRaisesContext(expected_exception, self, callable_obj,
+                                       expected_regex)
+        return context.handle('assertRaisesRegex', callable_obj, args, kwargs)
 
     def assertWarnsRegex(self, expected_warning, expected_regex,
                          callable_obj=None, *args, **kwargs):
@@ -1271,10 +1271,10 @@ class TestCase(unittest.TestCase):
             args: Extra args.
             kwargs: Extra kwargs.
         """
-        context = _AssertWarnsContext(expected_warning, self, callable_obj, expected_regex)
-        if callable_obj is None:
-            return context
-        with_context(context, callable_obj, *args, **kwargs)
+        context = _AssertWarnsContext(expected_warning, self, callable_obj,
+                                      expected_regex)
+        return context.handle('assertWarnsRegex', callable_obj, args, kwargs)
+
 
     def assertRegex(self, text, expected_regex, msg=None):
         """Fail the test unless the text matches the regular expression."""
