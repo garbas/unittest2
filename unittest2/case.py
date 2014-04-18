@@ -1185,9 +1185,13 @@ class TestCase(unittest.TestCase):
                 'Second argument is not a string'))
 
         if first != second:
+            firstlines = first.splitlines(keepends=True)
+            secondlines = second.splitlines(keepends=True)
+            if len(firstlines) == 1 and first.strip('\r\n') == first:
+                firstlines = [first + '\n']
+                secondlines = [second + '\n']
             standardMsg = '%s != %s' % _common_shorten_repr(first, second)
-            diff = '\n' + ''.join(difflib.ndiff(first.splitlines(True),
-                                                       second.splitlines(True)))
+            diff = '\n' + ''.join(difflib.ndiff(firstlines, secondlines))
             standardMsg = self._truncateMessage(standardMsg, diff)
             self.fail(self._formatMessage(msg, standardMsg))
 
