@@ -1001,6 +1001,21 @@ test case
         else:
             self.fail('assertMultiLineEqual did not fail')
 
+    def testAssertEqualSingleLine(self):
+        sample_text = "laden swallows fly slowly"
+        revised_sample_text = "unladen swallows fly quickly"
+        sample_text_error = """\
+- laden swallows fly slowly
+?                    ^^^^
++ unladen swallows fly quickly
+? ++                   ^^^^^
+"""
+        try:
+            self.assertEqual(sample_text, revised_sample_text)
+        except self.failureException as e:
+            error = str(e).split('\n', 1)[1]
+            self.assertEqual(sample_text_error, error)
+
     def testAssertIsNone(self):
         self.assertIsNone(None)
         self.assertRaises(self.failureException, self.assertIsNone, False)
