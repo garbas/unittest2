@@ -247,6 +247,14 @@ class Test_TestLoader(unittest2.TestCase):
         else:
             self.fail("TestLoader.loadTestsFromName failed to raise ImportError")
 
+    def check_module_lookup_error(self):
+        e = str(sys.exc_info()[1])
+        try:
+            self.assertEqual(e, "'module' object has no attribute 'sdasfasfasdf'")
+        except self.failureException:
+            self.assertEqual(e, "module 'unittest2' has no attribute 'sdasfasfasdf'")
+
+
     # "The specifier name is a ``dotted name'' that may resolve either to
     # a module, a test case class, a TestSuite instance, a test method
     # within a test case class, or a callable object which returns a
@@ -259,8 +267,7 @@ class Test_TestLoader(unittest2.TestCase):
         try:
             loader.loadTestsFromName('unittest2.sdasfasfasdf')
         except AttributeError:
-            e = sys.exc_info()[1]
-            self.assertEqual(str(e), "'module' object has no attribute 'sdasfasfasdf'")
+            self.check_module_lookup_error()
         else:
             self.fail("TestLoader.loadTestsFromName failed to raise AttributeError")
 
@@ -277,8 +284,7 @@ class Test_TestLoader(unittest2.TestCase):
         try:
             loader.loadTestsFromName('sdasfasfasdf', unittest2)
         except AttributeError:
-            e = sys.exc_info()[1]
-            self.assertEqual(str(e), "'module' object has no attribute 'sdasfasfasdf'")
+            self.check_module_lookup_error()
         else:
             self.fail("TestLoader.loadTestsFromName failed to raise AttributeError")
 
@@ -644,8 +650,7 @@ class Test_TestLoader(unittest2.TestCase):
         try:
             loader.loadTestsFromNames(['unittest2.sdasfasfasdf', 'unittest2'])
         except AttributeError:
-            e = sys.exc_info()[1]
-            self.assertEqual(str(e), "'module' object has no attribute 'sdasfasfasdf'")
+            self.check_module_lookup_error()
         else:
             self.fail("TestLoader.loadTestsFromNames failed to raise AttributeError")
 
@@ -664,8 +669,7 @@ class Test_TestLoader(unittest2.TestCase):
         try:
             loader.loadTestsFromNames(['sdasfasfasdf'], unittest2)
         except AttributeError:
-            e = sys.exc_info()[1]
-            self.assertEqual(str(e), "'module' object has no attribute 'sdasfasfasdf'")
+            self.check_module_lookup_error()
         else:
             self.fail("TestLoader.loadTestsFromName failed to raise AttributeError")
 
@@ -684,8 +688,7 @@ class Test_TestLoader(unittest2.TestCase):
         try:
             loader.loadTestsFromNames(['TestCase', 'sdasfasfasdf'], unittest2)
         except AttributeError:
-            e = sys.exc_info()[1]
-            self.assertEqual(str(e), "'module' object has no attribute 'sdasfasfasdf'")
+            self.check_module_lookup_error()
         else:
             self.fail("TestLoader.loadTestsFromName failed to raise AttributeError")
 
