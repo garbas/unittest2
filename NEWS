@@ -1,3 +1,6 @@
+- Issue #9815: assertRaises now tries to clear references to local variables
+  in the exception's traceback.
+
 - Issue #20145: `assertRaisesRegex` and `assertWarnsRegex` now raise a
   TypeError if the second argument is not a string or compiled regex.
 

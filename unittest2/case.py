@@ -7,6 +7,7 @@ import difflib
 import logging
 import pprint
 import re
+import traceback
 import types
 import unittest
 import warnings
@@ -189,6 +190,9 @@ class _AssertRaisesContext(_AssertRaisesBaseContext):
                 exc_name = str(self.expected)
             raise self.failureException(
                 "%s not raised" % (exc_name,))
+        else:
+            if getattr(traceback, 'clear_frames', None):
+                traceback.clear_frames(tb)
         if not issubclass(exc_type, self.expected):
             # let unexpected exceptions pass through
             return False

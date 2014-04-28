@@ -1,7 +1,9 @@
 import datetime
 import sys
+import weakref
 
 import unittest2
+import unittest2 as unittest
 
 
 class Test_Assertions(unittest2.TestCase):
@@ -68,6 +70,36 @@ class Test_Assertions(unittest2.TestCase):
                                delta=datetime.timedelta(seconds=20))
         self.assertNotAlmostEqual(first, second,
                                   delta=datetime.timedelta(seconds=5))
+
+    def test_assertRaises_frames_survival(self):
+        # Issue #9815: assertRaises should avoid keeping local variables
+        # in a traceback alive.
+        class A:
+            pass
+        wr = None
+
+        class Foo(unittest.TestCase):
+
+            def foo(self):
+                nonlocal wr
+                a = A()
+                wr = weakref.ref(a)
+                try:
+                    raise IOError
+                except IOError:
+                    raise ValueError
+
+            def test_functional(self):
+                self.assertRaises(ValueError, self.foo)
+
+            def test_with(self):
+                with self.assertRaises(ValueError):
+                    self.foo()
+
+        Foo("test_functional").run()
+        self.assertIsNone(wr())
+        Foo("test_with").run()
+        self.assertIsNone(wr())
 
     def testAssertNotRegex(self):
         self.assertNotRegex('Ala ma kota', r'r+')
