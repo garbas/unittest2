@@ -1,3 +1,6 @@
+- Issue #22032: __qualname__ instead of __name__ is now always used to format
+  fully qualified class names of Python implemented classes.
+
 - Issue #9815: assertRaises now tries to clear references to local variables
   in the exception's traceback.
 
