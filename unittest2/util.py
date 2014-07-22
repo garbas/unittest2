@@ -58,7 +58,7 @@ def safe_str(obj):
         return object.__str__(obj)
 
 def strclass(cls):
-    return "%s.%s" % (cls.__module__, cls.__name__)
+    return "%s.%s" % (cls.__module__, getattr(cls, '__qualname__', cls.__name__))
 
 def sorted_list_difference(expected, actual):
     """Finds elements in only one or the other of two, sorted input lists.
