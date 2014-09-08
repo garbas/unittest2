@@ -66,3 +66,13 @@ else:
 _TextTestResult = TextTestResult
 
 __unittest = True
+
+def load_tests(loader, tests, pattern):
+    # All our tests are in test/ - the test objects found in unittest2 itself
+    # are base classes not intended to be executed. This load_tests intercepts
+    # discovery to prevent that.
+    import unittest2.test
+    result = loader.suiteClass()
+    for path in unittest2.test.__path__:
+        result.addTests(loader.discover(path, pattern=pattern))
+    return result
