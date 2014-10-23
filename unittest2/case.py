@@ -7,6 +7,9 @@ import re
 import unittest
 import warnings
 
+import six
+from six.moves import range
+
 from unittest2 import result
 from unittest2.util import (
     safe_repr, safe_str, strclass,
@@ -116,7 +119,7 @@ class _AssertRaisesBaseContext(object):
                 self.obj_name = str(callable_obj)
         else:
             self.obj_name = None
-        if isinstance(expected_regex, basestring):
+        if isinstance(expected_regex, six.string_types):
             expected_regex = re.compile(expected_regex)
         self.expected_regex = expected_regex
 
@@ -210,7 +213,7 @@ class _TypeEqualityDict(object):
 
     def __getitem__(self, key):
         value = self._store[key]
-        if isinstance(value, basestring):
+        if isinstance(value, six.string_types):
             return getattr(self.testcase, value)
         return value
 
@@ -288,7 +291,7 @@ class TestCase(unittest.TestCase):
         self.addTypeEqualityFunc(tuple, 'assertTupleEqual')
         self.addTypeEqualityFunc(set, 'assertSetEqual')
         self.addTypeEqualityFunc(frozenset, 'assertSetEqual')
-        self.addTypeEqualityFunc(unicode, 'assertMultiLineEqual')
+        self.addTypeEqualityFunc(six.text_type, 'assertMultiLineEqual')
 
     def addTypeEqualityFunc(self, typeobj, function):
         """Add a type specific assertEqual style function to compare a type.
@@ -371,7 +374,8 @@ class TestCase(unittest.TestCase):
             function()
         except KeyboardInterrupt:
             raise
-        except SkipTest, e:
+        except SkipTest:
+            e = sys.exc_info()[1]
             outcome.success = False
             outcome.skipped = str(e)
         except _UnexpectedSuccess:
@@ -560,7 +564,7 @@ class TestCase(unittest.TestCase):
             excName = excClass.__name__
         else:
             excName = str(excClass)
-        raise self.failureException, "%s not raised" % excName
+        raise self.failureException("%s not raised" % excName)
 
     def assertWarns(self, expected_warning, callable_obj=None, *args, **kwargs):
         """Fail unless a warning of class warnClass is triggered
@@ -770,7 +774,7 @@ class TestCase(unittest.TestCase):
             elements = (seq_type_name.capitalize(), seq1_repr, seq2_repr)
             differing = '%ss differ: %s != %s\n' % elements
 
-            for i in xrange(min(len1, len2)):
+            for i in range(min(len1, len2)):
                 try:
                     item1 = seq1[i]
                 except (TypeError, IndexError, NotImplementedError):
@@ -866,16 +870,20 @@ class TestCase(unittest.TestCase):
         """
         try:
             difference1 = set1.difference(set2)
-        except TypeError, e:
+        except TypeError:
+            e = sys.exc_info()[1]
             self.fail('invalid type when attempting set difference: %s' % e)
-        except AttributeError, e:
+        except AttributeError:
+            e = sys.exc_info()[1]
             self.fail('first argument does not support set difference: %s' % e)
 
         try:
             difference2 = set2.difference(set1)
-        except TypeError, e:
+        except TypeError:
+            e = sys.exc_info()[1]
             self.fail('invalid type when attempting set difference: %s' % e)
-        except AttributeError, e:
+        except AttributeError:
+            e = sys.exc_info()[1]
             self.fail('second argument does not support set difference: %s' % e)
 
         if not (difference1 or difference2):
@@ -936,7 +944,7 @@ class TestCase(unittest.TestCase):
         """Checks whether actual is a superset of expected."""
         missing = []
         mismatched = []
-        for key, value in expected.iteritems():
+        for key, value in expected.items():
             if key not in actual:
                 missing.append(key)
             elif value != actual[key]:
@@ -999,9 +1007,9 @@ class TestCase(unittest.TestCase):
 
     def assertMultiLineEqual(self, first, second, msg=None):
         """Assert that two multi-line strings are equal."""
-        self.assertIsInstance(first, basestring, (
+        self.assertIsInstance(first, six.string_types, (
                 'First argument is not a string'))
-        self.assertIsInstance(second, basestring, (
+        self.assertIsInstance(second, six.string_types, (
                 'Second argument is not a string'))
 
         if first != second:
@@ -1076,8 +1084,9 @@ class TestCase(unittest.TestCase):
             return _AssertRaisesContext(expected_exception, self, expected_regex)
         try:
             callable_obj(*args, **kwargs)
-        except expected_exception, exc_value:
-            if isinstance(expected_regex, basestring):
+        except expected_exception:
+            exc_value = sys.exc_info()[1]
+            if isinstance(expected_regex, six.string_types):
                 expected_regex = re.compile(expected_regex)
             if not expected_regex.search(str(exc_value)):
                 raise self.failureException('"%s" does not match "%s"' %
@@ -1087,7 +1096,7 @@ class TestCase(unittest.TestCase):
                 excName = expected_exception.__name__
             else:
                 excName = str(expected_exception)
-            raise self.failureException, "%s not raised" % excName
+            raise self.failureException("%s not raised" % excName)
 
     def assertWarnsRegex(self, expected_warning, expected_regex,
                          callable_obj=None, *args, **kwargs):
@@ -1111,7 +1120,7 @@ class TestCase(unittest.TestCase):
 
     def assertRegex(self, text, expected_regex, msg=None):
         """Fail the test unless the text matches the regular expression."""
-        if isinstance(expected_regex, basestring):
+        if isinstance(expected_regex, six.string_types):
             expected_regex = re.compile(expected_regex)
         if not expected_regex.search(text):
             msg = msg or "Regex didn't match"
@@ -1120,7 +1129,7 @@ class TestCase(unittest.TestCase):
 
     def assertNotRegex(self, text, unexpected_regex, msg=None):
         """Fail the test if the text matches the regular expression."""
-        if isinstance(unexpected_regex, basestring):
+        if isinstance(unexpected_regex, six.string_types):
             unexpected_regex = re.compile(unexpected_regex)
         match = unexpected_regex.search(text)
         if match:

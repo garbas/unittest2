@@ -1,5 +1,6 @@
 unittest2 is a backport of the new features added to the unittest testing
-framework in Python 2.7 and onwards. It is tested to run on Python 2.4 - 2.7.
+framework in Python 2.7 and onwards. It is tested to run on Python 2.6, 2.7,
+3.2, 3.3, 3.4 and pypy.
 
 To use unittest2 instead of unittest simply replace ``import unittest`` with
 ``import unittest2``.
@@ -150,6 +151,12 @@ A comparison of text or long sequences (using ``assertSequenceEqual`` or
 ``assertMultiLineEqual`` etc) can take a *long* time to generate diffs for
 failure messages. These methods use ``prettyprint`` and ``difflib``.
 
+``pip install -e .`` on Python3.2 in the unittest2 source will fail unless
+setuptools > 0.6.24 is already installed. This is a combination of needing a
+newer setuptools (to avoid the use of execfile) and setup_requires falling back
+to easy_install that doesn't know how to upgrade setuptools just-in-time that
+prevents it being fixed in unittest2.
+
 
 CHANGELOG
 =========
@@ -160,6 +167,8 @@ CHANGELOG
 Many thanks to Mark Roddy and Ezio Melotti who contributed substantially to
 this release.
 
+* Changed supported Python versions to start at 2.6, and include all released 3.x
+  and pypy. (Robert Collins)
 * Invoking `unit2` without args starts test discovery
 * Added `TestCase.assertWarns` and `TestCase.assertWarnsRegexp` context managers
 * Error in setUp, tearDown or cleanUp function for a test marked as an

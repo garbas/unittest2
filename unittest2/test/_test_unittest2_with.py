@@ -1,13 +1,14 @@
 from __future__ import with_statement
 
+import inspect
+import sys
+import warnings
+
+from six import u
 
 import unittest2
 from unittest2.test.support import OldTestResult
 from unittest2.compatibility import catch_warnings
-
-import sys
-import warnings
-import inspect
 
 # needed to enable the deprecation warnings
 warnings.simplefilter('default')
@@ -42,7 +43,8 @@ class TestWith(unittest2.TestCase):
         self.assertRaises(KeyError, _raise, KeyError("key"))
         try:
             self.assertRaises(KeyError, lambda: None)
-        except self.failureException, e:
+        except self.failureException:
+            e = sys.exc_info()[1]
             self.assertIn("KeyError not raised", e.args)
         else:
             self.fail("assertRaises() didn't fail")
@@ -55,7 +57,8 @@ class TestWith(unittest2.TestCase):
         with self.assertRaises(KeyError) as cm:
             try:
                 raise KeyError
-            except Exception, e:
+            except Exception:
+                e = sys.exc_info()[1]
                 raise
         self.assertIs(cm.exception, e)
 
@@ -64,7 +67,8 @@ class TestWith(unittest2.TestCase):
         try:
             with self.assertRaises(KeyError):
                 pass
-        except self.failureException, e:
+        except self.failureException:
+            e = sys.exc_info()[1]
             self.assertIn("KeyError not raised", e.args)
         else:
             self.fail("assertRaises() didn't fail")
@@ -82,14 +86,14 @@ class TestWith(unittest2.TestCase):
             one = ''.join(chr(i) for i in range(255))
             # this used to cause a UnicodeDecodeError constructing the failure msg
             with self.assertRaises(self.failureException):
-                self.assertDictContainsSubset({'foo': one}, {'foo': u'\uFFFD'})
+                self.assertDictContainsSubset({'foo': one}, {'foo': u('\uFFFD')})
 
     def test_formatMessage_unicode_error(self):
         with catch_warnings(record=True):
             # This causes a UnicodeWarning due to its craziness
             one = ''.join(chr(i) for i in range(255))
             # this used to cause a UnicodeDecodeError constructing msg
-            self._formatMessage(one, u'\uFFFD')
+            self._formatMessage(one, u('\uFFFD'))
 
     def assertOldResultWarning(self, test, failures):
         with self.assertWarns(RuntimeWarning):

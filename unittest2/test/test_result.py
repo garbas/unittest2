@@ -1,6 +1,8 @@
 import sys
 import textwrap
-from StringIO import StringIO
+import traceback
+
+from six.moves import StringIO
 
 import unittest2
 
@@ -291,6 +293,16 @@ class Test_TestResult(unittest2.TestCase):
         self.assertTrue(self.testRan)
 
 
+class MockTraceback(object):
+    @staticmethod
+    def format_exception(*_):
+        return ['A traceback']
+
+
+def restore_traceback():
+    unittest2.result.traceback = traceback
+
+                
 class TestOutputBuffering(unittest2.TestCase):
 
     def setUp(self):
@@ -342,8 +354,8 @@ class TestOutputBuffering(unittest2.TestCase):
         result._original_stdout = StringIO()
         result._original_stderr = StringIO()
 
-        print 'foo'
-        print >> sys.stderr, 'bar'
+        print('foo')
+        sys.stderr.write('bar\n')
 
         self.assertEqual(out_stream.getvalue(), 'foo\n')
         self.assertEqual(err_stream.getvalue(), 'bar\n')
@@ -371,6 +383,9 @@ class TestOutputBuffering(unittest2.TestCase):
         return result
 
     def testBufferOutputAddErrorOrFailure(self):
+        unittest2.result.traceback = MockTraceback
+        self.addCleanup(restore_traceback)
+
         for message_attr, add_attr, include_error in [
             ('errors', 'addError', True),
             ('failures', 'addFailure', False),
@@ -381,9 +396,9 @@ class TestOutputBuffering(unittest2.TestCase):
             result._original_stderr = StringIO()
             result._original_stdout = StringIO()
 
-            print >> sys.stdout, 'foo'
+            print('foo')
             if include_error:
-                print >> sys.stderr, 'bar'
+                sys.stderr.write('bar\n')
 
             addFunction = getattr(result, add_attr)
             addFunction(self, (None, None, None))
@@ -403,7 +418,8 @@ class TestOutputBuffering(unittest2.TestCase):
                 Stderr:
                 bar
             """)
-            expectedFullMessage = 'None\n%s%s' % (expectedOutMessage, expectedErrMessage)
+
+            expectedFullMessage = 'A traceback%s%s' % (expectedOutMessage, expectedErrMessage)
 
             self.assertIs(test, self)
             self.assertEqual(result._original_stdout.getvalue(), expectedOutMessage)

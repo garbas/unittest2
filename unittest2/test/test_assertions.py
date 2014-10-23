@@ -1,4 +1,5 @@
 import datetime
+import sys
 
 import unittest2
 
@@ -64,7 +65,8 @@ class Test_Assertions(unittest2.TestCase):
         self.assertNotRegex('Ala ma kota', r'r+')
         try:
             self.assertNotRegex('Ala ma kota', r'k.t', 'Message')
-        except self.failureException, e:
+        except self.failureException:
+            e = sys.exc_info()[1]
             self.assertIn("'kot'", e.args[0])
             self.assertIn('Message', e.args[0])
         else:

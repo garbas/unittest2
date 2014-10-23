@@ -3,7 +3,7 @@ import os
 import sys
 import weakref
 
-from cStringIO import StringIO
+from six.moves import StringIO
 
 try:
     import signal
