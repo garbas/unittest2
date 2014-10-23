@@ -1,8 +1,10 @@
+import io
 import pickle
 
-from cStringIO import StringIO
-from unittest2.test.support import LoggingResult, OldTestResult
+from six.moves import StringIO
+from six import u
 
+from unittest2.test.support import LoggingResult, OldTestResult
 import unittest2
 
 
@@ -220,11 +222,9 @@ class Test_TextTestRunner(unittest2.TestCase):
     def test_pickle_unpickle(self):
         # Issue #7197: a TextTestRunner should be (un)pickleable. This is
         # required by test_multiprocessing under Windows (in verbose mode).
-        import StringIO
-        # cStringIO objects are not pickleable, but StringIO objects are.
-        stream = StringIO.StringIO("foo")
+        stream = StringIO(u("foo"))
         runner = unittest2.TextTestRunner(stream)
-        for protocol in range(pickle.HIGHEST_PROTOCOL + 1):
+        for protocol in range(2, pickle.HIGHEST_PROTOCOL + 1):
             s = pickle.dumps(runner, protocol=protocol)
             obj = pickle.loads(s)
             # StringIO objects never compare equal, a cheap test instead.

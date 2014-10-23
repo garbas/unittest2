@@ -9,7 +9,14 @@
 
 import os
 import sys
-from unittest2 import __version__ as VERSION
+
+class late_version:
+    def __str__(self):
+        from unittest2 import __version__ as VERSION
+        return VERSION
+    def __add__(self, other):
+        return str(self) + other
+VERSION = late_version()
 
 NAME = 'unittest2'
 
@@ -46,6 +53,10 @@ AUTHOR_EMAIL = 'michael@voidspace.org.uk'
 
 KEYWORDS = "unittest testing tests".split(' ')
 
+# Both install and setup requires - because we read VERSION from within the
+# package, and the package also exports all the APIs.
+# six for compat helpers
+REQUIRES = ['six'],
 
 params = dict(
     name=NAME,
@@ -58,7 +69,9 @@ params = dict(
     author_email=AUTHOR_EMAIL,
     url=URL,
     classifiers=CLASSIFIERS,
-    keywords=KEYWORDS
+    keywords=KEYWORDS,
+    install_requires=REQUIRES,
+    setup_requires=REQUIRES,
 )
 
 

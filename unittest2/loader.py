@@ -9,7 +9,7 @@ import unittest
 
 from fnmatch import fnmatch
 
-from unittest2 import case, suite
+from unittest2 import case, suite, util
 
 try:
     from os.path import relpath
@@ -68,7 +68,7 @@ class TestLoader(unittest.TestLoader):
     and returning them wrapped in a TestSuite
     """
     testMethodPrefix = 'test'
-    sortTestMethodsUsing = cmp
+    sortTestMethodsUsing = staticmethod(util.three_way_cmp)
     suiteClass = suite.TestSuite
     _top_level_dir = None
 
@@ -96,7 +96,8 @@ class TestLoader(unittest.TestLoader):
         if use_load_tests and load_tests is not None:
             try:
                 return load_tests(self, tests, None)
-            except Exception, e:
+            except Exception:
+                e = sys.exc_info()[1]
                 return _make_failed_load_tests(module.__name__, e,
                                                self.suiteClass)
         return tests
@@ -130,13 +131,22 @@ class TestLoader(unittest.TestLoader):
             return self.loadTestsFromModule(obj)
         elif isinstance(obj, type) and issubclass(obj, unittest.TestCase):
             return self.loadTestsFromTestCase(obj)
-        elif (isinstance(obj, types.UnboundMethodType) and
+        elif ((hasattr(types, 'UnboundMethodType')
+              and isinstance(obj, types.UnboundMethodType)) and
               isinstance(parent, type) and
               issubclass(parent, case.TestCase)):
             return self.suiteClass([parent(obj.__name__)])
+        elif (isinstance(obj, types.FunctionType) and
+              isinstance(parent, type) and
+              issubclass(parent, case.TestCase)):
+            name = parts[-1]
+            inst = parent(name)
+            # static methods follow a different path
+            if not isinstance(getattr(inst, name), types.FunctionType):
+                return self.suiteClass([inst])
         elif isinstance(obj, unittest.TestSuite):
             return obj
-        elif hasattr(obj, '__call__'):
+        if callable(obj):
             test = obj()
             if isinstance(test, unittest.TestSuite):
                 return test
@@ -162,7 +172,7 @@ class TestLoader(unittest.TestLoader):
                          prefix=self.testMethodPrefix):
             return attrname.startswith(prefix) and \
                 hasattr(getattr(testCaseClass, attrname), '__call__')
-        testFnNames = filter(isTestMethod, dir(testCaseClass))
+        testFnNames = list(filter(isTestMethod, dir(testCaseClass)))
         if self.sortTestMethodsUsing:
             testFnNames.sort(key=_CmpToKey(self.sortTestMethodsUsing))
         return testFnNames
@@ -302,7 +312,8 @@ class TestLoader(unittest.TestLoader):
                 else:
                     try:
                         yield load_tests(self, tests, pattern)
-                    except Exception, e:
+                    except Exception:
+                        e = sys.exc_info()[1]
                         yield _make_failed_load_tests(package.__name__, e,
                                                       self.suiteClass)
 
@@ -317,13 +328,13 @@ def _makeLoader(prefix, sortUsing, suiteClass=None):
         loader.suiteClass = suiteClass
     return loader
 
-def getTestCaseNames(testCaseClass, prefix, sortUsing=cmp):
+def getTestCaseNames(testCaseClass, prefix, sortUsing=util.three_way_cmp):
     return _makeLoader(prefix, sortUsing).getTestCaseNames(testCaseClass)
 
-def makeSuite(testCaseClass, prefix='test', sortUsing=cmp,
+def makeSuite(testCaseClass, prefix='test', sortUsing=util.three_way_cmp,
               suiteClass=suite.TestSuite):
     return _makeLoader(prefix, sortUsing, suiteClass).loadTestsFromTestCase(testCaseClass)
 
-def findTestCases(module, prefix='test', sortUsing=cmp,
+def findTestCases(module, prefix='test', sortUsing=util.three_way_cmp,
                   suiteClass=suite.TestSuite):
     return _makeLoader(prefix, sortUsing, suiteClass).loadTestsFromModule(module)

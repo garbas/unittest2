@@ -2,6 +2,7 @@ import sys
 import types
 
 import unittest2
+from unittest2 import util
 
 
 class Test_TestLoader(unittest2.TestCase):
@@ -205,7 +206,8 @@ class Test_TestLoader(unittest2.TestCase):
 
         try:
             loader.loadTestsFromName('')
-        except ValueError, e:
+        except ValueError:
+            e = sys.exc_info()[1]
             self.assertEqual(str(e), "Empty module name")
         else:
             self.fail("TestLoader.loadTestsFromName failed to raise ValueError")
@@ -238,8 +240,9 @@ class Test_TestLoader(unittest2.TestCase):
 
         try:
             loader.loadTestsFromName('sdasfasfasdf')
-        except ImportError, e:
-            self.assertEqual(str(e), "No module named sdasfasfasdf")
+        except ImportError:
+            e = sys.exc_info()[1]
+            self.assertRegex(str(e), "No module named '?sdasfasfasdf'?")
         else:
             self.fail("TestLoader.loadTestsFromName failed to raise ImportError")
 
@@ -254,7 +257,8 @@ class Test_TestLoader(unittest2.TestCase):
 
         try:
             loader.loadTestsFromName('unittest2.sdasfasfasdf')
-        except AttributeError, e:
+        except AttributeError:
+            e = sys.exc_info()[1]
             self.assertEqual(str(e), "'module' object has no attribute 'sdasfasfasdf'")
         else:
             self.fail("TestLoader.loadTestsFromName failed to raise AttributeError")
@@ -271,7 +275,8 @@ class Test_TestLoader(unittest2.TestCase):
 
         try:
             loader.loadTestsFromName('sdasfasfasdf', unittest2)
-        except AttributeError, e:
+        except AttributeError:
+            e = sys.exc_info()[1]
             self.assertEqual(str(e), "'module' object has no attribute 'sdasfasfasdf'")
         else:
             self.fail("TestLoader.loadTestsFromName failed to raise AttributeError")
@@ -425,7 +430,8 @@ class Test_TestLoader(unittest2.TestCase):
         loader = unittest2.TestLoader()
         try:
             loader.loadTestsFromName('testcase_1.testfoo', m)
-        except AttributeError, e:
+        except AttributeError:
+            e = sys.exc_info()[1]
             self.assertEqual(str(e), "type object 'MyTestCase' has no attribute 'testfoo'")
         else:
             self.fail("Failed to raise AttributeError")
@@ -583,7 +589,8 @@ class Test_TestLoader(unittest2.TestCase):
 
         try:
             loader.loadTestsFromNames([''])
-        except ValueError, e:
+        except ValueError:
+            e = sys.exc_info()[1]
             self.assertEqual(str(e), "Empty module name")
         else:
             self.fail("TestLoader.loadTestsFromNames failed to raise ValueError")
@@ -618,8 +625,9 @@ class Test_TestLoader(unittest2.TestCase):
 
         try:
             loader.loadTestsFromNames(['sdasfasfasdf'])
-        except ImportError, e:
-            self.assertEqual(str(e), "No module named sdasfasfasdf")
+        except ImportError:
+            e = sys.exc_info()[1]
+            self.assertRegex(str(e), "No module named '?sdasfasfasdf'?")
         else:
             self.fail("TestLoader.loadTestsFromNames failed to raise ImportError")
 
@@ -634,7 +642,8 @@ class Test_TestLoader(unittest2.TestCase):
 
         try:
             loader.loadTestsFromNames(['unittest2.sdasfasfasdf', 'unittest2'])
-        except AttributeError, e:
+        except AttributeError:
+            e = sys.exc_info()[1]
             self.assertEqual(str(e), "'module' object has no attribute 'sdasfasfasdf'")
         else:
             self.fail("TestLoader.loadTestsFromNames failed to raise AttributeError")
@@ -653,7 +662,8 @@ class Test_TestLoader(unittest2.TestCase):
 
         try:
             loader.loadTestsFromNames(['sdasfasfasdf'], unittest2)
-        except AttributeError, e:
+        except AttributeError:
+            e = sys.exc_info()[1]
             self.assertEqual(str(e), "'module' object has no attribute 'sdasfasfasdf'")
         else:
             self.fail("TestLoader.loadTestsFromName failed to raise AttributeError")
@@ -672,7 +682,8 @@ class Test_TestLoader(unittest2.TestCase):
 
         try:
             loader.loadTestsFromNames(['TestCase', 'sdasfasfasdf'], unittest2)
-        except AttributeError, e:
+        except AttributeError:
+            e = sys.exc_info()[1]
             self.assertEqual(str(e), "'module' object has no attribute 'sdasfasfasdf'")
         else:
             self.fail("TestLoader.loadTestsFromName failed to raise AttributeError")
@@ -821,7 +832,8 @@ class Test_TestLoader(unittest2.TestCase):
         loader = unittest2.TestLoader()
         try:
             loader.loadTestsFromNames(['testcase_1.testfoo'], m)
-        except AttributeError, e:
+        except AttributeError:
+            e = sys.exc_info()[1]
             self.assertEqual(str(e), "type object 'MyTestCase' has no attribute 'testfoo'")
         else:
             self.fail("Failed to raise AttributeError")
@@ -1105,7 +1117,7 @@ class Test_TestLoader(unittest2.TestCase):
     # getTestCaseNames() and all the loadTestsFromX() methods"
     def test_sortTestMethodsUsing__loadTestsFromTestCase(self):
         def reversed_cmp(x, y):
-            return -cmp(x, y)
+            return -util.three_way_cmp(x, y)
 
         class Foo(unittest2.TestCase):
             def test_1(self): pass
@@ -1121,7 +1133,7 @@ class Test_TestLoader(unittest2.TestCase):
     # getTestCaseNames() and all the loadTestsFromX() methods"
     def test_sortTestMethodsUsing__loadTestsFromModule(self):
         def reversed_cmp(x, y):
-            return -cmp(x, y)
+            return -util.three_way_cmp(x, y)
 
         m = types.ModuleType('m')
         class Foo(unittest2.TestCase):
@@ -1139,7 +1151,7 @@ class Test_TestLoader(unittest2.TestCase):
     # getTestCaseNames() and all the loadTestsFromX() methods"
     def test_sortTestMethodsUsing__loadTestsFromName(self):
         def reversed_cmp(x, y):
-            return -cmp(x, y)
+            return -util.three_way_cmp(x, y)
 
         m = types.ModuleType('m')
         class Foo(unittest2.TestCase):
@@ -1157,7 +1169,7 @@ class Test_TestLoader(unittest2.TestCase):
     # getTestCaseNames() and all the loadTestsFromX() methods"
     def test_sortTestMethodsUsing__loadTestsFromNames(self):
         def reversed_cmp(x, y):
-            return -cmp(x, y)
+            return -util.three_way_cmp(x, y)
 
         m = types.ModuleType('m')
         class Foo(unittest2.TestCase):
@@ -1177,7 +1189,7 @@ class Test_TestLoader(unittest2.TestCase):
     # Does it actually affect getTestCaseNames()?
     def test_sortTestMethodsUsing__getTestCaseNames(self):
         def reversed_cmp(x, y):
-            return -cmp(x, y)
+            return -util.three_way_cmp(x, y)
 
         class Foo(unittest2.TestCase):
             def test_1(self): pass
@@ -1189,15 +1201,15 @@ class Test_TestLoader(unittest2.TestCase):
         test_names = ['test_2', 'test_1']
         self.assertEqual(loader.getTestCaseNames(Foo), test_names)
 
-    # "The default value is the built-in cmp() function"
+    # "The default value is the built-in util.three_way_cmp() function"
     def test_sortTestMethodsUsing__default_value(self):
         loader = unittest2.TestLoader()
-        self.assertTrue(loader.sortTestMethodsUsing is cmp)
+        self.assertTrue(loader.sortTestMethodsUsing is util.three_way_cmp)
 
     # "it can be set to None to disable the sort."
     #
-    # XXX How is this different from reassigning cmp? Are the tests returned
-    # in a random order or something? This behaviour should die
+    # XXX How is this different from reassigning util.three_way_cmp? Are the
+    # tests returned in a random order or something? This behaviour should die
     def test_sortTestMethodsUsing__None(self):
         class Foo(unittest2.TestCase):
             def test_1(self): pass
