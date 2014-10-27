@@ -102,7 +102,6 @@ def expectedFailure(func):
         except Exception:
             raise _ExpectedFailure(sys.exc_info())
         raise _UnexpectedSuccess
-    wrapper._expectedFailure = True
     return wrapper
 
 
