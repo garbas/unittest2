@@ -161,8 +161,8 @@ prevents it being fixed in unittest2.
 CHANGELOG
 =========
 
-2010/XX/XX - 0.6.0 alpha 1
---------------------------
+2014/10/28 - 0.6.0
+------------------
 
 Many thanks to Mark Roddy and Ezio Melotti who contributed substantially to
 this release.
@@ -176,8 +176,7 @@ this release.
 * Removed unused `maxDiff` parameter from `TestCase.assertSequenceEqual`.
 * DeprecationWarning for unsupported result objects (missing addSkip method)
   became RuntimeWarning.
-* Addition of `TestCase.assertWarns` as a context manager. (Needs Python 2.5 to
-  be used.)
+* Addition of `TestCase.assertWarns` as a context manager.
 
 
 2010/07/12 - 0.5.1
@@ -330,3 +329,13 @@ TODO
 ====
 
 * Document ``SkipTest``, ``BaseTestSuite```
+
+Release process
+===============
+
+1. Make sure there is an entry in the Changelog in this document.
+1. Update __version__ in unittest2/__init__.py
+1. Commit.
+1. Create a tag for the version (e.g. ``hg tag 0.6.0``)
+1. Push so there is no outstanding patches and no room for races.
+1. Run ``make release`` to build an sdist and wheel and upload to pypi.
