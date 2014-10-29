@@ -3,7 +3,10 @@ from os.path import abspath
 import re
 import sys
 import types
-import builtins
+try:
+    import builtins
+except ImportError:
+    import __builtin__ as builtins
 
 import unittest2
 import unittest2 as unittest
@@ -521,11 +524,15 @@ class TestDiscovery(unittest2.TestCase):
         program = TestableTestProgram()
         program.testLoader = None
 
-        with support.captured_stderr() as stderr, \
-             self.assertRaises(SystemExit) as cm:
-            # too many args
-            program._do_discovery(['one', 'two', 'three', 'four'])
-        self.assertEqual(cm.exception.args, (2,))
+        with support.captured_stderr() as stderr:
+            with self.assertRaises(SystemExit) as cm:
+                # too many args
+                program._do_discovery(['one', 'two', 'three', 'four'])
+        if type(cm.exception) is int:
+            # Python 2.6. WAT.
+            self.assertEqual(cm.exception, 2)
+        else:
+            self.assertEqual(cm.exception.args, (2,))
         self.assertIn('usage:', stderr.getvalue())
 
     def test_command_line_handling_do_discovery_uses_default_loader(self):
@@ -728,6 +735,8 @@ class TestDiscovery(unittest2.TestCase):
                          'as dotted module names')
 
     def test_discovery_from_dotted_namespace_packages(self):
+        if not getattr(types, 'SimpleNamespace', None):
+            raise unittest.SkipTest('Namespaces not supported')
         loader = unittest.TestLoader()
 
         orig_import = __import__
@@ -774,7 +783,7 @@ class TestDiscovery(unittest2.TestCase):
         with self.assertRaises(TypeError) as cm:
             loader.discover('package')
         self.assertEqual(str(cm.exception),
-                         'don\'t know how to discover from {!r}'
+                         'don\'t know how to discover from {0!r}'
                          .format(package))
 
 

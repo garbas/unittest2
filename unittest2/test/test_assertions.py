@@ -76,14 +76,12 @@ class Test_Assertions(unittest2.TestCase):
         # in a traceback alive.
         class A:
             pass
-        wr = None
-
+        log = []
         class Foo(unittest.TestCase):
 
             def foo(self):
-                nonlocal wr
                 a = A()
-                wr = weakref.ref(a)
+                log.append(weakref.ref(a))
                 try:
                     raise IOError
                 except IOError:
@@ -97,9 +95,9 @@ class Test_Assertions(unittest2.TestCase):
                     self.foo()
 
         Foo("test_functional").run()
-        self.assertIsNone(wr())
+        self.assertIsNone(log.pop()())
         Foo("test_with").run()
-        self.assertIsNone(wr())
+        self.assertIsNone(log.pop()())
 
     def testAssertNotRegex(self):
         self.assertNotRegex('Ala ma kota', r'r+')

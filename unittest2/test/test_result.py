@@ -228,11 +228,12 @@ class Test_TestResult(unittest2.TestCase):
         self.assertIsInstance(formatted_exc, str)
 
     def test_addSubTest(self):
+        log = []
         class Foo(unittest.TestCase):
             def test_1(self):
-                nonlocal subtest
                 with self.subTest(foo=1):
                     subtest = self._subtest
+                    log.append(subtest)
                     try:
                         1/0
                     except ZeroDivisionError:
@@ -242,7 +243,6 @@ class Test_TestResult(unittest2.TestCase):
                     # Now trigger a failure
                     self.fail("some recognizable failure")
 
-        subtest = None
         test = Foo('test_1')
         result = unittest.TestResult()
 
@@ -255,6 +255,7 @@ class Test_TestResult(unittest2.TestCase):
         self.assertEqual(result.shouldStop, False)
 
         test_case, formatted_exc = result.errors[0]
+        subtest = log[0]
         self.assertIs(test_case, subtest)
         self.assertIn("ZeroDivisionError", formatted_exc)
         test_case, formatted_exc = result.failures[0]

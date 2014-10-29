@@ -2,6 +2,8 @@ import contextlib
 import sys
 import warnings
 
+from six.moves import StringIO
+
 import unittest2
 
 
@@ -155,9 +157,8 @@ class HashingMixin(object):
 def captured_output(stream_name):
     """Return a context manager used by captured_stdout/stdin/stderr
     that temporarily replaces the sys stream *stream_name* with a StringIO."""
-    import io
     orig_stdout = getattr(sys, stream_name)
-    setattr(sys, stream_name, io.StringIO())
+    setattr(sys, stream_name, StringIO())
     try:
         yield getattr(sys, stream_name)
     finally:
