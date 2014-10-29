@@ -390,54 +390,79 @@ class Test_TestLoader(unittest2.TestCase):
     def test_loadTestsFromName__malformed_name(self):
         loader = unittest2.TestLoader()
 
-        # XXX Should this raise ValueError or ImportError?
-        try:
-            loader.loadTestsFromName('abc () //')
-        except ValueError:
-            pass
-        except ImportError:
-            pass
-        else:
-            self.fail("TestLoader.loadTestsFromName failed to raise ValueError")
+        suite = loader.loadTestsFromName('abc () //')
+        error, test = self.check_deferred_error(loader, suite)
+        expected = "Failed to import test module: abc () //"
+        expected_regex = "Failed to import test module: abc \(\) //"
+        self.assertIn(
+            expected, error,
+            'missing error string in %r' % error)
+        self.assertRaisesRegex(
+            ImportError, expected_regex, getattr(test, 'abc () //'))
 
     # "The specifier name is a ``dotted name'' that may resolve ... to a
     # module"
     #
     # What happens when a module by that name can't be found?
     def test_loadTestsFromName__unknown_module_name(self):
-        loader = unittest2.TestLoader()
+        loader = unittest.TestLoader()
 
-        try:
-            loader.loadTestsFromName('sdasfasfasdf')
-        except ImportError:
-            e = sys.exc_info()[1]
-            self.assertRegex(str(e), "No module named '?sdasfasfasdf'?")
-        else:
-            self.fail("TestLoader.loadTestsFromName failed to raise ImportError")
+        suite = loader.loadTestsFromName('sdasfasfasdf')
+        error, test = self.check_deferred_error(loader, suite)
+        self.check_module_import_error(error, test)
 
-    def check_module_lookup_error(self):
-        e = str(sys.exc_info()[1])
+    def _check_module_lookup_error(self, error, test, exc_class, expected, attr, regex):
+        self.assertIn(
+            expected, error,
+            'missing error string in %r' % error)
+        self.assertRaisesRegex(exc_class, regex, getattr(test, attr))
+
+    def check_module_lookup_error(self, error, test, name,
+        attr='sdasfasfasdf', regex='sdasfasfasdf'):
         try:
-            self.assertEqual(e, "'module' object has no attribute 'sdasfasfasdf'")
+            self._check_module_lookup_error(
+                error, test, AttributeError,
+                "'module' object has no attribute '%s'" % attr, attr, regex)
         except self.failureException:
-            self.assertEqual(e, "module 'unittest2' has no attribute 'sdasfasfasdf'")
+            self._check_module_lookup_error(
+                error, test, AttributeError,
+                "module '%s' has no attribute '%s'" % (name, regex), attr, regex)
 
+    def check_module_import_error(self, error, test, attr='sdasfasfasdf', regex='(unittest2)?sdasfasfasdf'):
+        try:
+            self._check_module_lookup_error(
+                error, test, ImportError,
+                "No module named ", attr, regex)
+        except self.failureException:
+            self._check_module_lookup_error(
+                error, test, ImportError,
+                "No module named ", attr, regex)
 
     # "The specifier name is a ``dotted name'' that may resolve either to
     # a module, a test case class, a TestSuite instance, a test method
     # within a test case class, or a callable object which returns a
     # TestCase or TestSuite instance."
     #
-    # What happens when the module is found, but the attribute can't?
-    def test_loadTestsFromName__unknown_attr_name(self):
-        loader = unittest2.TestLoader()
+    # What happens when the module is found, but the attribute isn't?
+    def test_loadTestsFromName__unknown_attr_name_on_module(self):
+        loader = unittest.TestLoader()
 
-        try:
-            loader.loadTestsFromName('unittest2.sdasfasfasdf')
-        except AttributeError:
-            self.check_module_lookup_error()
-        else:
-            self.fail("TestLoader.loadTestsFromName failed to raise AttributeError")
+        suite = loader.loadTestsFromName('unittest2.loader.sdasfasfasdf')
+        error, test = self.check_deferred_error(loader, suite)
+        self.check_module_lookup_error(error, test, 'unittest2.loader')
+
+    # "The specifier name is a ``dotted name'' that may resolve either to
+    # a module, a test case class, a TestSuite instance, a test method
+    # within a test case class, or a callable object which returns a
+    # TestCase or TestSuite instance."
+    #
+    # What happens when the module is found, but the attribute isn't?
+    def test_loadTestsFromName__unknown_attr_name_on_package(self):
+        loader = unittest.TestLoader()
+
+        suite = loader.loadTestsFromName('unittest2.sdasfasfasdf')
+        error, test = self.check_deferred_error(loader, suite)
+        self.check_module_import_error(error, test)
 
     # "The specifier name is a ``dotted name'' that may resolve either to
     # a module, a test case class, a TestSuite instance, a test method
@@ -449,12 +474,9 @@ class Test_TestLoader(unittest2.TestCase):
     def test_loadTestsFromName__relative_unknown_name(self):
         loader = unittest2.TestLoader()
 
-        try:
-            loader.loadTestsFromName('sdasfasfasdf', unittest2)
-        except AttributeError:
-            self.check_module_lookup_error()
-        else:
-            self.fail("TestLoader.loadTestsFromName failed to raise AttributeError")
+        suite = loader.loadTestsFromName('sdasfasfasdf', unittest)
+        error, test = self.check_deferred_error(loader, suite)
+        self.check_module_lookup_error(error, test, 'unittest2')
 
     # "The specifier name is a ``dotted name'' that may resolve either to
     # a module, a test case class, a TestSuite instance, a test method
@@ -468,14 +490,15 @@ class Test_TestLoader(unittest2.TestCase):
     #
     # XXX Should probably raise a ValueError instead of an AttributeError
     def test_loadTestsFromName__relative_empty_name(self):
-        loader = unittest2.TestLoader()
+        loader = unittest.TestLoader()
 
-        try:
-            loader.loadTestsFromName('', unittest2)
-        except AttributeError:
-            pass
-        else:
-            self.fail("Failed to raise AttributeError")
+        suite = loader.loadTestsFromName('', unittest)
+        error, test = self.check_deferred_error(loader, suite)
+        expected = "has no attribute ''"
+        self.assertIn(
+            expected, error,
+            'missing error string in %r' % error)
+        self.assertRaisesRegex(AttributeError, expected, getattr(test, ''))
 
     # "The specifier name is a ``dotted name'' that may resolve either to
     # a module, a test case class, a TestSuite instance, a test method
@@ -487,17 +510,12 @@ class Test_TestLoader(unittest2.TestCase):
     # What happens when an impossible name is given, relative to the provided
     # `module`?
     def test_loadTestsFromName__relative_malformed_name(self):
-        loader = unittest2.TestLoader()
+        loader = unittest.TestLoader()
 
-        # XXX Should this raise AttributeError or ValueError?
-        try:
-            loader.loadTestsFromName('abc () //', unittest2)
-        except ValueError:
-            pass
-        except AttributeError:
-            pass
-        else:
-            self.fail("TestLoader.loadTestsFromName failed to raise ValueError")
+        suite = loader.loadTestsFromName('abc () //', unittest)
+        error, test = self.check_deferred_error(loader, suite)
+        self.check_module_lookup_error(
+            error, test, 'unittest2', 'abc () //', 'abc \(\) //')
 
     # "The method optionally resolves name relative to the given module"
     #
@@ -602,14 +620,14 @@ class Test_TestLoader(unittest2.TestCase):
                 pass
         m.testcase_1 = MyTestCase
 
-        loader = unittest2.TestLoader()
-        try:
-            loader.loadTestsFromName('testcase_1.testfoo', m)
-        except AttributeError:
-            e = sys.exc_info()[1]
-            self.assertEqual(str(e), "type object 'MyTestCase' has no attribute 'testfoo'")
-        else:
-            self.fail("Failed to raise AttributeError")
+        loader = unittest.TestLoader()
+        suite = loader.loadTestsFromName('testcase_1.testfoo', m)
+        expected = "type object 'MyTestCase' has no attribute 'testfoo'"
+        error, test = self.check_deferred_error(loader, suite)
+        self.assertIn(
+            expected, error,
+            'missing error string in %r' % error)
+        self.assertRaisesRegex(AttributeError, expected, test.testfoo)
 
     # "The specifier name is a ``dotted name'' that may resolve ... to
     # ... a callable object which returns a ... TestSuite instance"
@@ -727,6 +745,23 @@ class Test_TestLoader(unittest2.TestCase):
     ### Tests for TestLoader.loadTestsFromNames()
     ################################################################
 
+    def check_deferred_error(self, loader, suite):
+        """Helper function for checking that errors in loading are reported.
+
+        :param loader: A loader with some errors.
+        :param suite: A suite that should have a late bound error.
+        :return: The first error message from the loader and the test object
+            from the suite.
+        """
+        self.assertIsInstance(suite, unittest.TestSuite)
+        self.assertEqual(suite.countTestCases(), 1)
+        # Errors loading the suite are also captured for introspection.
+        self.assertNotEqual([], loader.errors)
+        self.assertEqual(1, len(loader.errors))
+        error = loader.errors[0]
+        test = list(suite)[0]
+        return error, test
+
     # "Similar to loadTestsFromName(), but takes a sequence of names rather
     # than a single name."
     #
@@ -780,14 +815,15 @@ class Test_TestLoader(unittest2.TestCase):
         loader = unittest2.TestLoader()
 
         # XXX Should this raise ValueError or ImportError?
-        try:
-            loader.loadTestsFromNames(['abc () //'])
-        except ValueError:
-            pass
-        except ImportError:
-            pass
-        else:
-            self.fail("TestLoader.loadTestsFromNames failed to raise ValueError")
+        suite = loader.loadTestsFromNames(['abc () //'])
+        error, test = self.check_deferred_error(loader, list(suite)[0])
+        expected = "Failed to import test module: abc () //"
+        expected_regex = "Failed to import test module: abc \(\) //"
+        self.assertIn(
+            expected,  error,
+            'missing error string in %r' % error)
+        self.assertRaisesRegex(
+            ImportError, expected_regex, getattr(test, 'abc () //'))
 
     # "The specifier name is a ``dotted name'' that may resolve either to
     # a module, a test case class, a TestSuite instance, a test method
@@ -796,15 +832,15 @@ class Test_TestLoader(unittest2.TestCase):
     #
     # What happens when no module can be found for the given name?
     def test_loadTestsFromNames__unknown_module_name(self):
-        loader = unittest2.TestLoader()
+        loader = unittest.TestLoader()
 
-        try:
-            loader.loadTestsFromNames(['sdasfasfasdf'])
-        except ImportError:
-            e = sys.exc_info()[1]
-            self.assertRegex(str(e), "No module named '?sdasfasfasdf'?")
-        else:
-            self.fail("TestLoader.loadTestsFromNames failed to raise ImportError")
+        suite = loader.loadTestsFromNames(['sdasfasfasdf'])
+        error, test = self.check_deferred_error(loader, list(suite)[0])
+        expected = "Failed to import test module: sdasfasfasdf"
+        self.assertIn(
+            expected, error,
+            'missing error string in %r' % error)
+        self.assertRaisesRegex(ImportError, expected, test.sdasfasfasdf)
 
     # "The specifier name is a ``dotted name'' that may resolve either to
     # a module, a test case class, a TestSuite instance, a test method
@@ -813,14 +849,12 @@ class Test_TestLoader(unittest2.TestCase):
     #
     # What happens when the module can be found, but not the attribute?
     def test_loadTestsFromNames__unknown_attr_name(self):
-        loader = unittest2.TestLoader()
+        loader = unittest.TestLoader()
 
-        try:
-            loader.loadTestsFromNames(['unittest2.sdasfasfasdf', 'unittest2'])
-        except AttributeError:
-            self.check_module_lookup_error()
-        else:
-            self.fail("TestLoader.loadTestsFromNames failed to raise AttributeError")
+        suite = loader.loadTestsFromNames(
+            ['unittest2.loader.sdasfasfasdf', 'unittest2.result'])
+        error, test = self.check_deferred_error(loader, list(suite)[0])
+        self.check_module_lookup_error(error, test, 'unittest2.loader')
 
     # "The specifier name is a ``dotted name'' that may resolve either to
     # a module, a test case class, a TestSuite instance, a test method
@@ -832,14 +866,11 @@ class Test_TestLoader(unittest2.TestCase):
     # What happens when given an unknown attribute on a specified `module`
     # argument?
     def test_loadTestsFromNames__unknown_name_relative_1(self):
-        loader = unittest2.TestLoader()
+        loader = unittest.TestLoader()
 
-        try:
-            loader.loadTestsFromNames(['sdasfasfasdf'], unittest2)
-        except AttributeError:
-            self.check_module_lookup_error()
-        else:
-            self.fail("TestLoader.loadTestsFromName failed to raise AttributeError")
+        suite = loader.loadTestsFromNames(['sdasfasfasdf'], unittest)
+        error, test = self.check_deferred_error(loader, list(suite)[0])
+        self.check_module_lookup_error(error, test, 'unittest2')
 
     # "The specifier name is a ``dotted name'' that may resolve either to
     # a module, a test case class, a TestSuite instance, a test method
@@ -851,14 +882,11 @@ class Test_TestLoader(unittest2.TestCase):
     # Do unknown attributes (relative to a provided module) still raise an
     # exception even in the presence of valid attribute names?
     def test_loadTestsFromNames__unknown_name_relative_2(self):
-        loader = unittest2.TestLoader()
+        loader = unittest.TestLoader()
 
-        try:
-            loader.loadTestsFromNames(['TestCase', 'sdasfasfasdf'], unittest2)
-        except AttributeError:
-            self.check_module_lookup_error()
-        else:
-            self.fail("TestLoader.loadTestsFromName failed to raise AttributeError")
+        suite = loader.loadTestsFromNames(['TestCase', 'sdasfasfasdf'], unittest)
+        error, test = self.check_deferred_error(loader, list(suite)[1])
+        self.check_module_lookup_error(error, test, 'unittest2')
 
     # "The specifier name is a ``dotted name'' that may resolve either to
     # a module, a test case class, a TestSuite instance, a test method
@@ -874,12 +902,13 @@ class Test_TestLoader(unittest2.TestCase):
     def test_loadTestsFromNames__relative_empty_name(self):
         loader = unittest2.TestLoader()
 
-        try:
-            loader.loadTestsFromNames([''], unittest2)
-        except AttributeError:
-            pass
-        else:
-            self.fail("Failed to raise ValueError")
+        suite = loader.loadTestsFromNames([''], unittest)
+        error, test = self.check_deferred_error(loader, list(suite)[0])
+        expected = "has no attribute ''"
+        self.assertIn(
+            expected, error,
+            'missing error string in %r' % error)
+        self.assertRaisesRegex(AttributeError, expected, getattr(test, ''))
 
     # "The specifier name is a ``dotted name'' that may resolve either to
     # a module, a test case class, a TestSuite instance, a test method
@@ -890,17 +919,13 @@ class Test_TestLoader(unittest2.TestCase):
     #
     # What happens when presented with an impossible attribute name?
     def test_loadTestsFromNames__relative_malformed_name(self):
-        loader = unittest2.TestLoader()
+        loader = unittest.TestLoader()
 
         # XXX Should this raise AttributeError or ValueError?
-        try:
-            loader.loadTestsFromNames(['abc () //'], unittest2)
-        except AttributeError:
-            pass
-        except ValueError:
-            pass
-        else:
-            self.fail("TestLoader.loadTestsFromNames failed to raise ValueError")
+        suite = loader.loadTestsFromNames(['abc () //'], unittest)
+        error, test = self.check_deferred_error(loader, list(suite)[0])
+        self.check_module_lookup_error(
+            error, test, 'unittest2', 'abc () //', 'abc \(\) //')
 
     # "The method optionally resolves name relative to the given module"
     #
@@ -1017,14 +1042,14 @@ class Test_TestLoader(unittest2.TestCase):
                 pass
         m.testcase_1 = MyTestCase
 
-        loader = unittest2.TestLoader()
-        try:
-            loader.loadTestsFromNames(['testcase_1.testfoo'], m)
-        except AttributeError:
-            e = sys.exc_info()[1]
-            self.assertEqual(str(e), "type object 'MyTestCase' has no attribute 'testfoo'")
-        else:
-            self.fail("Failed to raise AttributeError")
+        loader = unittest.TestLoader()
+        suite = loader.loadTestsFromNames(['testcase_1.testfoo'], m)
+        error, test = self.check_deferred_error(loader, list(suite)[0])
+        expected = "type object 'MyTestCase' has no attribute 'testfoo'"
+        self.assertIn(
+            expected, error,
+            'missing error string in %r' % error)
+        self.assertRaisesRegex(AttributeError, expected, test.testfoo)
 
     # "The specifier name is a ``dotted name'' that may resolve ... to
     # ... a callable object which returns a ... TestSuite instance"
