@@ -913,11 +913,7 @@ test case
                     error = error_lines[1]
                 else:
                     error = error_lines[0]
-
-                # assertMultiLineEqual is hooked up as the default for
-                # unicode strings - so we can't use it for this check
-                self.assertTrue(sample_text_error == error,
-                    "error %r not in sample_text %r" % (error_str, sample_text_error))
+                self.assertEqual(sample_text_error, error)
 
     def testAssertSequenceEqualMaxDiff(self):
         self.assertEqual(self.maxDiff, 80*8)
