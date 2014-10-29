@@ -11,6 +11,7 @@ import warnings
 from fnmatch import fnmatch
 
 from unittest2 import case, suite, util
+from unittest2.compatibility import raise_from
 
 try:
     from os.path import relpath
@@ -98,28 +99,27 @@ class TestLoader(unittest.TestLoader):
 
     # XXX After Python 3.5, remove backward compatibility hacks for
     # use_load_tests deprecation via *args and **kws.  See issue 16662.
-    def loadTestsFromModule(self, module, *args, pattern=None, **kws):
+    def loadTestsFromModule(self, module, use_load_tests=None, pattern=None, *args, **kws):
         """Return a suite of all tests cases contained in the given module"""
         # This method used to take an undocumented and unofficial
         # use_load_tests argument.  For backward compatibility, we still
         # accept the argument (which can also be the first position) but we
         # ignore it and issue a deprecation warning if it's present.
-        if len(args) > 0 or 'use_load_tests' in kws:
+        if use_load_tests is not None:
             warnings.warn('use_load_tests is deprecated and ignored',
                           DeprecationWarning)
-            kws.pop('use_load_tests', None)
-        if len(args) > 1:
+        if len(args) > 0:
             # Complain about the number of arguments, but don't forget the
             # required `module` argument.
             complaint = len(args) + 1
-            raise TypeError('loadTestsFromModule() takes 1 positional argument but {} were given'.format(complaint))
+            raise TypeError('loadTestsFromModule() takes 1 positional argument but {0} were given'.format(complaint))
         if len(kws) != 0:
             # Since the keyword arguments are unsorted (see PEP 468), just
             # pick the alphabetically sorted first argument to complain about,
             # if multiple were given.  At least the error message will be
             # predictable.
             complaint = sorted(kws)[0]
-            raise TypeError("loadTestsFromModule() got an unexpected keyword argument '{}'".format(complaint))
+            raise TypeError("loadTestsFromModule() got an unexpected keyword argument '{0}'".format(complaint))
         tests = []
         for name in dir(module):
             obj = getattr(module, name)
@@ -300,12 +300,12 @@ class TestLoader(unittest.TestLoader):
                                                               namespace=True))
                     elif the_module.__name__ in sys.builtin_module_names:
                         # builtin module
-                        raise TypeError('Can not use builtin modules '
-                                        'as dotted module names') from None
+                        raise_from(TypeError('Can not use builtin modules '
+                                        'as dotted module names'), None)
                     else:
-                        raise TypeError(
-                            'don\'t know how to discover from {!r}'
-                            .format(the_module)) from None
+                        raise_from(TypeError(
+                            'don\'t know how to discover from {0!r}'
+                            .format(the_module)), None)
 
                 if set_implicit_top:
                     if not is_namespace:
@@ -321,6 +321,18 @@ class TestLoader(unittest.TestLoader):
         if not is_namespace:
             tests = list(self._find_tests(start_dir, pattern))
         return self.suiteClass(tests)
+
+    def _get_directory_containing_module(self, module_name):
+        module = sys.modules[module_name]
+        full_path = os.path.abspath(module.__file__)
+
+        if os.path.basename(full_path).lower().startswith('__init__.py'):
+            return os.path.dirname(os.path.dirname(full_path))
+        else:
+            # here we have been given a module rather than a package - so
+            # all we can do is search the *same* directory the module is in
+            # should an exception be raised instead
+            return os.path.dirname(full_path)
 
     def _get_name_from_path(self, path):
         path = _jython_aware_splitext(os.path.normpath(path))
@@ -404,8 +416,10 @@ class TestLoader(unittest.TestLoader):
                         # loadTestsFromModule(package) has load_tests for us.
                         continue
                     # recurse into the package
-                    yield from self._find_tests(full_path, pattern,
-                                                namespace=namespace)
+                    pkg_tests =  self._find_tests(
+                        full_path, pattern, namespace=namespace)
+                    for test in pkg_tests:
+                        yield test
 
 
 defaultTestLoader = TestLoader()

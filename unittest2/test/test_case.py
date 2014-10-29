@@ -17,7 +17,7 @@ from unittest2.test.support import (
     OldTestResult, EqualityMixin, HashingMixin, LoggingResult,
     LegacyLoggingResult
 )
-from test.support import captured_stderr
+from .support import captured_stderr
 
 
 log_foo = logging.getLogger('foo')

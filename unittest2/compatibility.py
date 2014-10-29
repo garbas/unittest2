@@ -2,6 +2,8 @@ import collections
 import os
 import sys
 
+import six
+
 try:
     from functools import wraps
 except ImportError:
@@ -184,10 +186,15 @@ class ChainMap(collections.MutableMapping):
     def __bool__(self):
         return any(self.maps)
 
-    @collections._recursive_repr()
-    def __repr__(self):
-        return '{0.__class__.__name__}({1})'.format(
-            self, ', '.join(map(repr, self.maps)))
+    if getattr(collections, '_recursive_repr', None):
+        @collections._recursive_repr()
+        def __repr__(self):
+            return '{0.__class__.__name__}({1})'.format(
+                self, ', '.join(map(repr, self.maps)))
+    else:
+        def __repr__(self):
+            return '{0.__class__.__name__}({1})'.format(
+                self, ', '.join(map(repr, self.maps)))
 
     @classmethod
     def fromkeys(cls, iterable, *args):
@@ -243,3 +250,14 @@ class ChainMap(collections.MutableMapping):
 
 if sys.version_info[:2] < (3, 4):
     collections.ChainMap = ChainMap
+
+
+# support raise_from on 3.x:
+# submitted to six: https://bitbucket.org/gutworth/six/issue/102/raise-foo-from-bar-is-a-syntax-error-on-27
+if sys.version_info[:2] > (3, 2):
+    six.exec_("""def raise_from(value, from_value):
+    raise value from from_value
+""")
+else:
+    def raise_from(value, from_value):
+        raise value

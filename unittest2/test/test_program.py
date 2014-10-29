@@ -193,16 +193,25 @@ class TestCommandLineArgs(unittest2.TestCase):
                 self.assertIs(getattr(program, attr), True)
 
                 setattr(program, attr, False)
-                with support.captured_stderr() as stderr, \
-                    self.assertRaises(SystemExit) as cm:
-                    program.parseArgs([None, opt])
-                self.assertEqual(cm.exception.args, (2,))
+                with support.captured_stderr() as stderr:
+                    with self.assertRaises(SystemExit) as cm:
+                        program.parseArgs([None, opt])
+                if type(cm.exception) is int:
+                    # Python 2.6. WAT.
+                    self.assertEqual(cm.exception, 2)
+                else:
+                    self.assertEqual(cm.exception.args, (2,))
 
                 setattr(program, attr, True)
-                with support.captured_stderr() as stderr, \
-                    self.assertRaises(SystemExit) as cm:
-                    program.parseArgs([None, opt])
-                self.assertEqual(cm.exception.args, (2,))
+                with support.captured_stderr() as stderr:
+                    with self.assertRaises(SystemExit) as cm:
+                        program.parseArgs([None, opt])
+                if type(cm.exception) is int:
+                    # Python 2.6. WAT.
+                    self.assertEqual(cm.exception, 2)
+                else:
+                    self.assertEqual(cm.exception.args, (2,))
+
 
     def testRunTestsRunnerClass(self):
         program = self.program

@@ -276,18 +276,18 @@ class Test_TestLoader(unittest2.TestCase):
             return tests
         m.load_tests = load_tests
         loader = unittest.TestLoader()
-        with self.assertRaises(TypeError) as cm, \
-             warnings.catch_warning(record=True) as w:
-            loader.loadTestsFromModule(m, False, 'testme.*')
-            # We still got the deprecation warning.
-            self.assertIs(w[-1].category, DeprecationWarning)
-            self.assertEqual(str(w[-1].message),
-                                 'use_load_tests is deprecated and ignored')
-            # We also got a TypeError for too many positional arguments.
-            self.assertEqual(type(cm.exception), TypeError)
-            self.assertEqual(
-                str(cm.exception),
-                'loadTestsFromModule() takes 1 positional argument but 3 were given')
+        with self.assertRaises(TypeError) as cm:
+            with warnings.catch_warning(record=True) as w:
+                loader.loadTestsFromModule(m, False, 'testme.*')
+                # We still got the deprecation warning.
+                self.assertIs(w[-1].category, DeprecationWarning)
+                self.assertEqual(str(w[-1].message),
+                                     'use_load_tests is deprecated and ignored')
+                # We also got a TypeError for too many positional arguments.
+                self.assertEqual(type(cm.exception), TypeError)
+                self.assertEqual(
+                    str(cm.exception),
+                    'loadTestsFromModule() takes 1 positional argument but 3 were given')
 
     @warningregistry
     def test_loadTestsFromModule__use_load_tests_other_bad_keyword(self):

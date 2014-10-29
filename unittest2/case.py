@@ -21,7 +21,9 @@ from unittest2.util import (
     unorderable_list_difference, _common_shorten_repr
 )
 
-from unittest2.compatibility import wraps, with_context, catch_warnings
+from unittest2.compatibility import (
+    wraps, with_context, catch_warnings, raise_from
+)
 
 __unittest = True
 
@@ -341,7 +343,7 @@ class _AssertLogsContext(_BaseTestCaseContext):
             return False
         if len(self.watcher.records) == 0:
             self._raiseFailure(
-                "no logs of level {} or higher triggered on {}"
+                "no logs of level {0} or higher triggered on {1}"
                 .format(logging.getLevelName(self.level), self.logger.name))
 
 
@@ -385,6 +387,10 @@ class TestCase(unittest.TestCase):
 
     maxDiff = 80*8
 
+    # If a string is longer than _diffThreshold, use normal comparison instead
+    # of difflib.  See #11763.
+    _diffThreshold = 2**16
+
     # Attribute used by TestSuite for classSetUp
 
     _classSetupFailed = False
@@ -414,6 +420,8 @@ class TestCase(unittest.TestCase):
         self.addTypeEqualityFunc(tuple, 'assertTupleEqual')
         self.addTypeEqualityFunc(set, 'assertSetEqual')
         self.addTypeEqualityFunc(frozenset, 'assertSetEqual')
+        if six.PY2:
+            self.addTypeEqualityFunc(str, 'assertMultiLineEqual')
         self.addTypeEqualityFunc(six.text_type, 'assertMultiLineEqual')
 
     def addTypeEqualityFunc(self, typeobj, function):
@@ -552,7 +560,7 @@ class TestCase(unittest.TestCase):
             # We need to pass an actual exception and traceback to addFailure,
             # otherwise the legacy result can choke.
             try:
-                raise _UnexpectedSuccess from None
+                raise_from(_UnexpectedSuccess, None)
             except _UnexpectedSuccess:
                 result.addFailure(self, sys.exc_info())
         else:
@@ -618,7 +626,7 @@ class TestCase(unittest.TestCase):
             # explicitly break reference cycles:
             # outcome.errors -> frame -> outcome -> outcome.errors
             # outcome.expectedFailure -> frame -> outcome -> outcome.expectedFailure
-            outcome.errors.clear()
+            del outcome.errors[:]
             outcome.expectedFailure = None
 
             # clear the outcome, no more needed
@@ -1189,8 +1197,12 @@ class TestCase(unittest.TestCase):
                 'Second argument is not a string'))
 
         if first != second:
-            firstlines = first.splitlines(keepends=True)
-            secondlines = second.splitlines(keepends=True)
+            # don't use difflib if the strings are too long
+            if (len(first) > self._diffThreshold or
+                len(second) > self._diffThreshold):
+                self._baseAssertEqual(first, second, msg)
+            firstlines = first.splitlines(True)
+            secondlines = second.splitlines(True)
             if len(firstlines) == 1 and first.strip('\r\n') == first:
                 firstlines = [first + '\n']
                 secondlines = [second + '\n']
@@ -1403,16 +1415,16 @@ class _SubTest(TestCase):
     def _subDescription(self):
         parts = []
         if self._message:
-            parts.append("[{}]".format(self._message))
+            parts.append("[{0}]".format(self._message))
         if self.params:
             params_desc = ', '.join(
-                "{}={!r}".format(k, v)
+                "{0}={1!r}".format(k, v)
                 for (k, v) in sorted(self.params.items()))
-            parts.append("({})".format(params_desc))
+            parts.append("({0})".format(params_desc))
         return " ".join(parts) or '(<subtest>)'
 
     def id(self):
-        return "{} {}".format(self.test_case.id(), self._subDescription())
+        return "{0} {1}".format(self.test_case.id(), self._subDescription())
 
     def shortDescription(self):
         """Returns a one-line description of the subtest, or None if no
@@ -1421,4 +1433,4 @@ class _SubTest(TestCase):
         return self.test_case.shortDescription()
 
     def __str__(self):
-        return "{} {}".format(self.test_case, self._subDescription())
+        return "{0} {1}".format(self.test_case, self._subDescription())
