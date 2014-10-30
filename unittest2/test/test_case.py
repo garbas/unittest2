@@ -1,6 +1,7 @@
 import contextlib
 from copy import deepcopy
 import difflib
+import gc
 import pickle
 import pprint
 import re
@@ -1314,6 +1315,7 @@ test case
         for method_name in ('test1', 'test2'):
             testcase = TestCase(method_name)
             testcase.run()
+            gc.collect()
             self.assertEqual(MyException.ninstance, 0)
 
 
