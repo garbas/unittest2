@@ -710,7 +710,9 @@ class TestDiscovery(unittest2.TestCase):
         self.assertTrue(self.wasRun)
         self.assertEqual(suite._tests, tests)
 
-
+    # https://bitbucket.org/pypy/pypy/issue/1259/builtin-module-__file__-attribute-shows
+    @unittest.skipIf(
+        hasattr(sys, '__file__'), "builtin module with __file__ attribute.")
     def test_discovery_from_dotted_path_builtin_modules(self):
 
         loader = unittest.TestLoader()
