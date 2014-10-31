@@ -21,7 +21,6 @@ VERSION = late_version()
 NAME = 'unittest2'
 
 PACKAGES = ['unittest2', 'unittest2.test']
-SCRIPTS = ['unit2.py', 'unit2']#, 'unittestgui', 'unittestgui.py']
 
 DESCRIPTION = ('The new features in unittest backported to '
                'Python 2.4+.')
@@ -64,7 +63,6 @@ params = dict(
     description=DESCRIPTION,
     long_description=LONG_DESCRIPTION,
     packages=PACKAGES,
-    scripts=SCRIPTS,
     author=AUTHOR,
     author_email=AUTHOR_EMAIL,
     url=URL,
@@ -75,23 +73,13 @@ params = dict(
 )
 
 
-py_version = sys.version[:3]
+from setuptools import setup
+params['entry_points'] = {
+    'console_scripts': [
+        'unit2 = unittest2.main:main',
+    ],
+}
 
-SCRIPT1 = 'unit2'
-SCRIPT2 = 'unit2-%s' % (py_version,)
-
-try:
-    from setuptools import setup
-except ImportError:
-    from distutils.core import setup
-else:
-    params['entry_points'] = {
-        'console_scripts': [
-            '%s = unittest2:main_' % SCRIPT1,
-            '%s = unittest2:main_' % SCRIPT2,
-        ],
-    }
-
-    params['test_suite'] = 'unittest2.collector'
+params['test_suite'] = 'unittest2.collector'
 
 setup(**params)
