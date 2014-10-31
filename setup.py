@@ -76,7 +76,7 @@ params = dict(
 from setuptools import setup
 params['entry_points'] = {
     'console_scripts': [
-        'unit2 = unittest2.main:main',
+        'unit2 = unittest2.__main__:main_',
     ],
 }
 
