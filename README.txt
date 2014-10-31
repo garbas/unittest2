@@ -161,6 +161,13 @@ prevents it being fixed in unittest2.
 CHANGELOG
 =========
 
+2014/10/31 - 0.7.1
+------------------
+
+Fix for 0.7.0 being broken. Also switches from both manual and entrypoint
+scripts to just entrypoint scripts to reduce the possibility of similar
+oversights in future.
+
 2014/10/31 - 0.7.0
 ------------------
 
