@@ -31,7 +31,7 @@ __all__ = ['TestResult', 'TestCase', 'TestSuite',
            'defaultTestLoader', 'SkipTest', 'skip', 'skipIf', 'skipUnless',
            'expectedFailure', 'TextTestResult', '__version__', 'collector']
 
-__version__ = '0.6.0'
+__version__ = '0.7.0'
 
 # Expose obsolete functions for backwards compatibility
 __all__.extend(['getTestCaseNames', 'makeSuite', 'findTestCases'])
