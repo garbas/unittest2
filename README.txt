@@ -161,6 +161,12 @@ prevents it being fixed in unittest2.
 CHANGELOG
 =========
 
+2014/10/31 - 0.7.0
+------------------
+
+This release contains backports from cPython 3.5 of all (I think) commits since
+2010, as of today.
+
 2014/10/28 - 0.6.0
 ------------------
 
