@@ -852,7 +852,7 @@ class Test_TestLoader(unittest2.TestCase):
         loader = unittest.TestLoader()
 
         suite = loader.loadTestsFromNames(
-            ['unittest2.loader.sdasfasfasdf', 'unittest2.result'])
+            ['unittest2.loader.sdasfasfasdf', 'unittest2.test.dummy'])
         error, test = self.check_deferred_error(loader, list(suite)[0])
         self.check_module_lookup_error(error, test, 'unittest2.loader')
 

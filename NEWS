@@ -1,3 +1,5 @@
+- Issue #22457: Honour load_tests in the start_dir of discovery.
+
 - Issue #7559: unittest test loading ImportErrors are reported as import errors
   with their import exception rather than as attribute errors after the import
   has already failed.
