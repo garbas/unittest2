@@ -16,6 +16,8 @@ class late_version:
         return VERSION
     def __add__(self, other):
         return str(self) + other
+    def replace(self, old, new):
+        return str(self).replace(old, new)
 VERSION = late_version()
 
 NAME = 'unittest2'
