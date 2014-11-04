@@ -161,6 +161,11 @@ prevents it being fixed in unittest2.
 CHANGELOG
 =========
 
+2014/11/05 - 0.8
+----------------
+
+- Issue #22457: Honour load_tests in the start_dir of discovery.
+
 2014/10/31 - 0.7.1
 ------------------
 
