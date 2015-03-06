@@ -1,10 +1,10 @@
 """Test result object"""
 
 import sys
-import traceback
 import unittest
 
 from six.moves import StringIO
+import traceback2 as traceback
 
 from unittest2 import util
 from unittest2.compatibility import wraps
@@ -47,6 +47,7 @@ class TestResult(unittest.TestResult):
         self.unexpectedSuccesses = []
         self.shouldStop = False
         self.buffer = False
+        self.tb_locals = False
         self._stdout_buffer = None
         self._stderr_buffer = None
         self._original_stdout = sys.stdout
@@ -172,9 +173,11 @@ class TestResult(unittest.TestResult):
         if exctype is test.failureException:
             # Skip assert*() traceback levels
             length = self._count_relevant_tb_levels(tb)
-            msgLines = traceback.format_exception(exctype, value, tb, length)
         else:
-            msgLines = traceback.format_exception(exctype, value, tb)
+            length = None
+        tb_e = traceback.TracebackException(
+            exctype, value, tb, limit=length, capture_locals=self.tb_locals)
+        msgLines = list(tb_e.format())
 
         if self.buffer:
             output = sys.stdout.getvalue()

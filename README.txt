@@ -22,8 +22,9 @@ version of unittest2 can't be hosted on PyPI:
 
 * `Download unittest2 0.5.1 for Python 2.3 <http://voidspace.org.uk/downloads/unittest2-0.5.1-python2.3.zip>`_
 
-There is also a version of unittest2 for Python 3. This has the project name
-"unittest2py3k" but uses the same package name ("unittest2"):
+There was a separate version of unittest2 for Python 3. This is no longer
+needed, but still exists on PyPI. This had the project name "unittest2py3k" but
+uses the same package name ("unittest2"):
 
 * `unittest2 for Python 3 <http://pypi.python.org/pypi/unittest2py3k>`_
 
@@ -34,6 +35,11 @@ you can use the new assert methods on ``unittest2.TestCase`` with the standard
 unittest test running infrastructure. Not all of the new features in unittest2
 will work with the standard unittest test loaders, runners result objects
 however.
+
+In general for documentation on unittest2 see the current latest documented of
+CPython:
+
+* `CPython unittest documentation <https://docs.python.org/dev/library/unittest.html>`_
 
 New features include:
 
@@ -161,10 +167,18 @@ prevents it being fixed in unittest2.
 CHANGELOG
 =========
 
+2015-03-06 - 1.0.0
+------------------
+
+- Issue #22936: Permit showing local variables in tracebacks.
+
 2014/11/05 - 0.8
 ----------------
 
 - Issue #22457: Honour load_tests in the start_dir of discovery.
+
+- Issue #22894: TestCase.subTest() would cause the test suite to be stopped
+  when in failfast mode, even in the absence of failures.
 
 2014/10/31 - 0.7.1
 ------------------
