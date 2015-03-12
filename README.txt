@@ -167,6 +167,11 @@ prevents it being fixed in unittest2.
 CHANGELOG
 =========
 
+2015-03-12 - 1.0.1
+------------------
+
+- Unittest2 issue #94: Need at least 1.4 of six.
+
 2015-03-06 - 1.0.0
 ------------------
 
