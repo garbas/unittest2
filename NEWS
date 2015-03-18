@@ -1,3 +1,6 @@
+- Issue #22903: The fake test case created by unittest.loader when it fails
+  importing a test module is now picklable.
+
 - unittest2 issue #94: Dependency on six needs to be versioned.
 
 - Issue #22936: Make it possible to show local variables in tracebacks for
