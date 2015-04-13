@@ -1,3 +1,5 @@
+- Issue #23731: Implement PEP 488: removal of .pyo files.
+
 - Issue #22903: The fake test case created by unittest.loader when it fails
   importing a test module is now picklable.
 
