@@ -1,4 +1,6 @@
-- Issue #23731: Implement PEP 488: removal of .pyo files.
+- Issue #24134: assertRaises(), assertRaisesRegex(), assertWarns() and
+  assertWarnsRegex() checks now emits a deprecation warning when callable is
+  None or keyword arguments except msg is passed in the context manager mode.
 
 - Issue #22903: The fake test case created by unittest.loader when it fails
   importing a test module is now picklable.

@@ -62,7 +62,7 @@ def _make_failed_load_tests(name, exception, suiteClass):
     return _make_failed_test(
         name, exception, suiteClass, message)
 
-def _make_failed_test(methodname, exception, suiteClass), message:
+def _make_failed_test(methodname, exception, suiteClass, message):
     test = _FailedTest(methodname, exception)
     return suiteClass((test,)), message
 
@@ -199,7 +199,7 @@ class TestLoader(unittest.TestLoader):
                 else:
                     # Otherwise, we signal that an AttributeError has occurred.
                     error_case, error_message = _make_failed_test(
-                        'AttributeError', part, e, self.suiteClass,
+                        part, e, self.suiteClass,
                         'Failed to access attribute:\n%s' % (
                             traceback.format_exc(),))
                     self.errors.append(error_message)
