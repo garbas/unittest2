@@ -1,3 +1,7 @@
+- Issue #15836: assertRaises(), assertRaisesRegex(), assertWarns() and
+  assertWarnsRegex() assertments now check the type of the first argument
+  to prevent possible user error.  Based on patch by Daniel Wagner-Hall.
+
 - Issue #24134: assertRaises(), assertRaisesRegex(), assertWarns() and
   assertWarnsRegex() checks now emits a deprecation warning when callable is
   None or keyword arguments except msg is passed in the context manager mode.
