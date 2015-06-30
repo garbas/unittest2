@@ -167,6 +167,21 @@ prevents it being fixed in unittest2.
 CHANGELOG
 =========
 
+2015-06-20 - 1.1.0
+------------------
+
+- Issue #15836: assertRaises(), assertRaisesRegex(), assertWarns() and
+  assertWarnsRegex() assertments now check the type of the first argument
+  to prevent possible user error.  Based on patch by Daniel Wagner-Hall.
+
+- Issue #24134: assertRaises(), assertRaisesRegex(), assertWarns() and
+  assertWarnsRegex() checks now emits a deprecation warning when callable is
+  None or keyword arguments except msg is passed in the context manager mode.
+
+- Issue #22903: The fake test case created by unittest.loader when it fails
+  importing a test module is now picklable.
+
+
 2015-03-12 - 1.0.1
 ------------------
 
