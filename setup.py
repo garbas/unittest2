@@ -48,9 +48,9 @@ CLASSIFIERS = [
     'Topic :: Software Development :: Testing',
 ]
 
-AUTHOR = 'Michael Foord'
+AUTHOR = 'Robert Collins'
 
-AUTHOR_EMAIL = 'michael@voidspace.org.uk'
+AUTHOR_EMAIL = 'rbtcollins@hp.com'
 
 KEYWORDS = "unittest testing tests".split(' ')
 
