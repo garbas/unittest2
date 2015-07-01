@@ -167,6 +167,8 @@ prevents it being fixed in unittest2.
 CHANGELOG
 =========
 
+- Use traceback2 consistently to get consistent output across all Pythons.
+
 2015-06-20 - 1.1.0
 ------------------
 
