@@ -169,6 +169,8 @@ CHANGELOG
 
 - Use traceback2 consistently to get consistent output across all Pythons.
 
+- Use PEP-426 markers to avoid installing argparse on 2.7+ Pythons.
+
 2015-06-20 - 1.1.0
 ------------------
 
