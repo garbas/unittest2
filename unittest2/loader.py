@@ -3,7 +3,7 @@
 import os
 import re
 import sys
-import traceback
+import traceback2 as traceback
 import types
 import unittest
 import warnings
