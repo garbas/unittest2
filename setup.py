@@ -57,7 +57,7 @@ KEYWORDS = "unittest testing tests".split(' ')
 # Both install and setup requires - because we read VERSION from within the
 # package, and the package also exports all the APIs.
 # six for compat helpers
-REQUIRES = ['argparse', 'six>=1.4', 'traceback2'],
+REQUIRES = ['six>=1.4', 'traceback2']
 
 params = dict(
     name=NAME,
@@ -71,7 +71,10 @@ params = dict(
     classifiers=CLASSIFIERS,
     keywords=KEYWORDS,
     install_requires=REQUIRES,
-    setup_requires=REQUIRES,
+    setup_requires=['argparse'] + REQUIRES,
+    extras_require={
+        ':python_version<="2.6"': ['argparse'],
+        }
 )
 
 
