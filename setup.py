@@ -61,7 +61,7 @@ REQUIRES = ['six>=1.4', 'traceback2']
 
 params = dict(
     name=NAME,
-    version=VERSION,
+    version=str(VERSION),
     description=DESCRIPTION,
     long_description=LONG_DESCRIPTION,
     packages=PACKAGES,
