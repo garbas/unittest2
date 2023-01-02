@@ -140,7 +140,7 @@ except ImportError:
 ###  ChainMap (helper for configparser and string.Template)
 ########################################################################
 
-class ChainMap(collections.MutableMapping):
+class ChainMap(collections.abc.MutableMapping):
     ''' A ChainMap groups multiple dicts (or other mappings) together
     to create a single, updateable view.
 
